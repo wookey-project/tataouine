@@ -1,0 +1,125 @@
+config EXTERNALS
+  bool "Compile externals"
+  default y
+  ---help---
+  Support for external tools such as libecc
+
+if EXTERNALS
+
+config LIBSIGN
+  bool 
+# FIXME: All this part is for libecc. Libecc is an external component and
+# should be passed into another dir (not libs) as its build mechanism and
+# configuration part (below part) is not a part of the libecc project.
+config USR_LIB_SIGN
+  bool  "userspace libsign support"
+  default y
+  select USR_LIB_RNG
+  ---help---
+  Support for cryptographic signature support in usersapce.
+config USR_LIB_SIGN_CFLAGS
+  string
+  default " -I../../externals/libecc/src " if USR_LIB_SIGN
+
+menu "libsign features"
+  depends on USR_LIB_SIGN
+
+choice
+  prompt "Libsign Eliptic Curve name"
+  default ECC_CURVENAME_FR256
+config ECC_CURVENAME_FR256
+  bool "FRP256V1"
+config ECC_CURVENAME_SP256
+  bool "SECP256R1"
+config ECC_CURVENAME_SP384
+  bool "SECP384R1"
+config ECC_CURVENAME_SP521
+  bool "SECP521R1"
+config ECC_CURVENAME_BP256
+  bool "BRAINPOOLP256R1"
+config ECC_CURVENAME_BP384
+  bool "BRAINPOOLP384R1"
+config ECC_CURVENAME_BP512
+  bool "BRAINPOOLP512R1"
+config ECC_CURVENAME_GT256
+  bool "GOST256"
+config ECC_CURVENAME_GT512
+  bool "GOST512"
+endchoice
+# auto curvname string
+config ECC_CURVNAME
+  string
+  default "FRP256V1"        if ECC_CURVENAME_FR256
+  default "SECP256R1"       if ECC_CURVENAME_SP256
+  default "SECP384R1"       if ECC_CURVENAME_SP384
+  default "SECP521R1"       if ECC_CURVENAME_SP521
+  default "BRAINPOOLP256R1" if ECC_CURVENAME_BP256
+  default "BRAINPOOLP384R1" if ECC_CURVENAME_BP384
+  default "BRAINPOOLP512R1" if ECC_CURVENAME_BP512
+  default "GOST256"         if ECC_CURVENAME_GT256
+  default "GOST512"         if ECC_CURVENAME_GT512
+
+choice
+  prompt "Libsign signature name"
+  default ECC_SIGNAME_ECDSA
+config ECC_SIGNAME_ECDSA
+  bool "ECDSA"
+config ECC_SIGNAME_ECKCDSA
+  bool "ECKCDSA"
+config ECC_SIGNAME_ECSDSA
+  bool "ECSDSA"
+config ECC_SIGNAME_ECOSDSA
+  bool "ECOSDSA"
+config ECC_SIGNAME_ECFSDSA
+  bool "ECFSDSA"
+config ECC_SIGNAME_ECGDSA
+  bool "ECGDSA"
+config ECC_SIGNAME_ECRDSA
+  bool "ECRDSA"
+endchoice
+# auto signame string
+config ECC_SIGNAME
+  string
+  default "ECDSA"   if ECC_SIGNAME_ECDSA
+  default "ECKCDSA" if ECC_SIGNAME_ECKCDSA
+  default "ECSDSA"  if ECC_SIGNAME_ECSDSA
+  default "ECOSDSA" if ECC_SIGNAME_ECOSDSA
+  default "ECFSDSA" if ECC_SIGNAME_ECFSDSA
+  default "ECGDSA"  if ECC_SIGNAME_ECGDSA
+  default "ECRDSA"  if ECC_SIGNAME_ECRDSA
+
+choice
+  prompt "Libsign hash function name"
+  default ECC_HASHNAME_SHA256
+config ECC_HASHNAME_SHA224
+  bool "SHA224"
+config ECC_HASHNAME_SHA256
+  bool "SHA256"
+config ECC_HASHNAME_SHA384
+  bool "SHA384"
+config ECC_HASHNAME_SHA512
+  bool "SHA512"
+config ECC_HASHNAME_SHA3_224
+  bool "SHA3-224"
+config ECC_HASHNAME_SHA3_256
+  bool "SHA3-256"
+config ECC_HASHNAME_SHA3_384
+  bool "SHA3-384"
+config ECC_HASHNAME_SHA3_512
+  bool "SHA3-512"
+endchoice
+# auto hashname string
+config ECC_HASHNAME
+  string
+  default "SHA224"   if ECC_HASHNAME_SHA224
+  default "SHA256"   if ECC_HASHNAME_SHA256
+  default "SHA384"   if ECC_HASHNAME_SHA384
+  default "SHA512"   if ECC_HASHNAME_SHA512
+  default "SHA3-224" if ECC_HASHNAME_SHA3_224
+  default "SHA3-256" if ECC_HASHNAME_SHA3_256
+  default "SHA3-512" if ECC_HASHNAME_SHA3_512
+
+endmenu
+
+endif
+

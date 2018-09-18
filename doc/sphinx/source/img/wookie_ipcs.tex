@@ -1,0 +1,59 @@
+\documentclass{minimal}
+\usepackage[usenames,dvipsnames]{xcolor}
+\usepackage{tikz}
+%%%<
+\usepackage{verbatim}
+\usepackage[active,tightpage]{preview}
+\PreviewEnvironment{tikzpicture}
+\setlength\PreviewBorder{5pt}%
+%%%>
+
+\begin{document}
+\begin{tikzpicture}
+% pin
+\draw (0,2) rectangle ++(1.5,1) node[midway] {pin};
+% smart
+\draw (3,2) rectangle ++(1.5,1) node[midway] {smart};
+% pin vs smart IPC
+\draw[color=red,>=stealth,<-] (3,2.6) arc (45:135:1.05);
+\draw[color=gray] (2.25,3.2) circle (0.2) node {$1$};
+
+\draw[color=red,>=stealth,->] (3,2.4) arc (-45:-135:1.05);
+\draw[color=gray] (2.25,1.8) circle (0.2) node {$2$};
+
+% smart vs SmartCard
+% smartcard
+\draw[dashed] (2.9,0.5) rectangle ++(1.7,1) node[midway] {Smartcard};
+\draw[color=blue,>=stealth,->] (3.75,1.5)--(3.75,2);
+\draw[color=gray] (4.1,1.75) circle (0.2) node {$0$};
+
+% crypto
+\draw (3,4) rectangle ++(1.5,1) node[midway] {crypto};
+
+\draw[color=red,>=stealth,<-] (4,3) arc (-45:45:0.7);
+\draw[color=gray] (3,3.5) circle (0.2) node {$3''$};
+\draw[color=red,>=stealth,<-] (3.5,4) arc (135:225:0.7);
+\draw[color=gray] (4.5,3.5) circle (0.2) node {$4''$};
+
+% sdio
+\draw (0,4) rectangle ++(1.5,1) node[midway] {sdio};
+% crypto vs sdio IPC
+\draw[color=red,>=stealth,<-] (3,4.6) arc (45:135:1.05);
+\draw[color=gray] (2.25,5.2) circle (0.2) node {$3'$};
+
+\draw[color=red,>=stealth,->] (3,4.4) arc (-45:-135:1.05);
+\draw[color=gray] (2.25,3.8) circle (0.2) node {$4'$};
+
+% usb
+\draw (6,4) rectangle ++(1.5,1) node[midway] {usb};
+
+% crypto vs usb IPC
+\draw[color=red,>=stealth,<-] (6,4.6) arc (45:135:1.05);
+\draw[color=gray] (5.25,5.2) circle (0.2) node {$3$};
+
+\draw[color=red,>=stealth,->] (6,4.4) arc (-45:-135:1.05);
+\draw[color=gray] (5.25,3.8) circle (0.2) node {$4$};
+
+
+\end{tikzpicture}
+\end{document}

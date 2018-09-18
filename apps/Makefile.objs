@@ -1,0 +1,8 @@
+# list of applications
+
+# applications that will be built for the firmware content (mono or dual bank)
+app-fw-y :=
+# applications that will be built for the DFU content (mono or dual bank)
+app-dfu-y :=
+
+

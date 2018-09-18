@@ -1,0 +1,22 @@
+\documentclass{minimal}
+\usepackage[usenames,dvipsnames]{xcolor}
+\usepackage{tikz}
+%%%<
+\usepackage{verbatim}
+\usepackage[active,tightpage]{preview}
+\PreviewEnvironment{tikzpicture}
+\setlength\PreviewBorder{5pt}%
+%%%>
+
+\begin{document}
+\begin{tikzpicture}
+% libstd
+\draw (0,0.5) rectangle (7,2) node[midway] {$EwoK~microkernel~syscalls~API$};
+\draw (0,2.5) rectangle (1,6.5) node[midway,rotate=90] {$libstring$};
+\draw (1.5,2.5) rectangle (2.5,6.5) node[midway,rotate=90] {$libembed$};
+% TODO: liballoc is for a future release
+%\draw (3,2.5) rectangle (4,6.5) node[midway,rotate=90] {$liballoc$};
+\draw (4.5,2.5) rectangle (5.5,6.5) node[midway,rotate=90] {$libtime$};
+\draw (6,2.5) rectangle (7,6.5) node[midway,rotate=90] {$libstream$};
+\end{tikzpicture}
+\end{document}

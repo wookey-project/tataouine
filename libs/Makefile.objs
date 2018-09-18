@@ -1,0 +1,5 @@
+libs-y :=
+
+# required for all profiles
+libs-y                         += std
+

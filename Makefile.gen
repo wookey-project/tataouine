@@ -1,0 +1,74 @@
+# generic verbose management
+# To put more focus on warnings, be less verbose as default
+# Use 'make V=1' to see the full commands
+
+ifeq ("$(origin V)", "command line")
+  KBUILD_VERBOSE = $(V)
+  VERBOSE = $(V)
+endif
+ifndef KBUILD_VERBOSE
+  KBUILD_VERBOSE = 0
+endif
+
+ifeq ($(KBUILD_VERBOSE),1)
+  quiet =
+  Q =
+else
+  quiet=quiet_
+  Q = @
+  VERBOSE = 0
+endif
+
+# If the user is running make -s (silent mode), suppress echoing of
+# commands
+
+ifneq ($(findstring s,$(filter-out --%,$(MAKEFLAGS))),)
+  quiet=silent_
+  tools_silent=s
+endif
+
+# disable directory entering/leaving printout
+#MAKEFLAGS += --no-print-directory
+
+export quiet Q KBUILD_VERBOSE MAKE MAKEFLAGS
+
+# including Kbuild related tools for silent CC
+include $(PROJ_FILES)/tools/Kbuild.include
+include $(PROJ_FILES)/Makefile.build
+
+#including all source files to build, based on kconfig
+# this permit kconfig based C file inclusion
+-include $(PROJ_FILES)/kernel/arch/socs/$(SOC)/Makefile.objs
+-include $(PROJ_FILES)/kernel/arch/cores/$(ARCH)/Makefile.objs
+-include $(PROJ_FILES)/kernel/arch/boards/Makefile.objs
+
+# generic CFLAGS
+CFLAGS += -I$(PROJ_FILES)/include/generated
+CFLAGS += -I$(PROJ_FILES)/kernel/arch
+CFLAGS += $(DEBUG_CFLAGS)
+
+
+# GENERIC TARGETS
+default: all
+
+.PHONY: clean distclean
+
+clean:
+	$(call cmd,clean)
+
+distclean: clean
+	$(call cmd,distclean)
+
+sign: $(BUILD_DIR)/$(APP_NAME)/$(BIN_NAME) $(KEYS_PATH)_private_key.bin $(KEYS_PATH)_public_key.bin $(EC_UTILS)
+	$(call if_changed,ec_sign)
+	$(call if_changed,ec_verify)
+
+$(BUILD_DIR):
+	$(call cmd,mkdir)
+
+#
+##rust toolchain
+#RUSTBUILD=$(shell rustc --version |sed -n 's/^rustc [^ ]* (\([^ ]*\) .*)$$/\1/p')
+#LIBCORE_PATH=rust/libcore/$(TARGET)/$(RUSTBUILD)
+#RUSTCOREURL=https://github.com/rust-lang/rust/tarball/$(RUSTBUILD)
+#

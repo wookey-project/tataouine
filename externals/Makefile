@@ -1,0 +1,73 @@
+PROJ_FILES = ../
+
+VERSION = 1
+
+#########################################
+######### menuconfig inclusion.
+# these rules are accessible only wen the configuration is done
+# These rules requires a consistent .conf to use properly its content
+include $(PROJ_FILES)/Makefile.conf
+
+# generic rules for all Makefiles. These rules can be used at
+# any sublevel of the sources
+include $(PROJ_FILES)/Makefile.gen
+
+-include Makefile.objs
+
+.PHONY: $(EC_UTILS) std gnat hmac aes $(libs-y)
+
+KEY2HEADER       = $(PROJ_FILES)/tools/key2header.py
+
+##########################################
+##### Libecc cryptographic library
+
+external_targets :=
+
+ifeq ($(CONFIG_USR_LIB_SIGN),y)
+external_targets += libsign
+endif
+
+all: $(external_targets)
+
+libsign: $(BUILD_DIR)
+	if test -f $(PROJ_FILES)/externals/libecc/build/ec_utils; then \
+	  CFLAGS="-DWITH_LIBECC_CONFIG_OVERRIDE -DWITH_CURVE_$(ECC_CURVENAME) -DWITH_HASH_$(ECC_HASHNAME) -DWITH_SIG_$(ECC_SIGNAME)" $(MAKE) BUILD_DIR="$(BUILD_DIR)" -C $(PROJ_FILES)/externals/libecc clean; \
+	else \
+	  mkdir -p $(PROJ_FILES)/externals/libecc/build; \
+	fi; \
+	if test ! -f $(BUILD_DIR)/$@/libsign.a; then \
+	  mkdir -p $(BUILD_DIR)/libs/$@; \
+	  $(MAKE) -C $(PROJ_FILES)/externals/libecc CFLAGS="-DWITH_LIBECC_CONFIG_OVERRIDE -DWITH_CURVE_$(ECC_CURVENAME) -DWITH_HASH_$(ECC_HASHNAME) -DWITH_SIG_$(ECC_SIGNAME) $(AFLAGS) $(WARN_CFLAGS) $(HARDEN_CFLAGS) -pedantic -fno-builtin -std=c99 -D_FORTIFY_SOURCE=2 $(LIB_OPTIM_CFLAGS) -ffunction-sections -fdata-sections -fno-pie -fno-pic" \
+	  BUILD_DIR="build" CC=$(CC) AR=$(AR) RANLIB=$(RANLIB) LIBECC_NOSTDLIB=1 build/libsign.a; \
+	  cp $(PROJ_FILES)/externals/libecc/build/libsign.a $(BUILD_DIR)/libs/$@/libsign.a; \
+	fi; \
+
+$(EC_UTILS): $(BUILD_DIR)/tools
+	if test ! -f $@; then \
+    mkdir -p $(PROJ_FILES)/externals/libecc/build; \
+	CFLAGS="-DWITH_LIBECC_CONFIG_OVERRIDE=y -DWITH_CURVE_$(ECC_CURVENAME) -DWITH_HASH_$(ECC_HASHNAME) -DWITH_SIG_$(ECC_SIGNAME)" BUILD_DIR="build" make -C $(PROJ_FILES)/externals/libecc clean; \
+	CFLAGS="-DWITH_LIBECC_CONFIG_OVERRIDE -DWITH_CURVE_$(ECC_CURVENAME) -DWITH_HASH_$(ECC_HASHNAME) -DWITH_SIG_$(ECC_SIGNAME)" BUILD_DIR="build" CC=gcc AR=ar AS=as OBJCOPY=objcopy LD=ld RANLIB=ranlib $(MAKE) -C $(PROJ_FILES)/externals/libecc; \
+	cp $(PROJ_FILES)/externals/libecc/build/ec_utils $@; \
+    fi
+
+keys: $(EC_UTILS)
+	$(MKDIR) $(KEYS_DIR)
+	$(EC_UTILS) gen_keys  $(ECC_CURVENAME) $(ECC_SIGNAME) $(KEYS_PATH)
+	# Generate C headers for the platform and the token
+	$(EC_UTILS) gen_keys $(ECC_CURVENAME) $(ECC_SIGNAME) $(TOKEN_KEYS_PATH)/platform
+	$(EC_UTILS) gen_keys $(ECC_CURVENAME) $(ECC_SIGNAME) $(TOKEN_KEYS_PATH)/token
+	@test -d $(dir $@) || rm $(KEYS_DIR)/keys.h
+	$(KEY2HEADER) $(KEYS_PATH)_public_key.bin $(KEYS_DIR)/keys.h
+	$(KEY2JAVA) $(TOKEN_KEYS_PATH)/token_private_key.bin $(TOKEN_KEYS_PATH)/token_public_key.bin $(TOKEN_KEYS_PATH)/platform_public_key.bin $(KEYS_DIR)/Keys.java
+
+
+#keys: $(EC_UTILS)
+#	mkdir -p $(KEYS_DIR)
+#	$(EC_UTILS) gen_keys  $(ECC_CURVENAME) $(ECC_SIGNAME) $(KEYS_PATH)
+#	@test -d $(dir $@) || rm $(KEYS_DIR)/keys.h
+#	$(KEY2HEADER) $(KEYS_PATH)_public_key.bin $(KEYS_DIR)/keys.h
+
+$(BUILD_DIR)/tools:
+	$(call cmd,mkdir)
+
+

@@ -1,0 +1,58 @@
+menu "Applications"
+
+comment "Configuring Applications"
+
+source "apps/Kconfig.gen"
+
+comment "Configuring communication permissions for appliations"
+
+menu "Applications IPC and SHM"
+
+# this config (invisible to user) is used only to force IPC config
+# to y, making the IPC matrix starting with a comprehensive associated config
+config NEED_IPC
+  bool
+  select IPC
+  default y
+
+config IPC
+  bool "Allow communicating using kernel IPC"
+  default y
+
+if IPC
+
+source "apps/ipc.config"
+
+endif
+
+config DMA_SHM
+  bool "Allow Sharing DMA buffer beetween tasks"
+  default n
+  ---help---
+  if y, tasks are allowed to declare buffers that
+  can be used by other tasks as source (or destination)
+  of DMA transactions to improve performances. This
+  require two permissions: one for the task to share
+  the DMA buffer, one for the peer to use the shared
+  DMA buffer. See EwoK API for more information.
+
+if DMA_SHM
+
+source apps/dmashm.config
+
+endif
+
+endmenu
+
+config SHM
+  bool
+  default y
+
+config FIRMWARE
+  bool
+  depends on STM32F4
+  default y
+
+
+
+endmenu

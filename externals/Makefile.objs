@@ -1,0 +1,3 @@
+ext-y :=
+
+ext-$(CONFIG_USR_LIB_SIGN)    += libecc

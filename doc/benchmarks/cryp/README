@@ -1,0 +1,36 @@
+INTROCUTION
+
+This benchmarking tools permits to generate performance graph based on the console output of the wookey_crypbench_[ada_]defconfig profiles.
+
+HOW TO GENERATE BENCHMARK
+
+1) Generate benchmarks for EwoK C kernel
+
+First compile the crypbench firmware with the EwoK C kernel. In the SDK root directory:
+$ make wookey_crypbench_defconfig
+
+Flash and run the firmware, getting back the console output (usually USART1 if the defconfig file is unchanged)
+
+Keep only the benchmark output from the console (by grepping "CRYPTEST AES_HARD_DMA" lines from the console logs), and save the complete content into a file (for e.g. perfs_c.log)
+
+Generate the separated log files using gen_files.sh, in this directory:
+$ ./gen_files.sh perfs_c.log c
+
+2) Generate benchmarks for EwoK Ada kernel
+
+First compile the crypbench firmware with the EwoK Ada kernel. In the SDK root directory:
+$ make wookey_crypbench_ada_defconfig
+
+Flash and run the firmware, getting back the console output (usually USART1 if the defconfig file is unchanged)
+
+Keep only the benchmark output from the console (by grepping "CRYPTEST AES_HARD_DMA" lines from the console logs), and save the complete content into a file (for e.g. perfs_ada.log)
+
+Generate the separated log files using gen_files.sh, in this directory:
+$ ./gen_files.sh perfs_c.log ada
+
+3) Generate the gnuplot output
+
+$ gnuplot crypto_perf.plot
+
+The resulting graphic is generated in crypto_perf.png.
+

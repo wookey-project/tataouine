@@ -1,0 +1,225 @@
+# mainmenu Wookey embdedded OS configuration"
+mainmenu "Wookey configuration"
+
+menu "General Setup"
+
+config PROJ_NAME
+    string "Wookey project name"
+    default "wookey"
+    help
+      set the projet name.
+
+config PROJ_FILES
+    string "Wookey project files dir"
+    default "."
+    help
+      set the parent dir of the project output file.
+      can be set to any existing directory.
+
+# hidden to user, based on PROJ_NAME
+config BIN_NAME
+    string
+    default "$(CONFIG_PROJ_NAME).bin"
+
+config HEX_NAME
+    string
+    default "$(CONFIG_PROJ_NAME).hex"
+
+config ELF_NAME
+    string
+    default "$(CONFIG_PROJ_NAME).elf"
+# end of hidden
+
+config BUILD_DIR
+    string "project output build directory name"
+    default "build"
+    help
+      set the build directory.
+
+config PRIVATE_DIR
+    string "project output private directory name"
+    default "private"
+    help
+      set the private directory path, relative to current project dir.
+      If this directory already exist, the private content (key pairs, etc.)
+      are not regenerated.
+
+
+
+config CROSS_COMPILE
+    string "CROSS_COMPILE prefix"
+    default "arm-none-eabi-"
+    help
+      set the CROSS_COMPILE value (e.g. arm-none-eabi-) for the toolchain to use
+
+config ADA_RUNTIME
+    string "Ada runtime dir"
+    default "/opt/adacore-arm-eabi"
+    help
+      set the Ada runtime installation dir, used by the local reduced libgnat.
+      This permit to generate a reduced Ada footprint based on the ZFP profile,
+      only with the needed functionalities
+
+config ST_FLASH
+    string "STMicro st-flash tool path"
+    default "st-flash"
+    depends on STM32F4 || STM32F2
+
+config ST_UTIL
+    string "STMicro st-util tool path"
+    default "st-util"
+    depends on STM32F4 || STM32F2
+
+endmenu
+
+menu "Micro-Kernel configuration"
+
+source "kernel/Kconfig"
+
+endmenu
+
+menu "Userspace drivers and features"
+
+source "drivers/Kconfig"
+
+source "libs/Kconfig"
+
+source "apps/Kconfig"
+
+
+endmenu
+
+menu "External tooling and libs"
+
+source "externals/Kconfig"
+
+endmenu
+
+source "Kconfig.gen"
+
+menu "Firmware options"
+
+choice
+   prompt "Firmware generation mode"
+   default FIRMWARE_MODE_DUAL_BANK
+   config FIRMWARE_MODE_MONO_BANK
+      bool "Mono-bank firmware mode without DFU support"
+      ---help---
+        Single firmware mode, without DFU support. This mode
+        generates a single image of the content profile, with
+        no DFU profile concatenated.
+        This can be used for application testing, but is not
+        recommanded for production.
+   config FIRMWARE_MODE_MONO_BANK_DFU
+      bool "Mono-bank firmware mode with DFU support"
+      ---help---
+        Single firmware mode, with DFU support. This mode
+        generates a single image of the content profile, with
+        a DFU profile concatenated. This permits to update the
+        firmware bank by the DFU but not the DFU itself.
+        This can be used for embedded sytstems where there is not
+        enough space for dual-bank firmwares. This is less secure
+        than the dual-bank with DFU profile
+   config FIRMWARE_MODE_DUAL_BANK
+      bool "Dual-bank firmware mode without DFU support"
+      depends on STM32F439
+      ---help---
+        Dual firmware mode, without DFU support. This mode
+        generates a dual-bank image of the content profile, with
+        no DFU profile concatenated.
+        This can be used for application testing in both banks.
+        The device can't be updated through DFU, and requires a JTAG
+        interface for update. This is resilient but *not* secure.
+   config FIRMWARE_MODE_DUAL_BANK_DFU
+      bool "Dual-bank firmware mode with DFU support"
+      depends on STM32F439
+      ---help---
+        Dual firmware mode, with dual DFU support. This mode
+        generates a dual-bank image of the content profile, with
+        a dual-bank DFU profile concatenated.
+        This permits to update both firmware and DFU profiles in
+        production keeping resilient properties. This requires
+        enough flash in the target.
+endchoice
+
+config FIRMWARE_DUALBANK
+  bool
+  default y if FIRMWARE_MODE_DUAL_BANK || FIRMWARE_MODE_DUAL_BANK_DFU
+  default n
+
+config FIRMWARE_DFU
+  bool
+  default y if FIRMWARE_MODE_MONO_BANK_DFU || FIRMWARE_MODE_DUAL_BANK_DFU
+  default n
+
+endmenu
+
+menu "Global compile options"
+
+choice
+   prompt "Optimization flags"
+   default OPTIM_NONE
+   config OPTIM_NONE
+     bool "Only basics. No impact on code structure"
+   config OPTIM_PERF1
+     bool "Set -O1 compile flags"
+     help
+      if set, the project will be compiled using debug flags and witht
+      compile-time optimization set at -O1.
+   config OPTIM_PERF2
+     bool "Set -O2 compile flags"
+     help
+      if set, the project will be compiled using debug flags and witht
+      compile-time optimization set at -O2.
+   config OPTIM_PERF3
+     bool "Set -O3 compile flags"
+     help
+      if set, the project will be compiled using debug flags and witht
+      compile-time optimization set at -O3.
+   config OPTIM_SIZE
+     bool "Set size compile flags optimization (debug keeped)"
+     help
+      if set, the project will be compiled using debug flags and without
+      compile-time optimization.
+endchoice
+
+# hidden config done marker for root Makefile
+config DBGFLAGS
+  string
+  default "-g3 -finline-functions-called-once -fipa-pure-const -fmerge-constants -O0" if DEBUG && OPTIM_NONE
+  default "-g3 -fno-caller-saves -fno-cse-follow-jumps -fno-hoist-adjacent-loads -fno-inline-small-functions -fno-optimize-sibling-calls -fno-peephole2 -fno-reorder-functions -fno-rerun-cse-after-loop -fno-tree-vrp -fno-reorder-blocks -fno-tree-vect-loop-version -finline-functions-called-once -fno-align-functions  -fno-align-jumps  -fno-align-loops -fno-align-labels -fno-reorder-blocks-and-partition  -fno-prefetch-loop-arrays -finline-functions-called-once -fipa-pure-const -fmerge-constants -Os" if DEBUG && OPTIM_SIZE
+  default "-ggdb -O1" if DEBUG && OPTIM_PERF1
+  default "-ggdb -O2" if DEBUG && OPTIM_PERF2
+  default "-ggdb -O3" if DEBUG && OPTIM_PERF3
+
+
+config STACK_PROT_FLAG
+    bool "Activate -fstack-protection-strong"
+    default y
+
+# invisible by now... as consider as fixed
+config WARNFLAGS
+    string
+    default "-Wall -Werror -Wextra -Wno-reserved-id-macro -Wno-padded -Wno-packed -Wno-covered-switch-default -Wno-used-but-marked-unused -Wno-unused-but-set-variable -Wno-unused-function -Werror"
+
+config STACKPROTFLAGS
+    string
+    default "-fstack-protector-strong"
+    depends on STACK_PROT_FLAGS
+
+
+config EMBEDCFLAGS
+    string
+    default "-fno-builtin -nostdlib -D_FORTIFY_SOURCE=2"
+
+
+config EC_UTILS
+  string
+  default "tools/ec_utils"
+
+
+config DONE
+  bool
+  default y
+
+endmenu

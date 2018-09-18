@@ -1,0 +1,52 @@
+menu "Userspace utility libraries"
+
+#
+# TODO: CFLAGS auto update works because relative path of apps with project
+# root dir is ../.., but it is not clean. Using PROJ_FILES should be better
+# The goal here is to dynamically update APPS_CFLAGS with the api/ dir of
+# each compiled userspace driver, avoiding manual update of apps Makefiles
+#
+
+# generic libs inclusion
+source "libs/Kconfig.gen"
+
+
+choice
+  prompt "Libraries specific optimization flags"
+  default LIB_OPTIM_NONE
+  config LIB_OPTIM_NONE
+     bool "No specific flags, same as other SDK parts"
+     help
+      if set, the driject will be compiled using global SDK optimization
+      flags.
+  config LIB_OPTIM_PERF1
+     bool "Set -O1 compile flags"
+     help
+      if set, the libraries will be compiled using debug flags and witht
+      compile-time optimization set at -O1.
+  config LIB_OPTIM_PERF2
+     bool "Set -O2 compile flags"
+     help
+      if set, the libraries will be compiled using debug flags and witht
+      compile-time optimization set at -O2.
+  config LIB_OPTIM_PERF3
+     bool "Set -O3 compile flags"
+     help
+      if set, the libraries will be compiled using debug flags and witht
+      compile-time optimization set at -O3.
+  config LIB_OPTIM_SIZE
+     bool "Set size compile flags optimization"
+     help
+      if set, the libraries will be compiled using debug flags and with
+      compile-time optimization set at -Os.
+endchoice
+
+config LIB_OPTIM_CFLAGS
+  string
+  default "" if LIB_OPTIM_NONE
+  default "-O1" if LIB_OPTIM_PERF1
+  default "-O2" if LIB_OPTIM_PERF2
+  default "-O3" if LIB_OPTIM_PERF3
+  default "-Os" if LIB_OPTIM_SIZE
+
+endmenu
