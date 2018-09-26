@@ -19,3 +19,9 @@ For now, only two example use cases are provided with WooKey:
 Once the firmware is built, you can flash a target board using the procedure described in :ref:`flash`.
 Currently, only the **STM32 Discovert F407** is supported, but more boards (including our custom WooKey
 board) will come in the next months as explained in the :ref:`roadmap` section.
+
+If you have all the :ref:`dependencies` installed, you can directly clone the repository::
+
+   repo init -u https://github.com/wookey-project/manifest.git
+   repo sync 
+
