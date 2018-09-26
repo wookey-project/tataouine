@@ -123,7 +123,7 @@ menuconfig:
 # from now on, a config file must exists before executing one of the following
 # rules
 ifeq ($(CONFIG_DONE),y)
-all: prepare $(BUILD_DIR)/$(BIN_NAME)
+all: clean_kernel_headers prepare $(BUILD_DIR)/$(BIN_NAME)
 else
 all:
 	@echo "###########################################"
@@ -139,6 +139,17 @@ endif
 
 ifeq ("$(CONFIG_DONE)","y")
 
+#
+# As any modification in the user apps permissions or configuration impact the kernel
+# generated headers, the kernel headers and as a consequence the kernel binaries need
+# to be built again. We decide to require a kernel rebuilt at each all target to be
+# sure that the last potential configuration or userspace layout upgrade is taken into
+# account in the kernel
+#
+clean_kernel_headers:
+	rm -rf kernel/Ada/generated/*
+	rm -rf kernel/generated/*
+	rm -rf $(BUILD_DIR)/kernel/kernel.*.hex
 
 # prepare generate the include/generated/autoconf.h from the
 # .config file. This allows source files to use configured values
