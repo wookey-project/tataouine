@@ -147,9 +147,9 @@ ifeq ("$(CONFIG_DONE)","y")
 # account in the kernel
 #
 clean_kernel_headers:
-	rm -rf kernel/Ada/generated/*
-	rm -rf kernel/generated/*
-	rm -rf $(BUILD_DIR)/kernel/kernel.*.hex
+	$(Q)$(MAKE) -C kernel clean_headers
+	rm -rf $(BUILD_DIR)/*.bin
+	rm -rf $(BUILD_DIR)/*.hex
 
 # prepare generate the include/generated/autoconf.h from the
 # .config file. This allows source files to use configured values
