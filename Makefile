@@ -107,7 +107,7 @@ TODEL_DISTCLEAN = .config include $(CONFIG_BUILD_DIR) $(CONFIG_PRIVATE_DIR)
 # target for the classical menuconfig, the only one defined. In theory, we can
 # also define make config (dialog) and make qconfig (qt) but menuconfig should
 # be enough by now
-menuconfig:
+menuconfig: clean_kernel_headers
 	$(call cmd,kconf_app_gen)
 	$(call cmd,kconf_drv_gen)
 	$(call cmd,kconf_lib_gen)
