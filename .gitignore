@@ -21,3 +21,4 @@ layouts/
 javacard/
 .config*
 .*.cmd
+doc/*
