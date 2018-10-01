@@ -223,7 +223,7 @@ the Discovery 407 board):
 
 
 ```
-   $ openocd -f tools/stm32f4disco<X>.cfg -c "program build/armv7-m/32f407discovery/wookey.elf verify reset exit"
+   $ openocd -f tools/stm32f4disco<X>.cfg -c "program build/armv7-m/32f407discovery/wookey.hex verify reset exit"
 ```
 
 ## Debugging a sample application
@@ -248,8 +248,8 @@ In Terminal 2: launch your favorite ELF debugger, for example arm-none-eabi-gdb:
 ```
    $ cd <wookey repository>
    $ arm-none-eabi-gdb build/armv7-m/32f407discovery/wookey.elf"
-   gdb>target extended-remote 127.0.0.1:3333
-   gdb>symbols build/armv7-m/32f407discovery/wookey.elf
+   gdb> target extended-remote 127.0.0.1:3333
+   gdb> symbols build/armv7-m/32f407discovery/wookey.elf
    gdb>
 ```
 
