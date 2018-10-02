@@ -34,7 +34,7 @@ def Key2Java(argv):
     token_pub_key_data     = token_pub_key_data[3:(2*(len(token_pub_key_data)) / 3)+1]
     platform_pub_key_data  = platform_pub_key_data[3:(2*(len(platform_pub_key_data)) / 3)+1]
 
-    text = "package wookey;\n\npublic class Keys {\n\tbyte[] OurPrivKeyBuf    = { "
+    text = "package goodusb;\n\npublic class Keys {\n\tbyte[] OurPrivKeyBuf    = { "
     for byte in token_priv_key_data:
         text += "(byte)0x%02x, " % byte
     # For public keys, add the '04' uncompressed point 
