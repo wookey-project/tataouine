@@ -183,11 +183,11 @@ quiet_cmd_pepareada     = PREPAREADA
       # as file read is supported only since gmake 1.2, shell read is required here :-/
 
 quiet_cmd_prepare       = PREPARE
-      cmd_prepare       = $(CONF) --silentoldconfig Kconfig; ./tools/gen_autoconf_ada.pl .config;
+      cmd_prepare       = $(CONF) $(CONF_ARGS) Kconfig; ./tools/gen_autoconf_ada.pl .config;
 # tiny defconfig support, please don't call any other target depending on config here,
 # Makefile.conf should be relaoded
 quiet_cmd_defconfig     = DEFCONFIG  $@
-      cmd_defconfig     = cp configs/$@ .config && $(CONF) --silentoldconfig Kconfig
+      cmd_defconfig     = cp configs/$@ .config && $(CONF) $(CONF_ARGS) Kconfig
 
 quiet_cmd_listdefconfig = LISTDEFS   $@
 cmd_listdefconfig = find  configs/ -type f -iname '*_defconfig' | sed -e 's:^configs/::g' |sort
@@ -222,36 +222,14 @@ quiet_cmd_kconf_app_gen = KCONF
 # The drivers CFLAGS list is also generated here using the below for-llop respecting the CONFIG_USR_DRV_<DRVNAME>_CFLAGS convention, 
 # where DRVNAME is the upercase word using the lib<drvname> structure of the driver dir.
 quiet_cmd_kconf_drv_gen = KCONF
-      cmd_kconf_drv_gen = rm -f $(PROJ_FILES)/drivers/Kconfig.gen; for i in $(shell find drivers -maxdepth 3 -mindepth 3 -type d ! -iname '.git'); do /bin/echo "source \"$$i/Kconfig\"" >> $(PROJ_FILES)/drivers/Kconfig.gen; done; \
-	   				/bin/echo " " >> $(PROJ_FILES)/drivers/Kconfig.gen; \
-					/bin/echo "config DRV_CFLAGS" >> $(PROJ_FILES)/drivers/Kconfig.gen; \
-				   	/bin/echo "   string" >> $(PROJ_FILES)/drivers/Kconfig.gen; \
-                    /bin/echo -n "   default \"" >> $(PROJ_FILES)/drivers/Kconfig.gen; \
-					for i in $(shell find drivers -maxdepth 3 -mindepth 3 -type d); do \
-					   lib=`/bin/echo "$$i"| sed -e "s/drivers\/socs\/.*\///g"`; \
-					   ulib=`/bin/echo "$$lib" | tr a-z A-Z`; \
-	                   flags=`/bin/echo "\\$$(CONFIG_USR_DRV_$${ulib}_CFLAGS)"`; \
-					   /bin/echo -n " $$flags" >> $(PROJ_FILES)/drivers/Kconfig.gen; \
-					done; \
-					/bin/echo "\"" >> $(PROJ_FILES)/drivers/Kconfig.gen
+      cmd_kconf_drv_gen = rm -f $(PROJ_FILES)/drivers/Kconfig.gen; for i in $(shell find drivers -maxdepth 3 -mindepth 3 -type d ! -iname '.git'); do /bin/echo "source \"$$i/Kconfig\"" >> $(PROJ_FILES)/drivers/Kconfig.gen; done;
 
 
 # as libs are hosted by other repositories, liblist is dynamic for Kconfig, and generated here.
 # The drivers CFLAGS list is also generated here using the below for-llop respecting the CONFIG_USR_LIB_<LIBNAME>_CFLAGS convention, 
 # where DRVNAME is the upercase word using the lib<drvname> structure of the driver dir.
 quiet_cmd_kconf_lib_gen = KCONF
-      cmd_kconf_lib_gen = rm -f $(PROJ_FILES)/libs/Kconfig.gen; for i in $(shell find libs -maxdepth 1 -mindepth 1 -type d ! -iname '.git' -a ! -iname common -a ! -iname libbsp -a ! -iname libecc); do /bin/echo "source \"$$i/Kconfig\"" >> $(PROJ_FILES)/libs/Kconfig.gen; done; \
-	   				/bin/echo " " >> $(PROJ_FILES)/libs/Kconfig.gen; \
-					/bin/echo "config LIB_CFLAGS" >> $(PROJ_FILES)/libs/Kconfig.gen; \
-				   	/bin/echo "   string" >> $(PROJ_FILES)/libs/Kconfig.gen; \
-                    /bin/echo -n "   default \"" >> $(PROJ_FILES)/libs/Kconfig.gen; \
-					for i in $(shell find libs -maxdepth 1 -mindepth 1 -type d); do \
-					   lib=`/bin/echo "$$i"| sed -e "s/libs\///g"`; \
-					   ulib=`/bin/echo "$$lib" | tr a-z A-Z`; \
-	                   flags=`/bin/echo "\\$$(CONFIG_USR_LIB_$${ulib}_CFLAGS)"`; \
-					   /bin/echo -n " $$flags" >> $(PROJ_FILES)/libs/Kconfig.gen; \
-					done; \
-					/bin/echo " -I../../libs/std\"" >> $(PROJ_FILES)/libs/Kconfig.gen
+      cmd_kconf_lib_gen = rm -f $(PROJ_FILES)/libs/Kconfig.gen; for i in $(shell find libs -maxdepth 1 -mindepth 1 -type d ! -iname '.git' -a ! -iname common -a ! -iname libbsp -a ! -iname libecc); do /bin/echo "source \"$$i/Kconfig\"" >> $(PROJ_FILES)/libs/Kconfig.gen; done
 
 #
 # Depending on the manifest, some Kconfig and Kconfig-associated files may not exsit. If not
