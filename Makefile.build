@@ -183,7 +183,9 @@ quiet_cmd_pepareada     = PREPAREADA
       # as file read is supported only since gmake 1.2, shell read is required here :-/
 
 quiet_cmd_prepare       = PREPARE
-      cmd_prepare       = $(CONF) $(CONF_ARGS) Kconfig; ./tools/gen_autoconf_ada.pl .config;
+      cmd_prepare       = $(CONF) $(CONF_ARGS) Kconfig; ./tools/gen_autoconf_ada.pl .config; \
+						  $(CONFGEN) $(CONFGEN_ARGS) Kconfig
+
 # tiny defconfig support, please don't call any other target depending on config here,
 # Makefile.conf should be relaoded
 quiet_cmd_defconfig     = DEFCONFIG  $@
