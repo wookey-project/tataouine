@@ -242,7 +242,7 @@ quiet_cmd_nokconfig  = KCONF
 					   done
 
 quiet_cmd_kconf_root  = KCONF
-      cmd_kconf_root  = rm $(PROJ_FILES)/Kconfig.gen; if [ -f javacard/Kconfig ]; then /bin/echo "source javacard/Kconfig" > $(PROJ_FILES)/Kconfig.gen; else /bin/echo "" >> $(PROJ_FILES)/Kconfig.gen; fi
+      cmd_kconf_root  = rm -f $(PROJ_FILES)/Kconfig.gen; if [ -f javacard/Kconfig ]; then /bin/echo "source javacard/Kconfig" > $(PROJ_FILES)/Kconfig.gen; else /bin/echo "" >> $(PROJ_FILES)/Kconfig.gen; fi
 
 # generate makefile.objs directory listing from current list of dirs
 
