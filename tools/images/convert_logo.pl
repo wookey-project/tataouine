@@ -59,7 +59,7 @@ for my $colo (0..$nbcoul)
   @list=sort { $a <=> $b } @list;
   $max = pop @list;
   # 20 is the minimal number to appear in the final image. more reduce the number of colors, less increase it
-  if ($max <20 )
+  if ($max <10 )
   {
     	my $replace_color=find_nearest($colors,$tmp);
 	$replace_color+=$colo-$tmp if $replace_color>$tmp;
@@ -109,9 +109,11 @@ $size+=2;
 
 $toto=$totores;
 
+my $prefix=$ARGV[0]=~s/^.*?\/?([^\/]+)\.[^.]*?$/\1/r;
+
 
 $colors=~s/,$//;
-$res="const int nbcoul = $nbcoul;\nconst uint8_t colormap[]={$colors};\nconst int logo_width =$width, logo_height = $height;\nconst uint8_t logo[$size]={$toto};\n";
+$res="#ifndef \U${prefix}_H\E\n#define \U${prefix}_H\E\nconst int ${prefix}_nbcoul = $nbcoul;\nconst uint8_t ${prefix}_colormap[]={$colors};\nconst int ${prefix}_width =$width, ${prefix}_height = $height;\nconst uint8_t ${prefix}[$size]={$toto};\n#endif\n";
 
 print $res;
 
