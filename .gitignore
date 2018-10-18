@@ -6,6 +6,8 @@ libs/*/*
 configs/boards/*/
 drivers/socs/
 drivers/socs/*/*/*
+drivers/boards/
+drivers/boards/*/*/*
 **Kconfig.gen
 **Makefile.objs.gen
 build/*
