@@ -69,6 +69,7 @@ sub parse_ressource_perms
   my $perm_tsk_fipc = 0;
   my $perm_tsk_rst = 0;
   my $perm_tsk_upg = 0;
+  my $perm_tsk_rng = 0;
   my $perm_mem_dmap = 0;
 
   if ($hash{"${app}_PERM_DEV_DMA"} eq "y") {
@@ -101,11 +102,14 @@ sub parse_ressource_perms
   if ($hash{"${app}_PERM_TSK_UPG"} eq "y") {
       $perm_tsk_upg = 1;
   }
+  if ($hash{"${app}_PERM_TSK_RNG"} eq "y") {
+      $perm_tsk_rng = 1;
+  }
   if ($hash{"${app}_PERM_MEM_DYNAMIC_MAP"} eq "y") {
       $perm_mem_dmap = 1;
   }
   # generate the register
-  $register = ($perm_dev_dma << 31) | ($perm_dev_crypto << 29) | ($perm_dev_bus << 28) | ($perm_dev_exti << 27) | ($perm_dev_tim << 26) | ($perm_tim_cycles << 22) | ($perm_tsk_fisr << 15) | ($perm_tsk_fipc << 14) | ($perm_tsk_rst << 13) | ($perm_tsk_upg << 12) | ($perm_mem_dmap << 7);
+  $register = ($perm_dev_dma << 31) | ($perm_dev_crypto << 29) | ($perm_dev_bus << 28) | ($perm_dev_exti << 27) | ($perm_dev_tim << 26) | ($perm_tim_cycles << 22) | ($perm_tsk_fisr << 15) | ($perm_tsk_fipc << 14) | ($perm_tsk_rst << 13) | ($perm_tsk_upg << 12) | ($perm_tsk_rng << 12) | ($perm_mem_dmap << 7);
   return $register;
 }
 
@@ -285,7 +289,7 @@ sub generate_ada_ressource_perm
     my @devperms = ("DMA", "CRYPTO", "BUSES", "EXTI", "TIM");
 
     # array of task ressources
-    my @tskperms = ("FISR", "FIPC", "RESET", "UPGRADE");
+    my @tskperms = ("FISR", "FIPC", "RESET", "UPGRADE", "RNG");
 
     $string .= "       -- ressource_perm_register for $app\n";
     $string .= "       ID_APP$appid => (\n";
@@ -440,7 +444,8 @@ is
       TSK_FIPC        : bit;
       TSK_RESET       : bit;
       TSK_UPGRADE     : bit;
-      TSK_reserved    : bits_4;
+      TSK_RNG         : bit;
+      TSK_reserved    : bits_3;
       MEM_DYNAMIC_MAP : bit;
       MEM_reserved    : bits_7;
    end record
@@ -459,7 +464,8 @@ is
       TSK_FIPC        at 0 range 14 .. 14;
       TSK_RESET       at 0 range 13 .. 13;
       TSK_UPGRADE     at 0 range 12 .. 12;
-      TSK_reserved    at 0 range  8 .. 11;
+      TSK_RNG         at 0 range 11 .. 11;
+      TSK_reserved    at 0 range  8 .. 10;
       MEM_DYNAMIC_MAP at 0 range  7 .. 7;
       MEM_reserved    at 0 range  0 .. 6;
    end record;
