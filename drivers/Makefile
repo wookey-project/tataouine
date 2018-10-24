@@ -14,8 +14,8 @@ include $(PROJ_FILES)/Makefile.gen
 -include socs/$(SOC)/Makefile.objs
 -include socs/$(SOC)/Makefile.objs.gen
 
-include boards/$(BOARD)/Makefile.objs
-include boards/$(BOARD)/Makefile.objs.gen
+-include boards/$(BOARD)/Makefile.objs
+-include boards/$(BOARD)/Makefile.objs.gen
 
 #############################
 # build all
