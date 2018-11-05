@@ -144,14 +144,6 @@ quiet_cmd_mklib         = AR       $@
 quiet_cmd_ranlib        = RANLIB   $@
       cmd_ranlib        = $(RANLIB) $@
 
-# signing binary
-quiet_cmd_ec_sign       = SIGN     $(BIN_NAME)
-      cmd_ec_sign       = $(EC_UTILS) struct_sign $(ECC_CURVENAME)  $(ECC_SIGNAME) $(ECC_HASHNAME) $(BUILD_DIR)/$(APP_NAME)/$(BIN_NAME) $(KEYS_PATH)_private_key.bin $(BUILD_DIR)/$(APP_NAME)/$(BIN_NAME).sign $(IMAGE_TYPE) $(VERSION)
-
-# verifying the signature
-quiet_cmd_ec_verify     = VERIF    $(BIN_NAME)
-      cmd_ec_verify     = $(EC_UTILS) struct_verify $(ECC_CURVENAME) $(ECC_SIGNAME) $(ECC_HASHNAME) $(BUILD_DIR)/$(APP_NAME)/$(BIN_NAME).sign $(KEYS_PATH)_public_key.bin
-
 quiet_cmd_mkapplet      = APPLET   $@
       cmd_mkapplet      = mkdir -p $(BUILD_DIR)/javacard/applet; touch $(BUILD_DIR)/javacard/applet/.applet.cmd.ant; cp $(PRIVATE_DIR)/Keys.java $(PROJ_FILES)/javacard/applet/src/goodusb/; cd $(PROJ_FILES)/javacard/applet && ant -Dbuilddir=../$(BUILD_DIR)/javacard/applet -logfile ../$(BUILD_DIR)/javacard/applet/.applet.cmd.ant
 
