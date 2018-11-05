@@ -68,20 +68,17 @@ is not packaged, but you can install it using `pip`:
   $ pip install bincopy
 ```
 
-You will need a *kconfig-conf* and *kconfig-nconf* binaries. These binaries parse the Kconfig format
+You will need a Kconfig parser tool. This tool parses the Kconfig format
 as defined in the Linux kernel sources. One of the existing projects supporting a standalone
-implementation of such parsers is `kconfig-frontends` that can be found [here](http://ymorin.is-a-geek.org/projects/kconfig-frontends).
+implementation of such parsers is the python3 lib kconfiglib project that can be installed using `pip`:
 
 ```
-  $ brew tap px4/homebrew-px4
-  $ brew install kconfig-frontends
+  $ pip install kconfiglib
 ```
 
-or:
+Other Kconfig parsers can be used at your own choice, by overloading the KCONF variables (see the Wookeypedia
+documentation for more information).
 
-```
-$ sudo port install kconfig-frontends
-```
 
 If you wish to generate the documentation, you need `doxygen` (to generate the technical manuals), and
 `sphinx` (to generate the complete documentation website). As `doxygen` generates LaTeX sources that

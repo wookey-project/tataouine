@@ -58,13 +58,16 @@ is not packaged, but you can install it using `pip`:
   $ pip install bincopy
 ```
 
-You will need a *kconfig-conf* and *kconfig-nconf* binaries. These binaries parse the Kconfig format
+You will need a Kconfig parser tool. This tool parses the Kconfig format
 as defined in the Linux kernel sources. One of the existing projects supporting a standalone
-implementation of such parsers is `kconfig-frontends` that can be found [here](http://ymorin.is-a-geek.org/projects/kconfig-frontends).
-This is a C-based implementation of the Kconfig parsers. This software is currently being
-integrated in Debian by our team but is still in the [new queue](https://ftp-master.debian.org/new/kconfig-frontends_4.11.0.1%2Bdfsg-1.html) by now (mid sept. 2017):
-We hope it will be integrated as fast as possible in the Debian main pool for the unstable and testing
-distributions, and in the Ubuntu current one in the same time.
+implementation of such parsers is the python3 lib kconfiglib project that can be installed using `pip`:
+
+```
+  $ pip install kconfiglib
+```
+
+Other Kconfig parsers can be used at your own choice, by overloading the KCONF variables (see the Wookeypedia
+documentation for more information).
 
 If you wish to generate the documentation, you need `doxygen` (to generate the technical manuals), and
 `sphinx` (to generate the complete documentation website). As `doxygen` generates LaTeX sources that
