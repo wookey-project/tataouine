@@ -44,32 +44,6 @@ config PRIVATE_DIR
       If this directory already exist, the private content (key pairs, etc.)
       are not regenerated.
 
-
-
-config CROSS_COMPILE
-    string "CROSS_COMPILE prefix"
-    default "arm-none-eabi-"
-    help
-      set the CROSS_COMPILE value (e.g. arm-none-eabi-) for the toolchain to use
-
-config ADA_RUNTIME
-    string "Ada runtime dir"
-    default "/opt/adacore-arm-eabi"
-    help
-      set the Ada runtime installation dir, used by the local reduced libgnat.
-      This permit to generate a reduced Ada footprint based on the ZFP profile,
-      only with the needed functionalities
-
-config ST_FLASH
-    string "STMicro st-flash tool path"
-    default "st-flash"
-    depends on STM32F4 || STM32F2
-
-config ST_UTIL
-    string "STMicro st-util tool path"
-    default "st-util"
-    depends on STM32F4 || STM32F2
-
 endmenu
 
 menu "Micro-Kernel configuration"
