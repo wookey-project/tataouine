@@ -36,11 +36,11 @@ include Makefile.gen
 # transform ldr/ in ldr/ldr/ then we get the perfix $(BUILD_DIR)
 # to all app to finish we substitute the last '/' by .hex
 # this require that the app name should finish with a '/'
-APPS_FW1_HEXFILES = $(patsubst %,%.fw1.hex,$(addprefix "$(BUILD_DIR)/apps/",$(foreach path, $(app-fw-y), $(addsuffix $(path),$(path)/))))
-APPS_FW2_HEXFILES = $(patsubst %,%.fw2.hex,$(addprefix "$(BUILD_DIR)/apps/",$(foreach path, $(app-fw-y), $(addsuffix $(path),$(path)/))))
+APPS_FW1_HEXFILES = $(patsubst %,%.fw1.hex,$(addprefix $(BUILD_DIR)/apps/,$(foreach path, $(app-fw-y), $(addsuffix $(path),$(path)/))))
+APPS_FW2_HEXFILES = $(patsubst %,%.fw2.hex,$(addprefix $(BUILD_DIR)/apps/,$(foreach path, $(app-fw-y), $(addsuffix $(path),$(path)/))))
 
-APPS_DFU1_HEXFILES = $(patsubst %,%.dfu1.hex,$(addprefix "$(BUILD_DIR)/apps/",$(foreach path, $(app-dfu-y), $(addsuffix $(path),$(path)/))))
-APPS_DFU2_HEXFILES = $(patsubst %,%.dfu2.hex,$(addprefix "$(BUILD_DIR)/apps/",$(foreach path, $(app-dfu-y), $(addsuffix $(path),$(path)/))))
+APPS_DFU1_HEXFILES = $(patsubst %,%.dfu1.hex,$(addprefix $(BUILD_DIR)/apps/,$(foreach path, $(app-dfu-y), $(addsuffix $(path),$(path)/))))
+APPS_DFU2_HEXFILES = $(patsubst %,%.dfu2.hex,$(addprefix $(BUILD_DIR)/apps/,$(foreach path, $(app-dfu-y), $(addsuffix $(path),$(path)/))))
 
 APPS_HEXFILES = $(APPS_FW1_HEXFILES)
 ifeq ($(CONFIG_FIRMWARE_DUALBANK),y)
@@ -59,10 +59,15 @@ ifeq ($(CONFIG_FIRMWARE_DUALBANK),y)
 endif
 ifeq ($(CONFIG_FIRMWARE_MODE_MONO_BANK_DFU),y)
   KERNEL_HEXFILES += $(KERNEL_DFU1_HEXFILE)
+  APPS_HEXFILES   += $(APPS_DFU1_HEXFILES)
 endif
 
 ifeq ($(CONFIG_FIRMWARE_MODE_DUAL_BANK_DFU),y)
   KERNEL_HEXFILES += $(KERNEL_DFU1_HEXFILE)
+  APPS_HEXFILES   += $(APPS_DFU1_HEXFILES)
+
+  KERNEL_HEXFILES += $(KERNEL_DFU2_HEXFILE)
+  APPS_HEXFILES   += $(APPS_DFU2_HEXFILES)
 endif
 
 showapps:
@@ -218,8 +223,11 @@ endif
 
 
 
-loader: 
+loader:  libbsp
 	$(Q)$(MAKE) -C $@ EXTRA_CFLAGS="-DLOADER"
+
+libbsp:
+	ADAKERNEL= make LOADER=y -C kernel/arch
 
 libs:
 	$(Q)$(MAKE) -C $@
