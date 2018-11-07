@@ -25,3 +25,5 @@ javacard/
 .*.cmd
 doc/
 setenv.local.sh
+tools/__pycache__
+tools/*.pyc
