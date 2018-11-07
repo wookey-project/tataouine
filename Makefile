@@ -410,8 +410,7 @@ cleanlibcore:
 $(CONFIG_PRIVATE_DIR):
 	if [ -d "$(PROJ_FILES)/javacard" ]; then \
 	  if [ ! -d $@ ]; then \
-		mkdir $(PROJ_FILES)/$@; \
-		make -C externals keys; \
+		mkdir $(PROJ_FILES)/$@; $(MAKE) genkeys; \
 	  fi; \
 	fi
 
