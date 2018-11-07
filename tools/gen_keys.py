@@ -250,7 +250,7 @@ if __name__ == '__main__':
     #=================
     # Formatting the keys for Javacard
     ## AUTH
-    sys_cmd(KEY2JAVA+" "+AUTH_TOKEN_PATH+"/token_auth_private_key.bin "+AUTH_TOKEN_PATH+"/token_auth_public_key.bin "+AUTH_TOKEN_PATH+"/platform_auth_public_key.bin "+AUTH_TOKEN_PATH+"/shared_auth_petpin.bin "+AUTH_TOKEN_PATH+"/shared_auth_petname.bin "+AUTH_TOKEN_PATH+"/shared_auth_userpin.bin "+AUTH_TOKEN_PATH+"/master_symmetric_auth_key.bin "+AUTH_TOKEN_PATH+"/enc_master_symmetric_auth_local_pet_key.bin "+" "+auth_max_pin_tries+" "+" "+auth_max_sc_tries+" "+AUTH_TOKEN_PATH+"/AUTHKeys.java auth")
+    sys_cmd(KEY2JAVA+" "+AUTH_TOKEN_PATH+"/token_auth_private_key.bin "+AUTH_TOKEN_PATH+"/token_auth_public_key.bin "+AUTH_TOKEN_PATH+"/platform_auth_public_key.bin "+AUTH_TOKEN_PATH+"/shared_auth_petpin.bin "+AUTH_TOKEN_PATH+"/shared_auth_petname.bin "+AUTH_TOKEN_PATH+"/shared_auth_userpin.bin "+AUTH_TOKEN_PATH+"/master_symmetric_auth_key.bin "+AUTH_TOKEN_PATH+"/enc_master_symmetric_auth_local_pet_key.bin "+" "+str(auth_max_pin_tries)+" "+" "+str(auth_max_sc_tries)+" "+AUTH_TOKEN_PATH+"/AUTHKeys.java auth")
     # Cleanup
     sys_rm_file(AUTH_TOKEN_PATH+"/master_symmetric_auth_key.bin")
     sys_rm_file(AUTH_TOKEN_PATH+"/shared_auth_petname.bin")
@@ -258,7 +258,7 @@ if __name__ == '__main__':
     sys_rm_file(AUTH_TOKEN_PATH+"/enc_master_symmetric_auth_local_pet_key.bin")
 
     ## DFU
-    sys_cmd(KEY2JAVA+" "+DFU_TOKEN_PATH+"/token_dfu_private_key.bin "+DFU_TOKEN_PATH+"/token_dfu_public_key.bin "+DFU_TOKEN_PATH+"/platform_dfu_public_key.bin "+DFU_TOKEN_PATH+"/shared_dfu_petpin.bin "+DFU_TOKEN_PATH+"/shared_dfu_petname.bin "+DFU_TOKEN_PATH+"/shared_dfu_userpin.bin "+DFU_TOKEN_PATH+"/master_symmetric_dfu_key.bin "+DFU_TOKEN_PATH+"/enc_master_symmetric_dfu_local_pet_key.bin "+" "+dfu_max_pin_tries+" "+" "+dfu_max_sc_tries+" "+DFU_TOKEN_PATH+"/DFUKeys.java dfu")
+    sys_cmd(KEY2JAVA+" "+DFU_TOKEN_PATH+"/token_dfu_private_key.bin "+DFU_TOKEN_PATH+"/token_dfu_public_key.bin "+DFU_TOKEN_PATH+"/platform_dfu_public_key.bin "+DFU_TOKEN_PATH+"/shared_dfu_petpin.bin "+DFU_TOKEN_PATH+"/shared_dfu_petname.bin "+DFU_TOKEN_PATH+"/shared_dfu_userpin.bin "+DFU_TOKEN_PATH+"/master_symmetric_dfu_key.bin "+DFU_TOKEN_PATH+"/enc_master_symmetric_dfu_local_pet_key.bin "+" "+str(dfu_max_pin_tries)+" "+" "+str(dfu_max_sc_tries)+" "+DFU_TOKEN_PATH+"/DFUKeys.java dfu")
     # Cleanup
     sys_rm_file(DFU_TOKEN_PATH+"/master_symmetric_dfu_key.bin")
     sys_rm_file(DFU_TOKEN_PATH+"/shared_dfu_petname.bin")
@@ -267,7 +267,7 @@ if __name__ == '__main__':
 
     ## SIG
     if USE_SIG_TOKEN == True:
-        sys_cmd(KEY2JAVA+" "+SIG_TOKEN_PATH+"/token_sig_private_key.bin "+SIG_TOKEN_PATH+"/token_sig_public_key.bin "+SIG_TOKEN_PATH+"/platform_sig_public_key.bin "+SIG_TOKEN_PATH+"/shared_sig_petpin.bin "+SIG_TOKEN_PATH+"/shared_sig_petname.bin "+SIG_TOKEN_PATH+"/shared_sig_userpin.bin "+SIG_TOKEN_PATH+"/master_symmetric_sig_key.bin "+SIG_TOKEN_PATH+"/enc_master_symmetric_sig_local_pet_key.bin "+" "+sig_max_pin_tries+" "+" "+sig_max_sc_tries+" "+SIG_TOKEN_PATH+"/SIGKeys.java sig "+SIG_TOKEN_PATH+"/token_sig_firmware_private_key.bin "+SIG_TOKEN_PATH+"/token_sig_firmware_public_key.bin")
+        sys_cmd(KEY2JAVA+" "+SIG_TOKEN_PATH+"/token_sig_private_key.bin "+SIG_TOKEN_PATH+"/token_sig_public_key.bin "+SIG_TOKEN_PATH+"/platform_sig_public_key.bin "+SIG_TOKEN_PATH+"/shared_sig_petpin.bin "+SIG_TOKEN_PATH+"/shared_sig_petname.bin "+SIG_TOKEN_PATH+"/shared_sig_userpin.bin "+SIG_TOKEN_PATH+"/master_symmetric_sig_key.bin "+SIG_TOKEN_PATH+"/enc_master_symmetric_sig_local_pet_key.bin "+" "+str(sig_max_pin_tries)+" "+" "+str(sig_max_sc_tries)+" "+SIG_TOKEN_PATH+"/SIGKeys.java sig "+SIG_TOKEN_PATH+"/token_sig_firmware_private_key.bin "+SIG_TOKEN_PATH+"/token_sig_firmware_public_key.bin")
         # Cleanup
         sys_rm_file(SIG_TOKEN_PATH+"/master_symmetric_sig_key.bin")
         sys_rm_file(SIG_TOKEN_PATH+"/shared_sig_petname.bin")
