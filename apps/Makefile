@@ -23,8 +23,8 @@ app-y := $(sort $(app-fw-y) $(app-dfu-y))
 all: $(app-y)
 
 $(app-y): outdir
-	$(call cmd,ldscript)
-	$(call cmd,buildapp)
+	$(call if_changed,ldscript)
+	$(call if_changed,buildapp)
 
 
 #	cp $(BUILD_DIR)/libs/*/lib*.a $(BUILD_DIR)/apps/$@
