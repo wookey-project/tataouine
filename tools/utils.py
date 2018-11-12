@@ -374,13 +374,14 @@ def token_common_instructions(applet_id):
                              'TOKEN_INS_SET_USER_PIN'        : APDU(0x00, 0x03, 0x00, 0x00, None, 0x00),
                              'TOKEN_INS_SET_PET_PIN'         : APDU(0x00, 0x04, 0x00, 0x00, None, 0x00),
                              'TOKEN_INS_SET_PET_NAME'        : APDU(0x00, 0x05, 0x00, 0x00, None, 0x00),
-                             'TOKEN_INS_LOCK'                : APDU(0x00, 0x06, 0x00, 0x00, None, 0x00),
-                             'TOKEN_INS_GET_PET_NAME'        : APDU(0x00, 0x07, 0x00, 0x00, None, 0x00),
-                             'TOKEN_INS_GET_RANDOM'          : APDU(0x00, 0x08, 0x00, 0x00, None, 0x00),
-                             'TOKEN_INS_DERIVE_LOCAL_PET_KEY': APDU(0x00, 0x09, 0x00, 0x00, None, 0x00),
+                             'TOKEN_INS_USER_PIN_LOCK'       : APDU(0x00, 0x06, 0x00, 0x00, None, 0x00),
+                             'TOKEN_INS_FULL_LOCK'           : APDU(0x00, 0x07, 0x00, 0x00, None, 0x00),
+                             'TOKEN_INS_GET_PET_NAME'        : APDU(0x00, 0x08, 0x00, 0x00, None, 0x00),
+                             'TOKEN_INS_GET_RANDOM'          : APDU(0x00, 0x09, 0x00, 0x00, None, 0x00),
+                             'TOKEN_INS_DERIVE_LOCAL_PET_KEY': APDU(0x00, 0x0a, 0x00, 0x00, None, 0x00),
                              # FIXME: to be removed, for debug purposes only!
-                             'TOKEN_INS_ECHO_TEST'           : APDU(0x00, 0x0a, 0x00, 0x00, None, 0x00),
-                             'TOKEN_INS_SECURE_CHANNEL_ECHO' : APDU(0x00, 0x0b, 0x00, 0x00, None, 0x00),
+                             'TOKEN_INS_ECHO_TEST'           : APDU(0x00, 0x0b, 0x00, 0x00, None, 0x00),
+                             'TOKEN_INS_SECURE_CHANNEL_ECHO' : APDU(0x00, 0x0c, 0x00, 0x00, None, 0x00),
            }
 
 # The AUTH token instructions
@@ -731,9 +732,11 @@ class SCP:
     # Helper to get the PET name
     def token_get_pet_name(self):
         return self.send(token_ins(self.token_type, "TOKEN_INS_GET_PET_NAME"))
-    # Helper to lock the token
-    def token_lock(self):
-        return self.send(token_ins(self.token_type, "TOKEN_INS_LOCK"))
+    # Helpers to lock the token
+    def token_user_pin_lock(self):
+        return self.send(token_ins(self.token_type, "TOKEN_INS_USER_PIN_LOCK"))
+    def token_full_lock(self):
+        return self.send(token_ins(self.token_type, "TOKEN_INS_FULL_LOCK"))
     # Helper to set the user PIN
     def token_set_user_pin(self, new_user_pin = None):
         if new_user_pin == None:
