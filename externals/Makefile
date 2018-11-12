@@ -44,12 +44,10 @@ libsign: $(BUILD_DIR)
 	fi; \
 
 $(EC_UTILS): $(BUILD_DIR)/tools
-	if test ! -f $@; then \
-	  mkdir -p $(PROJ_FILES)/externals/libecc/build; \
-	  CFLAGS="-DWITH_LIBECC_CONFIG_OVERRIDE $(LIBSIGN_CFLAGS)" BUILD_DIR="build" make -C $(PROJ_FILES)/externals/libecc clean; \
-	  CFLAGS="-DWITH_LIBECC_CONFIG_OVERRIDE $(LIBSIGN_CFLAGS)" BUILD_DIR="build" CC=gcc AR=ar AS=as OBJCOPY=objcopy LD=ld RANLIB=ranlib $(MAKE) -C $(PROJ_FILES)/externals/libecc; \
-	  cp $(PROJ_FILES)/externals/libecc/build/ec_utils $@; \
-	fi
+	mkdir -p $(PROJ_FILES)/externals/libecc/build; \
+	CFLAGS="-DWITH_LIBECC_CONFIG_OVERRIDE $(LIBSIGN_CFLAGS)" BUILD_DIR="build" make -C $(PROJ_FILES)/externals/libecc clean; \
+	CFLAGS="-DWITH_LIBECC_CONFIG_OVERRIDE $(LIBSIGN_CFLAGS)" BUILD_DIR="build" CC=gcc AR=ar AS=as OBJCOPY=objcopy LD=ld RANLIB=ranlib $(MAKE) -C $(PROJ_FILES)/externals/libecc; \
+	cp $(PROJ_FILES)/externals/libecc/build/ec_utils $@; \
 
 $(BUILD_DIR)/tools:
 	$(call cmd,mkdir)

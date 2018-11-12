@@ -64,10 +64,8 @@ $(BUILD_DIR):
 ######### Key generation target
 # Generate keys
 genkeys:
-	@# We need ec_utils to generate our keys. Build it if necessary
-	@if [ ! -f $(EC_UTILS) ]; then \
-		make -C externals/; \
-	fi;
+	@# We need ec_utils to generate our keys. Build it
+	@make -C externals/;
 	@echo $(AUTH_TOKEN_MAX_PIN)  >  tmp_gen_keys_file
 	@echo $(AUTH_TOKEN_MAX_SC)   >> tmp_gen_keys_file
 	@echo $(DFU_TOKEN_MAX_PIN)   >> tmp_gen_keys_file
