@@ -182,7 +182,42 @@ to debug and interact with the execution of the microcontroller through its SWD 
 
 ## Configure the project
 
-First you have to select a configuration. Preinstalled configurations can be listed using the *defconfig\_list* target
+First, you have to set your environment. This is done by sourcing the `setenv.sh` script. This script exports
+all paths that are required by the SDK to work correctly.
+
+```
+   $ source setenv.sh
+   =========================================================
+   === Tataouine environment configuration
+   =========================================================
+
+     ADA_RUNTIME   = /opt/adacore-arm-eabi
+     ST_FLASH      = /usr/local/bin/st-flash
+     ST_UTIL       = /usr/local/bin/st-flash
+     CROSS_COMPILE = arm-none-eabi-
+   
+   =========================================================
+```
+
+Most of the time, the paths proposed in this script are not the one you use in your specific installation. The `setenv.sh` script support easy variables overloading by including a `setenv.local.sh` script file if this file exists in the same directory. If you need to overload
+some of the variables of the `setenv.sh` script, just add them to your own `setenv.local.sh` file.
+
+```
+  $ echo "export ADA_RUNTIME = /users/foo/opt/gnat2018" > setenv.local.sh
+  $ source setenv.sh
+   =========================================================
+   === Tataouine environment configuration
+   =========================================================
+
+     ADA_RUNTIME   = /users/foo/opt/gnat2018
+     ST_FLASH      = /usr/local/bin/st-flash
+     ST_UTIL       = /usr/local/bin/st-flash
+     CROSS_COMPILE = arm-none-eabi-
+   
+   =========================================================
+```
+
+Then  you have to select a configuration. Preinstalled configurations can be listed using the *defconfig\_list* target
 
 ```
 $ make defconfig_list
