@@ -4,13 +4,10 @@
 # Decrypt a firmware and check its signature using
 # the DFU token
 
-import sys, os, array
-import binascii
-from subprocess import Popen, PIPE, STDOUT
-from threading import Timer
-
 # Import our local utils
-from utils import *
+from common_utils import *
+from crypto_utils import *
+from token_utils import *
 
 def PrintUsage():
     executable = os.path.basename(__file__)

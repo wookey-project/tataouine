@@ -1,12 +1,8 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import sys, os, array
-import hashlib, hmac
-import binascii
-from Crypto.Cipher import AES
-
-from utils import *
+from common_utils import *
+from crypto_utils import *
 
 def PrintUsage():
     executable = os.path.basename(__file__)

@@ -4,12 +4,8 @@
 # Generate all the keys for the platform and for the
 # Javacard tokens.
 
-import sys, os, array
-import binascii
-from subprocess import Popen, PIPE, STDOUT
-from threading import Timer
-
-from utils import *
+from common_utils import *
+from crypto_utils import *
 
 def PrintUsage():
     executable = os.path.basename(__file__)
@@ -53,6 +49,7 @@ if __name__ == '__main__':
     USE_SIG_TOKEN = None
     if sys.argv[4] == "USE_SIG_TOKEN":
         USE_SIG_TOKEN = True
+        from token_utils import * 
     elif sys.argv[4] == "NO_SIG_TOKEN":
         USE_SIG_TOKEN = False
     else:
