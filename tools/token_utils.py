@@ -59,57 +59,35 @@ def connect_to_smartcard():
     print("ATR: "+toHexString(atr))
     return cardservice
 
-# Encrypt the local pet key using PBKDF2
-def enc_local_pet_key(pet_pin, salt, pbkdf2_iterations, master_symmetric_local_pet_key):
-    ## Master symmetric 'pet key' to be used for local credential encryption on the platform
-    # Use PBKDF2-SHA-512 to derive our local encryption keys
-    dk = local_pbkdf2_hmac('sha512', pet_pin, salt, pbkdf2_iterations)
-    # The encrypted key is the encryption with AES-ECB 128 of the generated keys.
-    # We have 64 bytes to encrypt and the PBKDF2 results in 64 bytes, hence
-    # we can encrypt each chunk with AES-ECB and an associated key
-    cipher1 = local_AES.new(dk[:16],   AES.MODE_ECB)
-    cipher2 = local_AES.new(dk[16:32], AES.MODE_ECB)
-    cipher3 = local_AES.new(dk[32:48], AES.MODE_ECB)
-    cipher4 = local_AES.new(dk[48:],   AES.MODE_ECB)
-    enc_master_symmetric_local_pet_key = cipher1.encrypt(master_symmetric_local_pet_key[:16]) + cipher2.encrypt(master_symmetric_local_pet_key[16:32]) + cipher3.encrypt(master_symmetric_local_pet_key[32:48]) + cipher4.encrypt(master_symmetric_local_pet_key[48:])
-    return enc_master_symmetric_local_pet_key
-
 # Decrypt the local pet key using PBKDF2 (and using optionnaly the external token)
-def dec_local_pet_key(pet_pin, salt, pbkdf2_iterations, enc_master_symmetric_local_pet_key, card, data_type):
+def dec_local_pet_key_with_token(pet_pin, salt, pbkdf2_iterations, enc_master_symmetric_local_pet_key, card, data_type):
     ## Master symmetric 'pet key' to be used for local credential encryption on the platform
     # Use PBKDF2-SHA-512 to derive our local encryption keys
     dk = local_pbkdf2_hmac('sha512', pet_pin, salt, pbkdf2_iterations)
     master_symmetric_local_pet_key = None
-    # We locally dercypt the key
-    if (card == None) or (enc_master_symmetric_local_pet_key != None):
-        # The decrypted key is the decryption with AES-ECB 128 of the generated keys.
-        # We have 64 bytes to encrypt and the PBKDF2 results in 64 bytes, hence
-        # we can encrypt each chunk with AES-ECB and an associated key
-        cipher1 = local_AES.new(dk[:16],   AES.MODE_ECB)
-        cipher2 = local_AES.new(dk[16:32], AES.MODE_ECB)
-        cipher3 = local_AES.new(dk[32:48], AES.MODE_ECB)
-        cipher4 = local_AES.new(dk[48:],   AES.MODE_ECB)
-        master_symmetric_local_pet_key = cipher1.decrypt(enc_master_symmetric_local_pet_key[:16]) + cipher2.decrypt(enc_master_symmetric_local_pet_key[16:32]) + cipher3.decrypt(enc_master_symmetric_local_pet_key[32:48]) + cipher4.decrypt(enc_master_symmetric_local_pet_key[48:])
+    if (card != None):
+        # Ask for the token to derive and get the local key
+        resp, sw1, sw2 = token_ins(data_type, "TOKEN_INS_SELECT_APPLET").send(card)
+        if (sw1 != 0x90) or (sw2 != 0x00):
+            print("Token Error: bad response from the token when selecting applet")
+            # This is an error
+            sys.exit(-1)
+        master_symmetric_local_pet_key, sw1, sw2 = token_ins(data_type, "TOKEN_INS_DERIVE_LOCAL_PET_KEY", data=dk).send(card)
+        if (sw1 != 0x90) or (sw2 != 0x00):
+            print("Token Error: bad response from the token when asking to derive local pet key")
+            # This is an error
+            sys.exit(-1)
     else:
-        if (card != None):
-            # Ask for the token to derive and get the local key
-            resp, sw1, sw2 = token_ins(data_type, "TOKEN_INS_SELECT_APPLET").send(card)
-            if (sw1 != 0x90) or (sw2 != 0x00):
-                print("Token Error: bad response from the token when selecting applet")
-                # This is an error
-                sys.exit(-1)
-            master_symmetric_local_pet_key, sw1, sw2 = token_ins(data_type, "TOKEN_INS_DERIVE_LOCAL_PET_KEY", data=dk).send(card)
-            if (sw1 != 0x90) or (sw2 != 0x00):
-                print("Token Error: bad response from the token when asking to derive local pet key")
-                # This is an error
-                sys.exit(-1)
+        print("Token Error: card cannont be None ...")
+        # This is an error
+        sys.exit(-1)
     return master_symmetric_local_pet_key
 
 # Decrypt our local private data
 # [RB] FIXME: private and public keys lengths are hardcoded here ... we should be more flexible!
 # Same for PBKDF2 iterations.
 # These lengths should be infered from other files
-def decrypt_platform_data(encrypted_platform_bin_file, pin, data_type, card):
+def decrypt_platform_data_with_token(encrypted_platform_bin_file, pin, data_type, card):
     data = read_in_file(encrypted_platform_bin_file)
     index = 0
     decrypt_platform_data.iv = data[index:index+16]
@@ -141,7 +119,7 @@ def decrypt_platform_data(encrypted_platform_bin_file, pin, data_type, card):
         index += 64
     # Derive the decryption key
     pbkdf2_iterations = 4096
-    dk = dec_local_pet_key(pin, salt, pbkdf2_iterations, encrypted_local_pet_key_data, card, data_type)
+    dk = dec_local_pet_key_with_token(pin, salt, pbkdf2_iterations, encrypted_local_pet_key_data, card, data_type)
     # Now compute and check the HMAC, and decrypt local data
     hmac_key = dk[32:]
     # Check the mac tag
@@ -420,7 +398,7 @@ class SCP:
         self.cardservice = card
         self.token_type = data_type
         # Decrypt local platform keys. We also keep the current salt and PBKDF2 iterations for later usage
-        dec_token_pub_key_data, dec_platform_priv_key_data, dec_platform_pub_key_data, self.dec_firmware_sig_pub_key_data, _, _, self.pbkdf2_salt, self.pbkdf2_iterations = decrypt_platform_data(encrypted_platform_bin_file, pin, data_type, card) 
+        dec_token_pub_key_data, dec_platform_priv_key_data, dec_platform_pub_key_data, self.dec_firmware_sig_pub_key_data, _, _, self.pbkdf2_salt, self.pbkdf2_iterations = decrypt_platform_data_with_token(encrypted_platform_bin_file, pin, data_type, card) 
 	# Get the algorithm and the curve
         ret_alg, ret_curve, prime, a, b, gx, gy, order, cofactor = get_curve_from_key(dec_platform_pub_key_data)
         if (ret_alg == None) or (ret_curve == None):

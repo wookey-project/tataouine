@@ -162,3 +162,105 @@ def local_pbkdf2_hmac(hash_func, pin, salt, pbkdf2_iterations):
         return dk.decode('latin-1')
     else:
         return dk
+
+# Encrypt the local pet key using PBKDF2
+def enc_local_pet_key(pet_pin, salt, pbkdf2_iterations, master_symmetric_local_pet_key):
+    ## Master symmetric 'pet key' to be used for local credential encryption on the platform
+    # Use PBKDF2-SHA-512 to derive our local encryption keys
+    dk = local_pbkdf2_hmac('sha512', pet_pin, salt, pbkdf2_iterations)
+    # The encrypted key is the encryption with AES-ECB 128 of the generated keys.
+    # We have 64 bytes to encrypt and the PBKDF2 results in 64 bytes, hence
+    # we can encrypt each chunk with AES-ECB and an associated key
+    cipher1 = local_AES.new(dk[:16],   AES.MODE_ECB)
+    cipher2 = local_AES.new(dk[16:32], AES.MODE_ECB)
+    cipher3 = local_AES.new(dk[32:48], AES.MODE_ECB)
+    cipher4 = local_AES.new(dk[48:],   AES.MODE_ECB)
+    enc_master_symmetric_local_pet_key = cipher1.encrypt(master_symmetric_local_pet_key[:16]) + cipher2.encrypt(master_symmetric_local_pet_key[16:32]) + cipher3.encrypt(master_symmetric_local_pet_key[32:48]) + cipher4.encrypt(master_symmetric_local_pet_key[48:])
+    return enc_master_symmetric_local_pet_key
+
+# Decrypt the local pet key using PBKDF2 (and using optionnaly the external token)
+def dec_local_pet_key(pet_pin, salt, pbkdf2_iterations, enc_master_symmetric_local_pet_key):
+    ## Master symmetric 'pet key' to be used for local credential encryption on the platform
+    # Use PBKDF2-SHA-512 to derive our local encryption keys
+    dk = local_pbkdf2_hmac('sha512', pet_pin, salt, pbkdf2_iterations)
+    master_symmetric_local_pet_key = None
+    # We locally dercypt the key
+    # The decrypted key is the decryption with AES-ECB 128 of the generated keys.
+    # We have 64 bytes to encrypt and the PBKDF2 results in 64 bytes, hence
+    # we can encrypt each chunk with AES-ECB and an associated key
+    cipher1 = local_AES.new(dk[:16],   AES.MODE_ECB)
+    cipher2 = local_AES.new(dk[16:32], AES.MODE_ECB)
+    cipher3 = local_AES.new(dk[32:48], AES.MODE_ECB)
+    cipher4 = local_AES.new(dk[48:],   AES.MODE_ECB)
+    master_symmetric_local_pet_key = cipher1.decrypt(enc_master_symmetric_local_pet_key[:16]) + cipher2.decrypt(enc_master_symmetric_local_pet_key[16:32]) + cipher3.decrypt(enc_master_symmetric_local_pet_key[32:48]) + cipher4.decrypt(enc_master_symmetric_local_pet_key[48:])
+    return master_symmetric_local_pet_key
+
+# Decrypt our local private data
+# [RB] FIXME: private and public keys lengths are hardcoded here ... we should be more flexible!
+# Same for PBKDF2 iterations.
+# These lengths should be infered from other files
+def decrypt_platform_data(encrypted_platform_bin_file, pin, data_type):
+    data = read_in_file(encrypted_platform_bin_file)
+    index = 0
+    decrypt_platform_data.iv = data[index:index+16]
+    index += 16
+    salt = data[index:index+16]
+    index += 16
+    hmac_tag = data[index:index+32]
+    index += 32
+    token_pub_key_data = data[index:index+99]
+    index += 99
+    platform_priv_key_data = data[index:index+35]
+    index += 35
+    platform_pub_key_data = data[index:index+99]
+    index += 99
+    firmware_sig_pub_key_data = None
+    if (data_type == "dfu") or (data_type == "sig"):
+        firmware_sig_pub_key_data = data[index:index+99]
+        index += 99
+    # Do we have other keys to decrypt (if we do not use a sig token)
+    firmware_sig_priv_key_data = None
+    firmware_sig_sym_key_data = None
+    encrypted_local_pet_key_data = None
+    if (len(data) > index):
+        firmware_sig_priv_key_data = data[index:index+35]
+        index += 35
+        firmware_sig_sym_key_data = data[index:index+32]
+        index += 32
+        encrypted_local_pet_key_data = data[index:index+64]
+        index += 64
+    # Derive the decryption key
+    pbkdf2_iterations = 4096
+    dk = dec_local_pet_key(pin, salt, pbkdf2_iterations, encrypted_local_pet_key_data)
+    # Now compute and check the HMAC, and decrypt local data
+    hmac_key = dk[32:]
+    # Check the mac tag
+    hm = local_hmac.new(hmac_key, digestmod=hashlib.sha256)
+    hm.update(decrypt_platform_data.iv + salt + token_pub_key_data + platform_priv_key_data + platform_pub_key_data)
+    if firmware_sig_pub_key_data != None:
+        hm.update(firmware_sig_pub_key_data)
+    if firmware_sig_priv_key_data != None:
+        hm.update(firmware_sig_priv_key_data)
+    if firmware_sig_sym_key_data != None:
+        hm.update(firmware_sig_sym_key_data)
+    hmac_tag_ref = hm.digest()
+    if hmac_tag != hmac_tag_ref:
+        print("Error when decrypting local data with the PET pin: hmac not OK!")
+        sys.exit(-1)
+    # Decrypt
+    enc_key = dk[:16]
+    cipher = local_AES.new(enc_key, AES.MODE_CTR, iv=decrypt_platform_data.iv)
+    dec_token_pub_key_data = cipher.decrypt(token_pub_key_data)
+    dec_platform_priv_key_data = cipher.decrypt(platform_priv_key_data)
+    dec_platform_pub_key_data = cipher.decrypt(platform_pub_key_data)
+    dec_firmware_sig_pub_key_data = None
+    if firmware_sig_pub_key_data != None:
+        dec_firmware_sig_pub_key_data = cipher.decrypt(firmware_sig_pub_key_data)
+    dec_firmware_sig_priv_key_data = None
+    if firmware_sig_priv_key_data != None:
+        dec_firmware_sig_priv_key_data = cipher.decrypt(firmware_sig_priv_key_data)
+    dec_firmware_sig_sym_key_data = None
+    if firmware_sig_sym_key_data != None:
+        dec_firmware_sig_sym_key_data = cipher.decrypt(firmware_sig_sym_key_data)
+
+    return dec_token_pub_key_data, dec_platform_priv_key_data, dec_platform_pub_key_data, dec_firmware_sig_pub_key_data, dec_firmware_sig_priv_key_data, dec_firmware_sig_sym_key_data, salt, pbkdf2_iterations

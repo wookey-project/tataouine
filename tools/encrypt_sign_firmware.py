@@ -77,7 +77,7 @@ if __name__ == '__main__':
     else:
         local_storage_password = get_user_input("Please provide the local storage password for SIG (firmware signature):\n")
         # Decrypt the local keys
-        dec_token_pub_key_data, dec_platform_priv_key_data, dec_platform_pub_key_data, dec_firmware_sig_pub_key_data, dec_firmware_sig_priv_key_data, dec_firmware_sig_sym_key_data, _, _ = decrypt_platform_data(keys_path+"/SIG/encrypted_platform_sig_keys.bin", local_storage_password, "sig", card)
+        dec_token_pub_key_data, dec_platform_priv_key_data, dec_platform_pub_key_data, dec_firmware_sig_pub_key_data, dec_firmware_sig_priv_key_data, dec_firmware_sig_sym_key_data, _, _ = decrypt_platform_data(keys_path+"/SIG/encrypted_platform_sig_keys.bin", local_storage_password, "sig")
 
     # ======================
     # Structure of a signed image is:

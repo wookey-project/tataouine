@@ -4,7 +4,7 @@
 import sys, os, array
 
 # Import our local utils
-from utils import *
+from crypto_utils import *
 
 def PrintUsage():
     executable = os.path.basename(__file__)
