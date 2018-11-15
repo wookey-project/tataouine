@@ -7,7 +7,7 @@
 # Import our local utils
 from common_utils import *
 from crypto_utils import *
-from token_utils import *
+from firmware_utils import *
 
 def PrintUsage():
     executable = os.path.basename(__file__)
@@ -71,6 +71,7 @@ if __name__ == '__main__':
     USE_SIG_TOKEN = is_sig_token_used(keys_path+"/SIG/encrypted_platform_sig_keys.bin")
  
     if USE_SIG_TOKEN == True:
+        from token_utils import *
         card = connect_to_token("SIG")
         scp_sig = token_full_unlock(card, "sig", keys_path+"/SIG/encrypted_platform_sig_keys.bin") # pet_pin="1234", user_pin="1234", force_pet_name_accept = True)
     else:

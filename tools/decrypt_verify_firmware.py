@@ -7,6 +7,7 @@
 # Import our local utils
 from common_utils import *
 from crypto_utils import *
+from firmware_utils import *
 from token_utils import *
 
 def PrintUsage():

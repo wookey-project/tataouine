@@ -1,4 +1,4 @@
-# Various utils and helpers common to all our scripts
+# Various utils and helpers related to the WooKey tokens
 
 from smartcard.CardType import AnyCardType
 from smartcard.CardRequest import CardRequest
@@ -58,16 +58,6 @@ def connect_to_smartcard():
     atr = cardservice.connection.getATR()
     print("ATR: "+toHexString(atr))
     return cardservice
-
-# Infer from the size of the local key bag if we use a SIG token or not
-# [RB] FIXME: this is a bit hardcoded, we should use a more flexible way of dealing
-# with this.
-def is_sig_token_used(encrypted_platform_bin_file):
-    data = read_in_file(encrypted_platform_bin_file)
-    if(len(data) > 400):
-        return False
-    else:
-        return True
 
 # Encrypt the local pet key using PBKDF2
 def enc_local_pet_key(pet_pin, salt, pbkdf2_iterations, master_symmetric_local_pet_key):
@@ -603,12 +593,3 @@ def token_full_unlock(card, token_type, local_keys_path, pet_pin = None, user_pi
         print("\033[1;44m PET NAME CHECK!  \033[1;m\n\nThe PET name for the "+token_type.upper()+" token is '"+resp+"' ...")
     resp, sw1, sw2 = scp.token_unlock_user_pin(user_pin)
     return scp
-
-# The partition types
-partitions_types = {
-    'FW1'      : 0,
-    'FW2'      : 1,
-    'DFU1'     : 2,
-    'DFU2'     : 3,
-    'SHR'      : 4,
-}
