@@ -7,10 +7,7 @@
 # Import our local utils
 from common_utils import *
 from crypto_utils import *
-<<<<<<< HEAD
 from firmware_utils import *
-=======
->>>>>>> [enhancement] Split the python utils in three sub modules: common utils, crypto
 from token_utils import *
 
 def PrintUsage():
