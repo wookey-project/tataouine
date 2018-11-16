@@ -440,12 +440,12 @@ class SCP:
             return None, None, None
         return self.send(token_ins(self.token_type, "TOKEN_INS_GET_KEY"), pin=pin, pin_decrypt=True) 
     # ====== DFU specific helpers
-    def token_dfu_begin_decrypt_session(self, ivivhmac):
+    def token_dfu_begin_decrypt_session(self, header_data):
         if self.token_type != "dfu":
             print("DFU Token Error: asked for TOKEN_INS_BEGIN_DECRYPT_SESSION for non DFU token ("+self.token_type.upper()+")")
             # This is an error
             return None, None, None
-        return self.send(token_ins(self.token_type, "TOKEN_INS_BEGIN_DECRYPT_SESSION", data=ivivhmac)) 
+        return self.send(token_ins(self.token_type, "TOKEN_INS_BEGIN_DECRYPT_SESSION", data=header_data)) 
     def token_dfu_derive_key(self):
         if self.token_type != "dfu":
             print("DFU Token Error: asked for TOKEN_INS_DERIVE_KEY for non DFU token ("+self.token_type.upper()+")")
@@ -453,12 +453,12 @@ class SCP:
             return None, None, None
         return self.send(token_ins(self.token_type, "TOKEN_INS_DERIVE_KEY")) 
     # ====== SIG specific helpers
-    def token_sig_begin_sign_session(self):
+    def token_sig_begin_sign_session(self, header_data):
         if self.token_type != "sig":
             print("SIG Token Error: asked for TOKEN_INS_BEGIN_SIGN_SESSION for non SIG token ("+self.token_type.upper()+")")
             # This is an error
             return None, None, None
-        return self.send(token_ins(self.token_type, "TOKEN_INS_BEGIN_SIGN_SESSION"))
+        return self.send(token_ins(self.token_type, "TOKEN_INS_BEGIN_SIGN_SESSION", data=header_data))
     def token_sig_derive_key(self):
         if self.token_type != "sig":
             print("SIG Token Error: asked for TOKEN_INS_DERIVE_KEY for non SIG token ("+self.token_type.upper()+")")

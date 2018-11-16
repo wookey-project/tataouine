@@ -81,22 +81,72 @@ if __name__ == '__main__':
 
     # ======================
     # Structure of a signed image is:
-    # Header + [ IV + MAC(IV) + MAX_CHUNK_SIZE(4 bytes) + ENC(firmware) ] + SIG
-    # The signature covers [ IV + MAC(IV) + ENC(firmware) ] 
+    # Header + MAX_CHUNK_SIZE(4 bytes) + SIG + IV + HMAC(previous) + ENC(firmware)
+    # The signature covers Header + MAX_CHUNK_SIZE + firmware
+
+    # ======================
+    # We forge the basic libecc_header = magic on 4 bytes || partition type on 4 bytes || version on 4 bytes || len of data after the header on 4 bytes || siglen on 4 bytes
+    sigtype = None
+    if USE_SIG_TOKEN == True:
+        sigtype, sw1, sw2 = scp_sig.token_sig_get_sig_type()
+        if (sw1 != 0x90) or (sw2 != 0x00):
+            print("Error:  SIG token APDU error ...")
+            sys.exit(-1)
+    else:
+        sigtype = expand(inttostring(get_sig_len(dec_firmware_sig_priv_key_data)), 32, "LEFT") + dec_firmware_sig_priv_key_data[:2]
+    siglen = sigtype[:4]
+    libeccparams = sigtype[-2:]
+    # Sanity check on the ECDSA signature algorithm
+    the_sig = stringtoint(libeccparams[0])
+    if ((len(sigtype) != 6) or (the_sig != 0x01)):
+        print("Error: signature type %d sent by the card is not conforming to ECDSA ..." % (the_sig))
+        sys.exit(-1)
+
+    data_len_encapsulated = expand(inttostring(len(firmware_to_sign) + 16 + 32), 32, "LEFT")
+    libecc_header = firmware_magic + expand(inttostring(firmware_partition_type), 32, "LEFT") + firmware_version + data_len_encapsulated + siglen
+
+    # ======================
+    # The signature on the header + chunk_size + the CLEAR text firmware
+    # NOTE1: since we want to check the firmware once it is written on flash, we
+    # have to sign its clear text form (and not the encrypted one).
+    # NOTE2: because of ECDSA limitations of the current javacard API, we cannot
+    # compute ECDSA on raw data since the card performs the hash function. Hence, we are
+    # deemed to compute ECDSA with double SHA-256:
+    # firmware_sig = ECDSA_SIG(SHA-256(header || firmware))
+    (to_sign, _, _) = sha256(libecc_header + firmware_chunk_size_str + firmware_to_sign)
+    sig = None
+    if USE_SIG_TOKEN == True:
+        sig, sw1, sw2  = scp_sig.token_sig_sign_firmware(to_sign)
+        if (sw1 != 0x90) or (sw2 != 0x00):
+            print("Error:  SIG token APDU error ...")
+            sys.exit(-1)
+        signed_data = to_sign + sig
+        resp, sw1, sw2 = scp_sig.token_sig_verify_firmware(signed_data) 
+        if (sw1 != 0x90) or (sw2 != 0x00):
+            print("Error:  SIG token APDU error ...")
+            sys.exit(-1)
+    else:
+        # Software ECDSA signature
+        ret_alg, ret_curve, prime, a, b, gx, gy, order, cofactor = get_curve_from_key(dec_firmware_sig_pub_key_data)
+        c = Curve(a, b, prime, order, cofactor, gx, gy, cofactor * order, ret_alg, None)
+        ecdsa_privkey = PrivKey(c, stringtoint(dec_firmware_sig_priv_key_data[3:3+32]))
+        ecdsa_keypair = KeyPair(None, ecdsa_privkey)
+        (sig, _) = ecdsa_sign(sha256, ecdsa_keypair, to_sign)
+
 
     sig_session_iv = None
-    # We first begin a signing session to get the iv and its MAC
+    # We first begin a signing session to get the iv and the header HMAC
     if USE_SIG_TOKEN == True:
-        sig_session_iv, sw1, sw2 = scp_sig.token_sig_begin_sign_session()
+        sig_session_iv, sw1, sw2 = scp_sig.token_sig_begin_sign_session(libecc_header + firmware_chunk_size_str + sig)
         if (sw1 != 0x90) or (sw2 != 0x00):
             print("Error:  SIG token APDU error ...")
             sys.exit(-1)
     else:
         # Generate random
         sig_session_iv = gen_rand_string(16)
-        # Compute its HMAC, and concatenate them
+        # Compute the HMAC, and concatenate them
         hm = local_hmac.new(dec_firmware_sig_sym_key_data, digestmod=hashlib.sha256)
-        hm.update(sig_session_iv)
+        hm.update(libecc_header + firmware_chunk_size_str + sig + sig_session_iv)
         sig_session_iv += hm.digest()
         
     iv = sig_session_iv[:16]
@@ -143,68 +193,5 @@ if __name__ == '__main__':
         encrypted_firmware += aes.encrypt(chunk)
         print("\tXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
 
-    # ======================
-    # We forge the encapsulated content
-    # [ the IV + the IV_MAC + the encrypted firmware ]
-    encapsulated_data = iv + iv_mac + expand(inttostring(firmware_chunk_size), 32, "LEFT") + encrypted_firmware
-
-    # ======================
-    # We forge the header
-    # Header = magic on 4 bytes || partition type on 4 bytes || version on 4 bytes || len of data after the header on 4 bytes || siglen on 4 bytes
-    # NOTE: this header is compatible with the libecc ec_utils original header
-    # Get the signature type (length and libECC parameters)
-    sigtype = None
-    if USE_SIG_TOKEN == True:
-        sigtype, sw1, sw2 = scp_sig.token_sig_get_sig_type()
-        if (sw1 != 0x90) or (sw2 != 0x00):
-            print("Error:  SIG token APDU error ...")
-            sys.exit(-1)
-    else:
-        sigtype = expand(inttostring(get_sig_len(dec_firmware_sig_priv_key_data)), 32, "LEFT") + dec_firmware_sig_priv_key_data[:2]
-    siglen = sigtype[:4]
-    libeccparams = sigtype[-2:]
-    # Sanity check on the ECDSA signature algorithm
-    the_sig = stringtoint(libeccparams[0])
-    if ((len(sigtype) != 6) or (the_sig != 0x01)):
-        print("Error: signature type %d sent by the card is not conforming to ECDSA ..." % (the_sig))
-        sys.exit(-1)
-        
-    # Sanity check
-    if len(encapsulated_data) >= (0x1 << 32):
-        print("Error: provided firmware size %d exceeds maximum allowed size ..." % (len(encapsulated_data)))
-        sys.exit(-1)
-   
-    encapsulated_data_len = expand(inttostring(len(encapsulated_data)), 32, "LEFT")
-    firmware_partition_type_str = expand(inttostring(firmware_partition_type), 32, "LEFT")
-    header = firmware_magic + firmware_partition_type_str + firmware_version + encapsulated_data_len + siglen
-    
-    # ======================
-    # The signature on the header + the IV + the IV_MAC + the CLEAR text firmware
-    # NOTE1: since we want to check the firmware once it is written on flash, we
-    # have to sign its clear text form (and not the encrypted one).
-    # NOTE2: because of ECDSA limitations of the current javacard API, we cannot
-    # compute ECDSA on raw data since the card performs the hash function. Hence, we are
-    # deemed to compute ECDSA with double SHA-256:
-    # firmware_sig = ECDSA_SIG(SHA-256(header || firmware))
-    (to_sign, _, _) = sha256(header + firmware_to_sign)
-    sig = None
-    if USE_SIG_TOKEN == True:
-        sig, sw1, sw2  = scp_sig.token_sig_sign_firmware(to_sign)
-        if (sw1 != 0x90) or (sw2 != 0x00):
-            print("Error:  SIG token APDU error ...")
-            sys.exit(-1)
-        signed_data = to_sign + sig
-        resp, sw1, sw2 = scp_sig.token_sig_verify_firmware(signed_data) 
-        if (sw1 != 0x90) or (sw2 != 0x00):
-            print("Error:  SIG token APDU error ...")
-            sys.exit(-1)
-    else:
-        # Software ECDSA signature
-        ret_alg, ret_curve, prime, a, b, gx, gy, order, cofactor = get_curve_from_key(dec_firmware_sig_pub_key_data)
-        c = Curve(a, b, prime, order, cofactor, gx, gy, cofactor * order, ret_alg, None)
-        ecdsa_privkey = PrivKey(c, stringtoint(dec_firmware_sig_priv_key_data[3:3+32]))
-        ecdsa_keypair = KeyPair(None, ecdsa_privkey)
-        (sig, _) = ecdsa_sign(sha256, ecdsa_keypair, to_sign)
-
-    # Save the signed firmware in a file
-    save_in_file(header + encapsulated_data + sig, firmware_to_sign_file+".signed")
+    # Save the hader and signed/encrypted firmware in a file
+    save_in_file(libecc_header + firmware_chunk_size_str + sig + sig_session_iv + encrypted_firmware, firmware_to_sign_file+".signed")
