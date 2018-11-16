@@ -148,6 +148,11 @@ foreach my $i (grep {!/_/} sort(keys(%hash))) {
 
   if ($hash{"${i}_NUMSLOTS"} != undef) {
     $num_slots = $hash{"${i}_NUMSLOTS"};
+    # DFU slots are 2*smallers than FW ones. if the task exists in both
+    # mode, it uses 2n slots in DFU mode for n slots in FW mode
+    if ($mode eq 'DFU' and defined($hash{"${i}_FW"})) {
+        $num_slots = $num_slots * 2;
+    }
   }
 
   if ($hash{"${i}_STACKSIZE"} != undef) {

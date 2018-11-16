@@ -43,6 +43,11 @@ for my $mode ("FW1", "FW2", "DFU1", "DFU2") {
     # Check if we have specific values for slot number and stack size
     # Or use default values
     my $num_slots = $hash{"${i}_NUMSLOTS"} // 1;
+    # DFU slots are 2*smallers than FW ones. if the task exists in both
+    # mode, it uses 2n slots in DFU mode for n slots in FW mode
+    if ($stem_mode eq 'DFU' and defined($hash{"${i}_FW"})) {
+        $num_slots = $num_slots * 2;
+    }
     my $stacksize = $hash{"${i}_STACKSIZE"} // 8192;
     my $totalslot = ${slot} + ${num_slots} - 1;
 
