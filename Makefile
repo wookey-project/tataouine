@@ -174,7 +174,10 @@ __prepare:
 	$(call cmd,mkobjlist_apps)
 	$(call cmd,mkobjlist_drvs)
 
-prepare: $(BUILD_DIR) __prepare layout libs $(CONFIG_PRIVATE_DIR)
+prepare: $(BUILD_DIR) __prepare layout devmap libs $(CONFIG_PRIVATE_DIR)
+
+devmap:
+	$(call cmd,devmap)
 
 # generate the memory layout for the target
 layout: $(MEM_LAYOUT_DEF)
