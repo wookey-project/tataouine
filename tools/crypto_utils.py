@@ -178,7 +178,7 @@ def enc_local_pet_key(pet_pin, salt, pbkdf2_iterations, master_symmetric_local_p
     enc_master_symmetric_local_pet_key = cipher1.encrypt(master_symmetric_local_pet_key[:16]) + cipher2.encrypt(master_symmetric_local_pet_key[16:32]) + cipher3.encrypt(master_symmetric_local_pet_key[32:48]) + cipher4.encrypt(master_symmetric_local_pet_key[48:])
     return enc_master_symmetric_local_pet_key
 
-# Decrypt the local pet key using PBKDF2 (and using optionnaly the external token)
+# Decrypt the local pet key using PBKDF2
 def dec_local_pet_key(pet_pin, salt, pbkdf2_iterations, enc_master_symmetric_local_pet_key):
     ## Master symmetric 'pet key' to be used for local credential encryption on the platform
     # Use PBKDF2-SHA-512 to derive our local encryption keys
@@ -199,7 +199,7 @@ def dec_local_pet_key(pet_pin, salt, pbkdf2_iterations, enc_master_symmetric_loc
 # [RB] FIXME: private and public keys lengths are hardcoded here ... we should be more flexible!
 # Same for PBKDF2 iterations.
 # These lengths should be infered from other files
-def decrypt_platform_data(encrypted_platform_bin_file, pin, data_type):
+def decrypt_platform_data(encrypted_platform_bin_file, pin, data_type, override_local_pet_key_handler=None, card=None):
     data = read_in_file(encrypted_platform_bin_file)
     index = 0
     decrypt_platform_data.iv = data[index:index+16]
@@ -218,7 +218,7 @@ def decrypt_platform_data(encrypted_platform_bin_file, pin, data_type):
     if (data_type == "dfu") or (data_type == "sig"):
         firmware_sig_pub_key_data = data[index:index+99]
         index += 99
-    # Do we have other keys to decrypt (if we do not use a sig token)
+    # Do we have other keys to decrypt? (if we do not use a sig token)
     firmware_sig_priv_key_data = None
     firmware_sig_sym_key_data = None
     encrypted_local_pet_key_data = None
@@ -231,7 +231,10 @@ def decrypt_platform_data(encrypted_platform_bin_file, pin, data_type):
         index += 64
     # Derive the decryption key
     pbkdf2_iterations = 4096
-    dk = dec_local_pet_key(pin, salt, pbkdf2_iterations, encrypted_local_pet_key_data)
+    if card == None:
+        dk = dec_local_pet_key(pin, salt, pbkdf2_iterations, encrypted_local_pet_key_data)
+    else:
+        dk = override_local_pet_key_handler(pin, salt, pbkdf2_iterations, encrypted_local_pet_key_data, card, data_type)
     # Now compute and check the HMAC, and decrypt local data
     hmac_key = dk[32:]
     # Check the mac tag
