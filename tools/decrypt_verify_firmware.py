@@ -68,18 +68,6 @@ if __name__ == '__main__':
     if ret_alg != "ECDSA":
         print("Error: asked signature algorithm is not supported (not ECDSA)")
         sys.exit(-1)
-    # Now check the signature
-    (to_verify, _, _) = sha256(firmware_to_decrypt[:-siglen])
-
-    # Verify ECDSA_VERIF(SHA-256(to_verify))
-    c = Curve(a, b, prime, order, cofactor, gx, gy, cofactor * order, ret_alg, None)
-    ecdsa_pubkey = PubKey(c, Point(c, stringtoint(firmware_sig_pub_key_data[3:3+32]), stringtoint(firmware_sig_pub_key_data[3+32:3+64])))
-    ecdsa_keypair = KeyPair(ecdsa_pubkey, None)
-    if ecdsa_verify(sha256, ecdsa_keypair, to_verify, signature) == False:
-        print("Error: bad signature for %s" % (firmware_to_decrypt_file))
-        sys.exit(-1) 
-    else: 
-        print("  [Signature for %s is OK!]  " % (firmware_to_decrypt_file))
 
     # The encapsulated content is [ IV + MAC(IV) + MAX_CHUNK_SIZE(4 bytes) + ENC(firmware) ]
     iv = encapsulated_content[:16]
@@ -128,6 +116,21 @@ if __name__ == '__main__':
         aes = local_AES.new(chunk_key, AES.MODE_CTR, iv=chunk_iv)
         decrypted_firmware += aes.decrypt(chunk)
         print("\tXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
+
+    # Now check the signature on the decrypted firmware with the header
+    # NOTE1: since we want to check the firmware once it is written on flash, we
+    # have to sign its clear text form (and not the encrypted one).
+    (to_verify, _, _) = sha256(header + decrypted_firmware)
+
+    # Verify ECDSA_VERIF(SHA-256(to_verify))
+    c = Curve(a, b, prime, order, cofactor, gx, gy, cofactor * order, ret_alg, None)
+    ecdsa_pubkey = PubKey(c, Point(c, stringtoint(firmware_sig_pub_key_data[3:3+32]), stringtoint(firmware_sig_pub_key_data[3+32:3+64])))
+    ecdsa_keypair = KeyPair(ecdsa_pubkey, None)
+    if ecdsa_verify(sha256, ecdsa_keypair, to_verify, signature) == False:
+        print(("\033[1;41m "+"[Error: bad signature for %s]"+"\033[1;m") % (firmware_to_decrypt_file))
+        sys.exit(-1) 
+    else: 
+        print(("\033[1;42m"+"[Signature for %s is OK!]  "+"\033[1;m") % (firmware_to_decrypt_file))
 
     # Save the file
     save_in_file(decrypted_firmware, firmware_to_decrypt_file+".decrypted")

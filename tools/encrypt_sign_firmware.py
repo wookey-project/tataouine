@@ -179,12 +179,14 @@ if __name__ == '__main__':
     header = firmware_magic + firmware_partition_type_str + firmware_version + encapsulated_data_len + siglen
     
     # ======================
-    # The signature on the header + the IV + the IV_MAC + the encrypted firmware
-    # NOTE: because of ECDSA limitations of the current javacard API, we cannot
+    # The signature on the header + the IV + the IV_MAC + the CLEAR text firmware
+    # NOTE1: since we want to check the firmware once it is written on flash, we
+    # have to sign its clear text form (and not the encrypted one).
+    # NOTE2: because of ECDSA limitations of the current javacard API, we cannot
     # compute ECDSA on raw data since the card performs the hash function. Hence, we are
     # deemed to compute ECDSA with double SHA-256:
     # firmware_sig = ECDSA_SIG(SHA-256(header || firmware))
-    (to_sign, _, _) = sha256(header + encapsulated_data)
+    (to_sign, _, _) = sha256(header + firmware_to_sign)
     sig = None
     if USE_SIG_TOKEN == True:
         sig, sw1, sw2  = scp_sig.token_sig_sign_firmware(to_sign)
