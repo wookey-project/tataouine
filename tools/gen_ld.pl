@@ -127,7 +127,7 @@ foreach my $i (grep {!/_/} sort(keys(%hash))) {
   next if (not defined($hash{"${i}_${mode}"}));
   print $OUTHDR_ADA "
    ${i}_name : t_task_name :=
-      \"${i}\" \& \"" . " " x (8 - length(${i})) . "\";";
+      \"${i}\" \& \"" . " " x (10 - length(${i})) . "\";";
 }
 
 print $OUTHDR_ADA "
