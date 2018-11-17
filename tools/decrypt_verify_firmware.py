@@ -36,12 +36,12 @@ if __name__ == '__main__':
         ONLY_INFO = True
     # Parse the header
     # Header = magic on 4 bytes || partition type on 4 bytes || version on 4 bytes || len of data after the header on 4 bytes || siglen on 4 bytes
-    libecc_header = firmware_to_decrypt[:4*5]
-    magic =  libecc_header[:4+(0*4)]
-    partition_type =  libecc_header[4+(0*4):4+(1*4)]
-    version = libecc_header[4+(1*4):4+(2*4)]
-    data_len = libecc_header[4+(2*4):4+(3*4)]
-    siglen = libecc_header[4+(3*4):4+(4*4)]
+    header = firmware_to_decrypt[:firmware_header_layout['CHUNKSIZE_OFFSET']]
+    magic =  header[firmware_header_layout['MAGIC_OFFSET'] : firmware_header_layout['MAGIC_OFFSET'] + firmware_header_layout['MAGIC_SIZE']]
+    partition_type =  header[firmware_header_layout['TYPE_OFFSET'] : firmware_header_layout['TYPE_OFFSET'] + firmware_header_layout['TYPE_SIZE']]
+    version = header[firmware_header_layout['VERSION_OFFSET'] : firmware_header_layout['VERSION_OFFSET'] + firmware_header_layout['VERSION_SIZE']]
+    data_len = header[firmware_header_layout['LEN_OFFSET'] : firmware_header_layout['LEN_OFFSET'] + firmware_header_layout['LEN_SIZE']]
+    siglen = header[firmware_header_layout['SIGLEN_OFFSET'] : firmware_header_layout['SIGLEN_OFFSET'] + firmware_header_layout['SIGLEN_SIZE']]
 
     def inverse_mapping(f):
         return f.__class__(map(reversed, f.items()))
@@ -55,10 +55,16 @@ if __name__ == '__main__':
     # Now extract the signature and parse the content
     data_len = stringtoint(data_len)
     siglen = stringtoint(siglen)
-    encapsulated_content = firmware_to_decrypt[(4*5)+4+siglen:]
-    firmware_chunk_size_str = firmware_to_decrypt[(4*5):(4*5)+4]
+    firmware_chunk_size_str = firmware_to_decrypt[firmware_header_layout['CHUNKSIZE_OFFSET'] : firmware_header_layout['CHUNKSIZE_OFFSET'] + firmware_header_layout['CHUNKSIZE_SIZE']]
     firmware_chunk_size = stringtoint(firmware_chunk_size_str)
-    signature = firmware_to_decrypt[(4*5)+4:(4*5)+4+siglen]
+    # Extract the chunk size, the IV and the HMAC
+    iv = firmware_to_decrypt[firmware_header_layout['IV_OFFSET'] : firmware_header_layout['IV_OFFSET'] + firmware_header_layout['IV_SIZE']:]
+    hmac = firmware_to_decrypt[firmware_header_layout['HMAC_OFFSET'] : firmware_header_layout['HMAC_OFFSET'] + firmware_header_layout['HMAC_SIZE']]
+    # Extract the signature
+    signature = firmware_to_decrypt[firmware_header_layout['SIG_OFFSET'] : firmware_header_layout['SIG_OFFSET'] + siglen]
+    # Extract the remaining data
+    encrypted_content = encapsulated_content = firmware_to_decrypt[firmware_header_layout['SIG_OFFSET'] + siglen:]
+
     if len(encapsulated_content) != data_len:
         print("Error: encapsulated firmware length %d does not match the one in the header %d!" % (len(encapsulated_content), data_len))
         sys.exit(-1)
@@ -71,13 +77,8 @@ if __name__ == '__main__':
         print("Error: asked signature algorithm is not supported (not ECDSA)")
         sys.exit(-1)
 
-    # Extract the chunk size, the IV and the HMAC
-    iv = encapsulated_content[:16]
-    hmac = encapsulated_content[16:16+32]
-    encrypted_content = encapsulated_content[16+32:]
-
     print("IV            : 0x" + local_hexlify(iv))
-    print("IV_HMAC       : 0x" + local_hexlify(hmac))
+    print("HMAC          : 0x" + local_hexlify(hmac))
     print("Chunk size    : %d" % (firmware_chunk_size))
     print("Signature     : 0x" + local_hexlify(signature))
     
@@ -88,7 +89,7 @@ if __name__ == '__main__':
     # Ask the DFU token to begin a session
     card = connect_to_token("DFU")
     scp_dfu = token_full_unlock(card, "dfu", keys_path+"/DFU/encrypted_platform_dfu_keys.bin") # pet_pin="1234", user_pin="1234", force_pet_name_accept = True)
-    resp, sw1, sw2 = scp_dfu.token_dfu_begin_decrypt_session(libecc_header + firmware_chunk_size_str + signature + iv + hmac)
+    resp, sw1, sw2 = scp_dfu.token_dfu_begin_decrypt_session(header + firmware_chunk_size_str + iv + hmac + signature)
     if (sw1 != 0x90) or (sw2 != 0x00):
         print("Error:  DFU token APDU error ...")
         sys.exit(-1)
@@ -120,7 +121,7 @@ if __name__ == '__main__':
     # Now check the signature on the decrypted firmware with the header
     # NOTE1: since we want to check the firmware once it is written on flash, we
     # have to verify its clear text form (and not the encrypted one).
-    (to_verify, _, _) = sha256(libecc_header + firmware_chunk_size_str + decrypted_firmware)
+    (to_verify, _, _) = sha256(header + firmware_chunk_size_str + decrypted_firmware)
 
     # Verify ECDSA_VERIF(SHA-256(to_verify))
     c = Curve(a, b, prime, order, cofactor, gx, gy, cofactor * order, ret_alg, None)

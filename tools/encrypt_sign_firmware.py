@@ -81,11 +81,11 @@ if __name__ == '__main__':
 
     # ======================
     # Structure of a signed image is:
-    # Header + MAX_CHUNK_SIZE(4 bytes) + SIG + IV + HMAC(previous) + ENC(firmware)
+    # Header + MAX_CHUNK_SIZE(4 bytes) + IV + HMAC(previous) + SIG + ENC(firmware)
     # The signature covers Header + MAX_CHUNK_SIZE + firmware
 
     # ======================
-    # We forge the basic libecc_header = magic on 4 bytes || partition type on 4 bytes || version on 4 bytes || len of data after the header on 4 bytes || siglen on 4 bytes
+    # We forge the basic header = magic on 4 bytes || partition type on 4 bytes || version on 4 bytes || len of data after the header on 4 bytes || siglen on 4 bytes
     sigtype = None
     if USE_SIG_TOKEN == True:
         sigtype, sw1, sw2 = scp_sig.token_sig_get_sig_type()
@@ -102,8 +102,8 @@ if __name__ == '__main__':
         print("Error: signature type %d sent by the card is not conforming to ECDSA ..." % (the_sig))
         sys.exit(-1)
 
-    data_len_encapsulated = expand(inttostring(len(firmware_to_sign) + 16 + 32), 32, "LEFT")
-    libecc_header = firmware_magic + expand(inttostring(firmware_partition_type), 32, "LEFT") + firmware_version + data_len_encapsulated + siglen
+    data_len_encapsulated = expand(inttostring(len(firmware_to_sign)), 32, "LEFT")
+    header = firmware_magic + expand(inttostring(firmware_partition_type), 32, "LEFT") + firmware_version + data_len_encapsulated + siglen
 
     # ======================
     # The signature on the header + chunk_size + the CLEAR text firmware
@@ -113,7 +113,7 @@ if __name__ == '__main__':
     # compute ECDSA on raw data since the card performs the hash function. Hence, we are
     # deemed to compute ECDSA with double SHA-256:
     # firmware_sig = ECDSA_SIG(SHA-256(header || firmware))
-    (to_sign, _, _) = sha256(libecc_header + firmware_chunk_size_str + firmware_to_sign)
+    (to_sign, _, _) = sha256(header + firmware_chunk_size_str + firmware_to_sign)
     sig = None
     if USE_SIG_TOKEN == True:
         sig, sw1, sw2  = scp_sig.token_sig_sign_firmware(to_sign)
@@ -137,7 +137,7 @@ if __name__ == '__main__':
     sig_session_iv = None
     # We first begin a signing session to get the iv and the header HMAC
     if USE_SIG_TOKEN == True:
-        sig_session_iv, sw1, sw2 = scp_sig.token_sig_begin_sign_session(libecc_header + firmware_chunk_size_str + sig)
+        sig_session_iv, sw1, sw2 = scp_sig.token_sig_begin_sign_session(header + firmware_chunk_size_str + sig)
         if (sw1 != 0x90) or (sw2 != 0x00):
             print("Error:  SIG token APDU error ...")
             sys.exit(-1)
@@ -146,11 +146,8 @@ if __name__ == '__main__':
         sig_session_iv = gen_rand_string(16)
         # Compute the HMAC, and concatenate them
         hm = local_hmac.new(dec_firmware_sig_sym_key_data, digestmod=hashlib.sha256)
-        hm.update(libecc_header + firmware_chunk_size_str + sig + sig_session_iv)
+        hm.update(header + firmware_chunk_size_str + sig_session_iv + sig)
         sig_session_iv += hm.digest()
-        
-    iv = sig_session_iv[:16]
-    iv_mac = sig_session_iv[16:]
 
     # ======================
     # The encryption of the firmware chunks of 
@@ -193,5 +190,5 @@ if __name__ == '__main__':
         encrypted_firmware += aes.encrypt(chunk)
         print("\tXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
 
-    # Save the hader and signed/encrypted firmware in a file
-    save_in_file(libecc_header + firmware_chunk_size_str + sig + sig_session_iv + encrypted_firmware, firmware_to_sign_file+".signed")
+    # Save the header and signed/encrypted firmware in a file
+    save_in_file(header + firmware_chunk_size_str + sig_session_iv + sig + encrypted_firmware, firmware_to_sign_file+".signed")
