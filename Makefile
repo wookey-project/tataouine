@@ -174,7 +174,7 @@ __prepare:
 	$(call cmd,mkobjlist_apps)
 	$(call cmd,mkobjlist_drvs)
 
-prepare: $(BUILD_DIR) __prepare layout devmap libs $(CONFIG_PRIVATE_DIR)
+prepare: $(BUILD_DIR) __prepare layout devmap $(CONFIG_PRIVATE_DIR) libs 
 
 devmap:
 	$(call cmd,devmap)
