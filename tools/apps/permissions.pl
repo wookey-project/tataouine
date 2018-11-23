@@ -109,7 +109,7 @@ sub parse_ressource_perms
       $perm_mem_dmap = 1;
   }
   # generate the register
-  $register = ($perm_dev_dma << 31) | ($perm_dev_crypto << 29) | ($perm_dev_bus << 28) | ($perm_dev_exti << 27) | ($perm_dev_tim << 26) | ($perm_tim_cycles << 22) | ($perm_tsk_fisr << 15) | ($perm_tsk_fipc << 14) | ($perm_tsk_rst << 13) | ($perm_tsk_upg << 12) | ($perm_tsk_rng << 12) | ($perm_mem_dmap << 7);
+  $register = ($perm_dev_dma << 31) | ($perm_dev_crypto << 29) | ($perm_dev_bus << 28) | ($perm_dev_exti << 27) | ($perm_dev_tim << 26) | ($perm_tim_cycles << 22) | ($perm_tsk_fisr << 15) | ($perm_tsk_fipc << 14) | ($perm_tsk_rst << 13) | ($perm_tsk_upg << 12) | ($perm_tsk_rng << 11) | ($perm_mem_dmap << 7);
   return $register;
 }
 
