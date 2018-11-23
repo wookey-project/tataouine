@@ -279,7 +279,7 @@ sub generate_ada_ressource_perm
   my $outfile=shift;
   my $register = 0;
 
-  my $string = "   ressource_perm_register_tab : array (t_real_task_id'range) of t_ressource_reg :=\n      (\n";
+  my $string = "   ressource_perm_register_tab : constant array (t_real_task_id'range) of t_ressource_reg :=\n      (\n";
   my $appid = 1;
 
   foreach my $app (grep {!/_/} sort(keys(%hash)))
