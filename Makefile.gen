@@ -380,6 +380,9 @@ endif
 
 javacard: javacard_compile javacard_push
 
+sanitize:
+	scan-build --use-cc=$(CROSS_COMPILE)gcc -o $(APP_BUILD_DIR)/scan make
+
 #
 ##rust toolchain
 #RUSTBUILD=$(shell rustc --version |sed -n 's/^rustc [^ ]* (\([^ ]*\) .*)$$/\1/p')
