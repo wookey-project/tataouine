@@ -322,7 +322,7 @@ dumpconfig:
 # See the various README for complete information
 
 burn: $(BUILD_DIR)/$(BIN_NAME)
-	$(STFLASH) write $(BUILD_DIR)/$(BIN_NAME) 0x8000000
+	$(ST_FLASH) write $(BUILD_DIR)/$(BIN_NAME) 0x8000000
 
 flash: burn
 
