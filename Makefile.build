@@ -40,10 +40,10 @@ quiet_cmd_gnat_o_ada    = GNAT     $@
 quiet_cmd_buildapp      = APP     $@
       cmd_buildapp      = cp $(BUILD_DIR)/libs/*/lib*.a $(BUILD_DIR)/apps/$@; \
 						  cp $(BUILD_DIR)/drivers/*/lib*.a $(BUILD_DIR)/apps/$@; \
-						  if [ -f $(BUILD_DIR)/apps/$@/$@.fw1.ld ]; then make -C $@ all EXTRA_LDFLAGS="-T$@.fw1.ld -DMODE_FW" APP_NAME=$@.fw1; fi; \
-						  if [ ! -z "$(CONFIG_FIRMWARE_DUALBANK)" ]; then if [ -f $(BUILD_DIR)/apps/$@/$@.fw2.ld ]; then make -C $@ all EXTRA_LDFLAGS="-T$@.fw2.ld -DMODE_FW" APP_NAME=$@.fw2; fi; fi; \
+						  if [ -f $(BUILD_DIR)/apps/$@/$@.fw1.ld ]; then make -C $@ all EXTRA_LDFLAGS="-T$@.fw1.ld" APP_NAME=$@.fw1; fi; \
+						  if [ ! -z "$(CONFIG_FIRMWARE_DUALBANK)" ]; then if [ -f $(BUILD_DIR)/apps/$@/$@.fw2.ld ]; then make -C $@ all EXTRA_LDFLAGS="-T$@.fw2.ld" APP_NAME=$@.fw2; fi; fi; \
 						  if [ -f $(BUILD_DIR)/apps/$@/$@.dfu1.ld ]; then make -C $@ all EXTRA_LDFLAGS="-T$@.dfu1.ld -DMODE_DFU" APP_NAME=$@.dfu1; fi; \
-						  if [ ! -z "$(CONFIG_FIRMWARE_DUALBANK)" ]; then if [ -f $(BUILD_DIR)/apps/$@/$@.dfu2.ld ]; then make -C $@ all EXTRA_LDFLAGS="-T$@.dfu2.ld -DMODE_DFU" APP_NAME=$@.dfu2; fi; fi
+						  if [ ! -z "$(CONFIG_FIRMWARE_DUALBANK)" ]; then if [ -f $(BUILD_DIR)/apps/$@/$@.dfu2.ld ]; then make -C $@ all EXTRA_LDFLAGS="-T$@.dfu2.ld" APP_NAME=$@.dfu2; fi; fi
 
 # linking
 quiet_cmd_ldscript      = LDSCRIPT $@
@@ -62,7 +62,7 @@ quiet_cmd_gnat_o_ali    = GNATBIND $@
 # of syms when generating the firmware. as they are resolved at link time,
 # they can be prefixed after without arm
 quiet_cmd_link_o_target = LD       $@
-      cmd_link_o_target = $(CC) $(LDFLAGS) $(ARCH_OBJ) $(ROBJ) $(SOBJ) $(OBJ) $(DRVOBJ) $(CORE_OBJ) $(SOC_OBJ) $(BOARD_OBJ) $(LD_LIBS) -o $@
+      cmd_link_o_target = $(CROSS_COMPILE)gcc $(LDFLAGS) $(ARCH_OBJ) $(ROBJ) $(SOBJ) $(OBJ) $(DRVOBJ) $(CORE_OBJ) $(SOC_OBJ) $(BOARD_OBJ) $(LD_LIBS) -o $@
 
 # ADA linking
 quiet_cmd_adalink_o_target = ADALD    $@

@@ -45,6 +45,18 @@ export ST_UTIL="/usr/local/bin/st-flash"
 
 export CROSS_COMPILE="arm-none-eabi-"
 
+# 6) By default, the SDK is using GCC for cross-compiling. It is possible to
+# use LLVM to get a better static analysis through clang and build-check.
+# Although, *this requires clang 7 and higher*.
+# set this variable to 'y' if you which to use LLVM/Clang instead of gcc
+
+export USE_LLVM=n
+
+# 7) Specify clang path, if you clang installation is not standard (multiple
+# versions, etc.).
+#
+export CLANG_PATH="/usr/bin/clang"
+
 # All the above variables are "standard values". Now you can override any of
 # them by rewriting 'export VARNAME="content" on your own setenv.local.sh file
 # if needed to overload any of the above. For that, just create the setenv.local.sh
@@ -65,5 +77,7 @@ echo "  ADA_RUNTIME   = $ADA_RUNTIME"
 echo "  ST_FLASH      = $ST_FLASH"
 echo "  ST_UTIL       = $ST_UTIL"
 echo "  CROSS_COMPILE = $CROSS_COMPILE"
+echo "  USE_LLVM      = $USE_LLVM"
+echo "  CLANG_PATH    = $CLANG_PATH"
 echo
 echo "========================================================="
