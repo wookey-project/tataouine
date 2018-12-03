@@ -52,6 +52,8 @@ source "kernel/Kconfig"
 
 endmenu
 
+source "loader/Kconfig"
+
 menu "Userspace drivers and features"
 
 source "drivers/Kconfig"
