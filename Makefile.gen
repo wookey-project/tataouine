@@ -36,15 +36,8 @@ export quiet Q KBUILD_VERBOSE MAKE MAKEFLAGS
 include $(PROJ_FILES)/tools/Kbuild.include
 include $(PROJ_FILES)/Makefile.build
 
-#including all source files to build, based on kconfig
-# this permit kconfig based C file inclusion
--include $(PROJ_FILES)/kernel/arch/socs/$(SOC)/Makefile.objs
--include $(PROJ_FILES)/kernel/arch/cores/$(ARCH)/Makefile.objs
--include $(PROJ_FILES)/kernel/arch/boards/Makefile.objs
-
 # generic CFLAGS
 CFLAGS += -I$(PROJ_FILES)/include/generated
-CFLAGS += -I$(PROJ_FILES)/kernel/arch
 CFLAGS += $(DEBUG_CFLAGS)
 
 # GENERIC TARGETS
