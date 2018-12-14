@@ -94,7 +94,7 @@ foreach my $i (grep {!/_/} sort(keys(%hash))) {
 
     $i = lc($i);
 
-    open OBJDUMP, "arm-none-eabi-objdump -h build/$arch/$board/apps/$i/$i.$firmnum.elf |"
+    open OBJDUMP, "$ENV{'CROSS_COMPILE'}objdump -h build/$arch/$board/apps/$i/$i.$firmnum.elf |"
         or die "Couldn't execute program: $!";
 
     while (defined (my $line = <OBJDUMP>)) {

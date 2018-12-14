@@ -44,8 +44,11 @@ export ST_UTIL="/usr/local/bin/st-flash"
 # This variable is used only for the C compiler (not for Ada which is using its
 # own in its gpr files). Depending on your C cross-compiler installation, this
 # prefix may varies.
+# WARNING: if you use the Ada toochain, please be sure to use the Ada toolchain C compiler
+# to avoid unexpected link and run problems due to incompatible compilers versions.
+# The AdaCore Ada toolchain is using the arm-eabi- prefix for its toolchain
 
-export CROSS_COMPILE="arm-none-eabi-"
+export CROSS_COMPILE="arm-eabi-"
 
 # 6) By default, the SDK is using GCC for cross-compiling. It is possible to
 # use LLVM to get a better static analysis through clang and build-check.
@@ -67,6 +70,14 @@ export CLANG_PATH="/usr/bin/clang"
 # overriding the above variable with the user configuration, if the file exists.
 if test -f setenv.local.sh; then
   source setenv.local.sh
+fi
+
+which ${CROSS_COMPILE}gcc > /dev/null
+if [ $? -ne 0 ]; then
+    echo "ERROR: your cross-toolchain is not in your path !"
+    echo "please update your PATH variable first by including your cross-toolchain"
+    echo "bin/ directory"
+    return 1
 fi
 
 # Let's print you current configuration

@@ -194,7 +194,7 @@ foreach my $i (grep {!/_/} sort(keys(%hash))) {
   # generate the register
   $register = ($perm_dev_dma << 31) | ($perm_dev_crypto << 29) | ($perm_dev_bus << 28) | ($perm_dev_exti << 27) | ($perm_dev_tim << 26) | ($perm_tim_cycles << 22) | ($perm_tsk_fisr << 15) | ($perm_tsk_fipc << 14) | ($perm_tsk_fc << 13);
 
-  my $startisr = `arm-none-eabi-nm -a build/$arch/$board/apps/\L$i\E/\L$i\E.${firmnum}.elf |grep "do_startisr"|awk '{ print \$1  }'`;
+  my $startisr = `$ENV{'CROSS_COMPILE'}nm -a build/$arch/$board/apps/\L$i\E/\L$i\E.${firmnum}.elf |grep "do_startisr"|awk '{ print \$1  }'`;
   chomp($startisr);
 
   print $OUTHDR "  { \"APPNAME\", $slot, $domain, $priority, 0x$startisr,  $num_slots, $stacksize, $register }," =~ s/APPNAME/\L$i\E/gr;
