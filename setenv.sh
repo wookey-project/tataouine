@@ -1,5 +1,7 @@
 #!/usr/bin/env sh
 
+export WOOKEY_ENV=true
+
 # this is the script for setting user environment in order to set the various
 # tools paths and names
 # this script is separated from the Kconfig content in order to allow the user

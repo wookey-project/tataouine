@@ -114,7 +114,7 @@ TODEL_DISTCLEAN = .config include $(CONFIG_BUILD_DIR) $(CONFIG_PRIVATE_DIR)
 # be enough by now
 # as nearly any modification of the configuration require a kernel recompilation,
 # we clean the kernel build dir.
-menuconfig:
+menuconfig: check-env
 	rm -rf $(BUILD_DIR)/kernel
 	$(call cmd,kconf_app_gen)
 	$(call cmd,kconf_drv_gen)
@@ -131,9 +131,9 @@ menuconfig:
 # from now on, a config file must exists before executing one of the following
 # rules
 ifeq ($(CONFIG_DONE),y)
-all: clean_kernel_headers prepare $(BUILD_DIR)/$(BIN_NAME)
+all: check-env clean_kernel_headers prepare $(BUILD_DIR)/$(BIN_NAME)
 else
-all:
+all: check-env
 	@echo "###########################################"
 	@echo "# Wookey SDK information"
 	@echo "###########################################"
@@ -416,4 +416,9 @@ $(CONFIG_PRIVATE_DIR):
 		mkdir $(PROJ_FILES)/$@; $(MAKE) genkeys; \
 	  fi; \
 	fi
+
+check-env:
+ifndef WOOKEY_ENV
+	$(error Please, edit 'setenv.sh' and run '. setenv.sh')
+endif
 
