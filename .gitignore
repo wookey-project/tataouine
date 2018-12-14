@@ -27,3 +27,4 @@ doc/
 setenv.local.sh
 tools/__pycache__
 tools/*.pyc
+gdb.cf
