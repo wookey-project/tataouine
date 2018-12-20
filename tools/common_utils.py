@@ -83,5 +83,3 @@ def local_unhexlify(str_in):
         return binascii.unhexlify(str_in)
     else:
         return (binascii.unhexlify(str_in.encode('latin-1'))).decode('latin-1')
-        
-

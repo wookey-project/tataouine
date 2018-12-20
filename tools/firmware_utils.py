@@ -2,11 +2,8 @@ from common_utils import *
 
 # The partition types
 partitions_types = {
-    'FW1'      : 0,
-    'FW2'      : 1,
-    'DFU1'     : 2,
-    'DFU2'     : 3,
-    'SHR'      : 4,
+    'FLIP'      : 0,
+    'FLOP'      : 1,
 }
 
 # The firmware header layout
