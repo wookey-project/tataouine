@@ -6,9 +6,6 @@ from subprocess import Popen, PIPE, STDOUT
 from threading import Timer
 import math
 
-from builtins import input
-
-
 # Import our ECC python primitives
 sys.path.append(os.path.abspath(os.path.dirname(sys.argv[0])) + "/" + "../externals/libecc/scripts/")
 from expand_libecc import *
