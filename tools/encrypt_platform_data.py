@@ -38,7 +38,7 @@ def encrypt_platform_data(argv):
     firmware_sig_pub_key = None
     outfile_base      = argv[7]
     curve_name        = argv[8]
-    pbkdf2_iterations = int(argv[9])
+    pbkdf2_iterations = int(argv[9], 0)
     applet_type       = argv[10]
     firmware_sig_priv_key  = None
     firmware_sig_sym_key   = None

@@ -22,10 +22,10 @@ if __name__ == '__main__':
         PrintUsage()
     keys_path = sys.argv[1]
     firmware_to_sign_file = sys.argv[2]
-    firmware_magic = int(sys.argv[3])
+    firmware_magic = int(sys.argv[3], 0)
     firmware_partition_type = sys.argv[4]
-    firmware_version = int(sys.argv[5])
-    firmware_chunk_size = int(sys.argv[6])
+    firmware_version = int(sys.argv[5], 0)
+    firmware_chunk_size = int(sys.argv[6], 0)
     # Default values for the DFU suffix
     usb_vid = usb_pid = 0xffff
     if len(sys.argv) > 7:
@@ -203,9 +203,13 @@ if __name__ == '__main__':
         encrypted_firmware += aes.encrypt(chunk)
         print("\tXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
 
+    # The header is zero padded to a crypto chunk size in order to properly deal with alignment issues
+    full_header = header + firmware_chunk_size_str + sig_session_iv + sig
+    full_header_padding_len = firmware_chunk_size - (len(full_header) % firmware_chunk_size)
+    padded_full_header = full_header + ('\x00' * full_header_padding_len)
     # Compute the DFU suffix on 16 bytes
     dfu_suffix = inttostring(0xffff) + expand(inttostring(usb_pid), 16, "LEFT")[::-1] + expand(inttostring(usb_vid), 16, "LEFT")[::-1] + "\x00\x01\x55\x46\x44\x10"
-    to_save = header + firmware_chunk_size_str + sig_session_iv + sig + encrypted_firmware + dfu_suffix
+    to_save = padded_full_header + encrypted_firmware + dfu_suffix
     dfu_suffix_crc32 = expand(inttostring(dfu_crc32_update(to_save, 0xffffffff)), 32, "LEFT")[::-1]
     # Save the header and signed/encrypted firmware in a file
     save_in_file(to_save + dfu_suffix_crc32, firmware_to_sign_file+".signed")

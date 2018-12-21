@@ -46,8 +46,8 @@ def Key2Java(argv):
     shared_userpin    = argv[6]
     master_secret_key = argv[7]
     enc_local_pet_key = argv[8]
-    max_pin_tries     = int(argv[9])
-    max_secure_channel_tries = int(argv[10])
+    max_pin_tries     = int(argv[9], 0)
+    max_secure_channel_tries = int(argv[10], 0)
     outfile           = argv[11]
     applet_type       = argv[12]
     sig_priv_key = None

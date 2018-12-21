@@ -67,11 +67,23 @@ if __name__ == '__main__':
     hmac = firmware_to_decrypt[firmware_header_layout['HMAC_OFFSET'] : firmware_header_layout['HMAC_OFFSET'] + firmware_header_layout['HMAC_SIZE']]
     # Extract the signature
     signature = firmware_to_decrypt[firmware_header_layout['SIG_OFFSET'] : firmware_header_layout['SIG_OFFSET'] + siglen]
-    # Extract the remaining data
-    encrypted_content = encapsulated_content = firmware_to_decrypt[firmware_header_layout['SIG_OFFSET'] + siglen:]
+    # Extract the remaining data. The header should be padded to the crypto chunk size
+    padded_encrypted_content = firmware_to_decrypt[firmware_header_layout['SIG_OFFSET'] + siglen:]
+    if len(firmware_to_decrypt) < firmware_chunk_size:
+        print("Error: encrypted firmware length %d is not consistent (should be greater than chunk size %d)" % (len(firmware_to_decrypt), firmware_chunk_size))
+        sys.exit(-1)
+    header_len = firmware_header_layout['SIG_OFFSET'] + siglen
+    header_padding_len = firmware_chunk_size - (header_len % firmware_chunk_size)
+    padding = firmware_to_decrypt[header_len:header_len+header_padding_len]
+    # Sanity check: check that our padding is indeed zero ...
+    if padding != (header_padding_len*'\x00'):
+        print("Error: bad header padding (non zero) ...")
+        sys.exit(-1)  
+    # Extract the encapsulated content
+    encrypted_content = firmware_to_decrypt[header_len+header_padding_len:]
 
-    if len(encapsulated_content) != data_len:
-        print("Error: encapsulated firmware length %d does not match the one in the header %d!" % (len(encapsulated_content), data_len))
+    if len(encrypted_content) != data_len:
+        print("Error: encrypted firmware length %d does not match the one in the header %d!" % (len(encrypted_content), data_len))
         sys.exit(-1)
     # Now extract the signature information from the public key
     SCRIPT_PATH = os.path.abspath(os.path.dirname(sys.argv[0])) + "/"
