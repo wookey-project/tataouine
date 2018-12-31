@@ -120,7 +120,7 @@ if __name__ == '__main__':
     decrypted_firmware = ""
     for i in range(0, n_chunks):
         print("\tXXXXXXXXXXXXXXXXX DECRYPTING CHUNK %04x XXXXXXXXXXXXXXXXX" % (i))
-        chunk_key, sw1, sw2 = scp_dfu.token_dfu_derive_key()
+        chunk_key, sw1, sw2 = scp_dfu.token_dfu_derive_key(i)
         if (sw1 != 0x90) or (sw2 != 0x00):
             print("Error:  DFU token APDU error ...")
             sys.exit(-1)

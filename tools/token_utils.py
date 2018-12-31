@@ -446,12 +446,12 @@ class SCP:
             # This is an error
             return None, None, None
         return self.send(token_ins(self.token_type, "TOKEN_INS_BEGIN_DECRYPT_SESSION", data=header_data)) 
-    def token_dfu_derive_key(self):
+    def token_dfu_derive_key(self, chunk_num):
         if self.token_type != "dfu":
             print("DFU Token Error: asked for TOKEN_INS_DERIVE_KEY for non DFU token ("+self.token_type.upper()+")")
             # This is an error
             return None, None, None
-        return self.send(token_ins(self.token_type, "TOKEN_INS_DERIVE_KEY")) 
+        return self.send(token_ins(self.token_type, "TOKEN_INS_DERIVE_KEY", data=chr((chunk_num >> 8) & 0xff)+chr(chunk_num & 0xff))) 
     # ====== SIG specific helpers
     def token_sig_begin_sign_session(self, header_data):
         if self.token_type != "sig":
@@ -459,12 +459,12 @@ class SCP:
             # This is an error
             return None, None, None
         return self.send(token_ins(self.token_type, "TOKEN_INS_BEGIN_SIGN_SESSION", data=header_data))
-    def token_sig_derive_key(self):
+    def token_sig_derive_key(self, chunk_num):
         if self.token_type != "sig":
             print("SIG Token Error: asked for TOKEN_INS_DERIVE_KEY for non SIG token ("+self.token_type.upper()+")")
             # This is an error
             return None, None, None
-        return self.send(token_ins(self.token_type, "TOKEN_INS_DERIVE_KEY"))
+        return self.send(token_ins(self.token_type, "TOKEN_INS_DERIVE_KEY", data=chr((chunk_num >> 8) & 0xff)+chr(chunk_num & 0xff)))
     def token_sig_sign_firmware(self, to_sign):
         if self.token_type != "sig":
             print("SIG Token Error: asked for TOKEN_INS_SIGN_FIRMWARE for non SIG token ("+self.token_type.upper()+")")

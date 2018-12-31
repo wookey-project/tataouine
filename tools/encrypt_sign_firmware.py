@@ -183,7 +183,7 @@ if __name__ == '__main__':
         print("\tXXXXXXXXXXXXXXXXX ENCRYPTING CHUNK %04x XXXXXXXXXXXXXXXXX" % (i))
         chunk_key = None
         if USE_SIG_TOKEN == True:
-            chunk_key, sw1, sw2 = scp_sig.token_sig_derive_key()
+            chunk_key, sw1, sw2 = scp_sig.token_sig_derive_key(i)
             if (sw1 != 0x90) or (sw2 != 0x00):
                 print("Error:  SIG token APDU error ...")
                 sys.exit(-1)
