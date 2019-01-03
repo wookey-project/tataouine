@@ -109,7 +109,7 @@ static const uint8_t soc_devices_list_size =
     sizeof(soc_devices_list) / sizeof(struct device_soc_infos);
 
 struct device_soc_infos* soc_devmap_find_device
-    (physaddr_t addr, uint16_t size);
+    (physaddr_t addr, uint32_t size);
 
 void soc_devmap_enable_clock (const struct device_soc_infos *device);
 
