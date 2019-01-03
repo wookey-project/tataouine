@@ -99,7 +99,7 @@ sub parse_ressource_perms
   if ($hash{"${app}_PERM_TSK_RST"} eq "y") {
       $perm_tsk_rst = 1;
   }
-  if ($hash{"${app}_PERM_TSK_UPG"} eq "y") {
+  if ($hash{"${app}_PERM_TSK_UPGRADE"} eq "y") {
       $perm_tsk_upg = 1;
   }
   if ($hash{"${app}_PERM_TSK_RNG"} eq "y") {
