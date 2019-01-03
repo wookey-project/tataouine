@@ -29,6 +29,28 @@ get_apps_from_config();
 # Iterate over all modes
 for my $mode ("FW1", "FW2", "DFU1", "DFU2") {
   my $slot = 1;
+  my $is_flip = 0;
+  my $is_flop = 0;
+  my $is_fw   = 0;
+  my $is_dfu  = 0;
+
+  if ($mode =~ "FW1") {
+      $is_flip = 0xf0;
+      $is_fw   = 0xf0;
+  }
+  if ($mode =~ "FW2") {
+      $is_flop = 0xf0;
+      $is_fw   = 0xf0;
+  }
+  if ($mode =~ "DFU1") {
+      $is_flip = 0xf0;
+      $is_dfu  = 0xf0;
+  }
+  if ($mode =~ "DFU2") {
+      $is_flop = 0xf0;
+      $is_dfu  = 0xf0;
+  }
+
 
   # Iterate over all apps
   for my $i (grep {!/_/} sort(keys(%hash))) {
@@ -62,6 +84,12 @@ ENTRY(do_starttask)
 
 INCLUDE ../../$builddir/layout.apps.ld
 
+__is_flip = $is_flip;
+__is_flop = $is_flop;
+__is_fw   = $is_fw;
+__is_dfu  = $is_dfu;
+
+
 /* Define output sections */
 SECTIONS
 {
@@ -80,11 +108,11 @@ _s_text = .;	            /* create a global symbol at data start */
 *(.glue_7)         	/* glue arm to thumb code */
 *(.glue_7t)        	/* glue thumb to arm code */
 *(.eh_frame)
-
 KEEP (*(.init))
 KEEP (*(.fini))
 
 . = ALIGN(4);
+
 __e_text = .;        	/* define a global symbols at end of code */
 }>${mode}_APP${slot}_APP${totalslot}
 
@@ -106,6 +134,7 @@ _s_idata = .;
 {
 . = ALIGN(4);
 _s_data = .;        /* create a global symbol at data start */
+. = ALIGN(4);
 *(.data)           /* .data sections */
 *(.data*)          /* .data* sections */
 _e_data = .;        /* define a global symbol at data end */
