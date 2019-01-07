@@ -276,11 +276,45 @@ $(APPS_FW1_HEXFILES): layout libs externals $(DRVS) $(APPS)
 
 $(APPS_FW2_HEXFILES): layout libs externals $(DRVS) $(APPS)
 
+# binary to flash through JTAG (initial flashing)
 $(BUILD_DIR)/$(HEX_NAME): $(APPS_HEXFILES) $(KERNEL_HEXFILES) $(BUILD_DIR)/loader/loader.hex
 	$(call if_changed,final_hex)
 
+# firmwares to flash through DFU
+
+$(BUILD_DIR)/$(HEX_NAME).flip: $(APPS_FW1_HEXFILES) $(KERNEL_FW1_HEXFILE) $(APPS_DFU1_HEXFILES) $(KERNEL_DFU1_HEXFILE)
+	$(call if_changed,final_hex)
+
+ifeq ($(CONFIG_FIRMWARE_DUALBANK),y)
+$(BUILD_DIR)/$(HEX_NAME).flop: $(APPS_FW2_HEXFILES) $(KERNEL_FW2_HEXFILE) $(APPS_DFU2_HEXFILES) $(KERNEL_DFU2_HEXFILE)
+	$(call if_changed,final_hex)
+endif
+
 $(BUILD_DIR)/$(BIN_NAME): $(BUILD_DIR)/$(HEX_NAME)
 	$(call if_changed,final_bin)
+
+$(BUILD_DIR)/$(BIN_NAME).flip: $(BUILD_DIR)/$(HEX_NAME).flip
+	$(call if_changed,final_bin)
+
+ifeq ($(CONFIG_FIRMWARE_DUALBANK),y)
+$(BUILD_DIR)/$(BIN_NAME).flop: $(BUILD_DIR)/$(HEX_NAME).flop
+	$(call if_changed,final_bin)
+else
+$(BUILD_DIR)/$(BIN_NAME).flop:
+endif
+
+sign: sign_flip sign_flop
+
+sign_flip: $(BUILD_DIR)/$(BIN_NAME).flip
+	$(call if_changed,sign_flip)
+
+ifeq ($(CONFIG_FIRMWARE_DUALBANK),y)
+sign_flop: $(BUILD_DIR)/$(BIN_NAME).flop
+	$(call if_changed,sign_flop)
+else
+sign_flop:
+	@echo "no flop firmware to sign."
+endif
 
 endif # CONFIG_DONE=y
 
