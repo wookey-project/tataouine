@@ -23,7 +23,6 @@ my $ada_pkg_name    = "applications";
 my $out_header      = "kernel/generated/apps_layout.h";
 my $out_header_ada  = "kernel/Ada/generated/$ada_pkg_name.ads";
 
-open my $OUTLD, ">", "$out_ld" or die "unable to open $out_ld";
 open my $OUTHDR, ">", "$out_header" or die "unable to open $out_header";
 open my $OUTHDR_ADA, ">", "$out_header_ada" or die "unable to open $out_header_ada";
 
@@ -65,7 +64,9 @@ struct app {
     uint8_t        prio;
     physaddr_t     startisr;
     uint8_t        num_slots;
-    uint16_t       stacksize;
+    physaddr_t     stack_bottom;
+    physaddr_t     stack_top;
+    uint16_t       stack_size;
     uint32_t       res_perm_reg; /* ressource permission register */
 };
 
@@ -108,6 +109,8 @@ package $ada_pkg_name is
       domain       : unsigned_8;
       priority     : unsigned_8;
       num_slots    : unsigned_8;  -- How many slots are used
+      stack_bottom : system_address;
+      stack_top    : system_address;
       stack_size   : unsigned_16;
       start_isr    : system_address;
       res_perm_reg : unsigned_32; -- ressources permission register
@@ -144,7 +147,7 @@ foreach my $i (grep {!/_/} sort(keys(%hash))) {
   my $num_slots = 1;
   my $domain    = 0;
   my $priority  = 0;
-  my $stacksize = 8192;
+  my $stack_size = 8192;
 
   if ($hash{"${i}_NUMSLOTS"} != undef) {
     $num_slots = $hash{"${i}_NUMSLOTS"};
@@ -156,7 +159,7 @@ foreach my $i (grep {!/_/} sort(keys(%hash))) {
   }
 
   if ($hash{"${i}_STACKSIZE"} != undef) {
-    $stacksize = $hash{"${i}_STACKSIZE"};
+    $stack_size = $hash{"${i}_STACKSIZE"};
   }
 
   if ($hash{"${i}_DOMAIN"} != undef) {
@@ -197,7 +200,13 @@ foreach my $i (grep {!/_/} sort(keys(%hash))) {
   my $startisr = `$ENV{'CROSS_COMPILE'}nm -a build/$arch/$board/apps/\L$i\E/\L$i\E.${firmnum}.elf |grep "do_startisr"|awk '{ print \$1  }'`;
   chomp($startisr);
 
-  print $OUTHDR "  { \"APPNAME\", $slot, $domain, $priority, 0x$startisr,  $num_slots, $stacksize, $register }," =~ s/APPNAME/\L$i\E/gr;
+  my $stack_bottom = `$ENV{'CROSS_COMPILE'}nm -a build/$arch/$board/apps/\L$i\E/\L$i\E.${firmnum}.elf |grep "_s_stack"|awk '{ print \$1  }'`;
+  chomp($stack_bottom);
+
+  my $stack_top = `$ENV{'CROSS_COMPILE'}nm -a build/$arch/$board/apps/\L$i\E/\L$i\E.${firmnum}.elf |grep "_e_stack"|awk '{ print \$1  }'`;
+  chomp($stack_top);
+
+  print $OUTHDR "  { \"APPNAME\", $slot, $domain, $priority, 0x$startisr,  $num_slots, 0x$stack_bottom, 0x$stack_top, $stack_size, $register }," =~ s/APPNAME/\L$i\E/gr;
 
   # Trailing ',' to separate records
   if ($slot gt 1) {
@@ -208,95 +217,14 @@ foreach my $i (grep {!/_/} sort(keys(%hash))) {
   # Note: if name is greater than 16 compilation will fail
 
   $startisr =~ s/(\d{4})(\d{4})/$1_$2/;
+  $stack_bottom =~ s/(\d{4})(\d{4})/$1_$2/;
+  $stack_top =~ s/(\d{4})(\d{4})/$1_$2/;
 
-  printf $OUTHDR_ADA "      ID_APP$appid => (${i}_name, $slot, $domain, $priority, $num_slots, $stacksize, 16#$startisr#, $register)";
+  printf $OUTHDR_ADA "      ID_APP$appid => (${i}_name, $slot, $domain, $priority, $num_slots, 16#$stack_bottom#, 16#$stack_top#, $stack_size, 16#$startisr#, $register)";
   $appid = $appid + 1;
 
-  my $totalslot = ${slot} + ${num_slots} - 1;
-  print $OUTLD <<EOF
-
-  .user_text :
-  {
-    _s_user_text = .;	            /* create a global symbol at data start */
-    *startup*(.user_main) /* kernel code should start with its reset handler */
-    *(.user_text*)
-    *(.user_rodata)         	/* .rodata sections (constants, strings, etc.) */
-    *(.user_rodata*)         	/* .rodata sections (constants, strings, etc.) */
-    *(.glue_7)         	/* glue arm to thumb code */
-    *(.glue_7t)        	/* glue thumb to arm code */
-	*(.eh_frame)
-
-    KEEP (*(.init))
-    KEEP (*(.fini))
-
-    . = ALIGN(4);
-    _e_user_text = .;        	/* define a global symbols at end of code */
-  } > FW${firmnum}_APP${slot}_APP${totalslot}
-
-  /* used by the startup to initialize got */
-  _s_user_igot = .;
-  .user_got : AT ( _s_user_igot ) {
-    . = ALIGN(4);
-        _s_user_got = .;
-        /*  *(.got.plt)
-         *    We don't need plt segment
-         *    since we do not need dynamic library relocation
-         */
-        *(.user_got)
-        *(.user_got*)
-    . = ALIGN(4);
-    _e_user_got = .;
-    ASSERT (((_e_user_got - _s_user_text) < _Max_User_Size), "Error: FW1 kernel .text size too big!");
-  } > FW${firmnum}_APP${slot}_APP${totalslot}
-
-  . = ALIGN(4);
-  _s_user_idata = .;
-  .user_data : AT (_s_user_idata )
-  {
-    . = ALIGN(4);
-    _s_user_data = .;        /* create a global symbol at data start */
-    *(.user_data)           /* .data sections */
-    *(.user_data*)          /* .data* sections */
-    _e_user_data = .;        /* define a global symbol at data end */
-  } >RAM_APP${slot}_APP${totalslot}
-
-  .user_bss :
-  {
-    /* This is used by the startup in order to initialize the .bss section */
-    _s_user_bss = .;         /* define a global symbol at bss start */
-    __user_bss_start__ = _s_user_bss;
-    *.user_debug.o(.bss)
-    *(.user_bss)
-    *(.user_bss*)
-    *(user_COMMON)
-
-    . = ALIGN(4);
-    _e_user_bss = .;         /* define a global symbol at bss end */
-    __user_bss_end__ = _e_user_bss;
-  } >RAM_APP${slot}_APP${totalslot}
-
-    /* User_heap_stack section, used to check that there is enough RAM left */
-  . = ALIGN(4);
-  ._user_heap_stack :
-  {
-    . = ALIGN(4);
-    PROVIDE ( end = . );
-    PROVIDE ( _end = . );
-    user_stack_start = .;
-    . = . + _Min_User_Heap_Size;
-    . = . + _Min_User_Stack_Size;
-    user_stack_end = .;
-    . = ALIGN(4);
-  } >RAM_APP${slot}_APP${totalslot}
-
-  /DISCARD/ :
-  {
-    *(*_stacking);
-  }
-EOF
- =~ s/user/\L$i\E/gr;
+  my $totalslot = $slot + ${num_slots} - 1;
   $slot += $num_slots;
-
 }
 
 

@@ -93,83 +93,82 @@ __is_dfu  = $is_dfu;
 /* Define output sections */
 SECTIONS
 {
-numslots = ${num_slots};
-/* The program code and other data goes into FLASH */
-/* this is the kernel code part */
-.text :
-{
-_s_text = .;	            /* create a global symbol at data start */
+	numslots = ${num_slots};
 
-*startup*(.text.do_starttask)
-*(.text._main)
-*(.text*)
-*(.rodata)         	/* .rodata sections (constants, strings, etc.) */
-*(.rodata*)         	/* .rodata sections (constants, strings, etc.) */
-*(.glue_7)         	/* glue arm to thumb code */
-*(.glue_7t)        	/* glue thumb to arm code */
-*(.eh_frame)
-KEEP (*(.init))
-KEEP (*(.fini))
+	/* The program code and other data goes into FLASH */
+	/* this is the kernel code part */
+	.text :
+	{
+		_s_text = .;	            /* create a global symbol at data start */
+		*startup*(.text.do_starttask)
+		*(.text._main)
+		*(.text*)
+		*(.rodata)         	/* .rodata sections (constants, strings, etc.) */
+		*(.rodata*)         	/* .rodata sections (constants, strings, etc.) */
+		*(.glue_7)         	/* glue arm to thumb code */
+		*(.glue_7t)        	/* glue thumb to arm code */
+		*(.eh_frame)
+		KEEP (*(.init))
+		KEEP (*(.fini))
+		__e_text = .;        	/* define a global symbols at end of code */
+	}>${mode}_APP${slot}_APP${totalslot}
+	
+	. = ALIGN(4);
 
-. = ALIGN(4);
+	/* used by the startup to initialize got */
+	.got :
+	{
+		_s_got = .;
+		*(.got)
+		*(.got*)
+		/* declaring variables for various task slots and add them to flash */
+		__e_got = .;
+	}>${mode}_APP${slot}_APP${totalslot}
 
-__e_text = .;        	/* define a global symbols at end of code */
-}>${mode}_APP${slot}_APP${totalslot}
+	. = ALIGN(4);
+	_s_data_in_flash = .;
 
-/* used by the startup to initialize got */
-__s_igot = .;
-.got : AT ( __s_igot ) {
-. = ALIGN(4);
-_s_got = .;
-*(.got)
-*(.got*)
-. = ALIGN(4);
-/* declaring variables for various task slots and add them to flash */
-__e_got = .;
-}>${mode}_APP${slot}_APP${totalslot}
-/* used by the startup to initialize data */
-_s_idata = .;
-/* Initialized data sections goes into RAM, load LMA copy after code */
-.data : AT ( _s_idata )
-{
-. = ALIGN(4);
-_s_data = .;        /* create a global symbol at data start */
-. = ALIGN(4);
-*(.data)           /* .data sections */
-*(.data*)          /* .data* sections */
-_e_data = .;        /* define a global symbol at data end */
-}>RAM_APP${slot}_APP${totalslot}
+	.stacking :
+	{
+		_s_stack = .;         /* define a global symbol after .data+.bss+.stack size content */
+		. = . + ${stacksize}; /*  thread stack */
+		_e_stack = .;         /* define a global symbol after .data+.bss+.stack size content */
+	}>RAM_APP${slot}_APP${totalslot}
+	
+	. = ALIGN(4);
 
-/* Uninitialized data section */
-. = ALIGN(4);
-.bss :
-{
-/* This is used by the startup in order to initialize the .bss section */
-_s_bss = .;         /* define a global symbol at bss start */
-_bss_start__ = _s_bss;
-*debug.o(.bss)
-*(.bss)
-*(.bss*)
-*(COMMON)
+	/* Initialized data sections goes into RAM, load LMA copy after code *
+	 * Used at the startup to initialize data                            */
+	.data : AT (_s_data_in_flash)
+	{
+		_s_data = .;        /* create a global symbol at data start */
+		*(.data)           /* .data sections */
+		*(.data*)          /* .data* sections */
+		_e_data = .;        /* define a global symbol at data end */
+	}>RAM_APP${slot}_APP${totalslot}
 
-. = ALIGN(4);
-_e_bss = .;         /* define a global symbol at bss end */
-}>RAM_APP${slot}_APP${totalslot}
+	. = ALIGN(4);
+	
+	/* Uninitialized data section */
+	.bss : AT (.)
+	{
+		/* This is used by the startup in order to initialize the .bss section */
+		_s_bss = .;         /* define a global symbol at bss start */
+		_bss_start__ = _s_bss;
+		*debug.o(.bss)
+		*(.bss)
+		*(.bss*)
+		*(COMMON)
+		_e_bss = .;         /* define a global symbol at bss end */
+	}>RAM_APP${slot}_APP${totalslot}
+	
+	. = ALIGN(4);
 
-.stacking :
-{
-_s_stack = .;         /* define a global symbol after .data+.bss+.stack size content */
-. = ALIGN(4);
-. = . + ${stacksize}; /*  thread stack */
-. = ALIGN(4);
-}>RAM_APP${slot}_APP${totalslot}
-_e_stack = .;         /* define a global symbol after .data+.bss+.stack size content */
-
-/* Remove information from the standard libraries */
-/DISCARD/ :
-{
-libgcc.a ( * )
-}
+	/* Remove information from the standard libraries */
+	/DISCARD/ :
+	{
+		libgcc.a ( * )
+	}
 
 }
 EOF

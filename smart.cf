@@ -1,0 +1,5 @@
+target extended-remote 127.0.0.1:3333
+mon reset halt
+symbol-file build/armv7-m/wookey/apps/smart/smart.fw1.elf
+b _main
+c
