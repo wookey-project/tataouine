@@ -174,7 +174,7 @@ __prepare:
 	$(call cmd,mkobjlist_apps)
 	$(call cmd,mkobjlist_drvs)
 
-prepare: $(BUILD_DIR) __prepare layout devmap $(CONFIG_PRIVATE_DIR) libs 
+prepare: $(BUILD_DIR) __prepare layout devmap $(CONFIG_PRIVATE_DIR) libs
 
 devmap:
 	$(call cmd,devmap)
@@ -357,6 +357,9 @@ dumpconfig:
 
 burn: $(BUILD_DIR)/$(BIN_NAME)
 	$(ST_FLASH) write $(BUILD_DIR)/$(BIN_NAME) 0x8000000
+
+tburn: $(BUILD_DIR)/$(BIN_NAME)
+	{ echo 'reset halt'; sleep 1; echo 'flash write_image erase build/armv7-m/wookey/wookey.hex'; sleep 60; echo 'reset run'; sleep 1; } | telnet localhost 4444
 
 flash: burn
 
