@@ -359,7 +359,7 @@ burn: $(BUILD_DIR)/$(BIN_NAME)
 	$(ST_FLASH) write $(BUILD_DIR)/$(BIN_NAME) 0x8000000
 
 tburn: $(BUILD_DIR)/$(BIN_NAME)
-	{ echo 'reset halt'; sleep 1; echo 'flash write_image erase build/armv7-m/wookey/wookey.hex'; sleep 60; echo 'reset run'; sleep 1; } | telnet localhost 4444
+	{ echo 'reset halt'; sleep 1; echo 'flash write_image erase build/armv7-m/wookey/wookey.hex'; sleep 60; echo 'reset run'; sleep 1; } | telnet localhost 4444 || true
 
 flash: burn
 
