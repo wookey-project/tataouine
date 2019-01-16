@@ -16,7 +16,6 @@ include $(PROJ_FILES)/Makefile.gen
 -include Makefile.objs.gen
 
 # add potential userspace specific cflags (see Makefile.conf)
-CFLAGS += $(CLAGS_USER)
 
 .PHONY: $(libs-y)
 
@@ -35,6 +34,7 @@ __distclean:
 show:
 	@echo "libs-y: $(libs-y)"
 	@echo "libs-n: $(libs-n)"
+	@echo "cflags: $(CFLAGS)"
 
 ##########################################
 

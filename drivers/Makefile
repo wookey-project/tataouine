@@ -18,7 +18,7 @@ include $(PROJ_FILES)/Makefile.gen
 -include boards/$(BOARD)/Makefile.objs.gen
 
 # add potential userspace specific cflags (see Makefile.conf)
-CFLAGS += $(CLAGS_USER)
+CFLAGS += $(DRIVERS_CFLAGS)
 
 #############################
 # build all
