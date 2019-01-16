@@ -223,16 +223,14 @@ class SCP:
          (key, _, _) = local_sha256(self.first_IV+h)
          key = key[:16]
          aes = local_AES.new(key, AES.MODE_CBC, iv=iv)
-         # [RB] FIXME: should be decrypt here ... To be moved
-         dec_data = aes.encrypt(data)
+         dec_data = aes.decrypt(data)
          return dec_data
     def pin_encrypt_data(self, pin, data, iv):
          (h, _, _) = local_sha256(pin)
          (key, _, _) = local_sha256(self.first_IV+h)
          key = key[:16]
          aes = local_AES.new(key, AES.MODE_CBC, iv=iv)
-         # [RB] FIXME: should be encrypt here ... To be moved
-         enc_data = aes.decrypt(data)
+         enc_data = aes.encrypt(data)
          return enc_data
         
     # Send a message through the secure channel
