@@ -24,7 +24,23 @@ if __name__ == '__main__':
     firmware_to_sign_file = sys.argv[2]
     firmware_magic = int(sys.argv[3], 0)
     firmware_partition_type = sys.argv[4]
-    firmware_version = int(sys.argv[5], 0)
+
+    firmware_string_version = [ int(x) for x in sys.argv[5].replace('-','.').split(".") ]
+    print firmware_string_version;
+    firmware_version=0;
+    pos=24;
+    if len(firmware_string_version) > 4:
+            print("Error: version string too long");
+            sys.exit(-1);
+    print("firmware version integer is %x" % firmware_version);
+    for value in firmware_string_version:
+        if int(value)>255:
+            print("Error: invalid version field: %d" % value);
+            sys.exit(-1);
+        firmware_version = firmware_version + (int(value) << pos);
+        pos -= 8;
+
+    #firmware_version = int(sys.argv[5], 0)
     firmware_chunk_size = int(sys.argv[6], 0)
     # Default values for the DFU suffix
     usb_vid = usb_pid = 0xffff
@@ -32,13 +48,13 @@ if __name__ == '__main__':
         usb_vid = int(sys.argv[7], 16)
     if len(sys.argv) > 8:
         usb_pid = int(sys.argv[8], 16)
-  
+
     if usb_vid > 0xffff:
         print("Error: provided USB Vendor ID %d is invalid (> 0xffff)" % (usb_vid))
         sys.exit(-1)
     if usb_pid > 0xffff:
         print("Error: provided USB Product ID %d is invalid (> 0xffff)" % (usb_pid))
-        sys.exit(-1)  
+        sys.exit(-1)
 
     if not os.path.isfile(firmware_to_sign_file):
         print("Error: provided firmware file %s does not exist!" % (firmware_to_sign_file))
@@ -53,7 +69,7 @@ if __name__ == '__main__':
         sys.exit(-1)
     if firmware_version > (0x1 << 32):
         print("Error: provided firmware_version %d exceeds maximum size of 4 bytes ..." % (firmware_version))
-        sys.exit(-1) 
+        sys.exit(-1)
     # Check that we have a reasonable chunk size to be sure to call the token
     # a reasonable number of times
     if firmware_chunk_size > 65536:
@@ -65,7 +81,7 @@ if __name__ == '__main__':
     firmware_chunk_size_str = expand(inttostring(firmware_chunk_size), 32, "LEFT")
     # Read the firmware file in a buffer
     firmware_to_sign = read_in_file(firmware_to_sign_file)
- 
+
     # Current script path
     SCRIPT_PATH = os.path.abspath(os.path.dirname(sys.argv[0])) + "/"
     # Variable used when the SIG token is used
@@ -76,13 +92,13 @@ if __name__ == '__main__':
     dec_token_pub_key_data = None
     dec_platform_priv_key_data = None
     dec_platform_pub_key_data = None
-    dec_firmware_sig_pub_key_data = None 
+    dec_firmware_sig_pub_key_data = None
     dec_firmware_sig_priv_key_data = None
     dec_firmware_sig_sym_key_data = None
 
     # Check if we want to use an external token for the signature or not
     USE_SIG_TOKEN = is_sig_token_used(keys_path+"/SIG/encrypted_platform_sig_keys.bin")
- 
+
     if USE_SIG_TOKEN == True:
         from token_utils import *
         card = connect_to_token("SIG")
@@ -134,7 +150,7 @@ if __name__ == '__main__':
             print("Error:  SIG token APDU error ...")
             sys.exit(-1)
         signed_data = to_sign + sig
-        resp, sw1, sw2 = scp_sig.token_sig_verify_firmware(signed_data) 
+        resp, sw1, sw2 = scp_sig.token_sig_verify_firmware(signed_data)
         if (sw1 != 0x90) or (sw2 != 0x00):
             print("Error:  SIG token APDU error ...")
             sys.exit(-1)
@@ -163,16 +179,16 @@ if __name__ == '__main__':
         sig_session_iv += hm.digest()
 
     # ======================
-    # The encryption of the firmware chunks of 
+    # The encryption of the firmware chunks of
     # Each chunk is encrypted using AES-CTR and the current session key and an IV of zero
-   
+
     # Split the firmware in chunks
     n_chunks = int(len(firmware_to_sign) // firmware_chunk_size)
     if len(firmware_to_sign) % firmware_chunk_size != 0:
         n_chunks += 1
-    
+
     encrypted_firmware = ""
-    
+
     if USE_SIG_TOKEN == True:
         # The SIG token will derive keys for us
         local_key_to_derive = None
@@ -190,7 +206,7 @@ if __name__ == '__main__':
         else:
             aes_cbc_ctx = local_AES.new(dec_firmware_sig_sym_key_data[:16], AES.MODE_CBC, iv=dec_firmware_sig_sym_key_data[16:])
             chunk_key = aes_cbc_ctx.encrypt(local_key_to_derive)
- 
+
             # Increment the session iv
             local_key_to_derive = expand(inttostring((stringtoint(local_key_to_derive)+1)), 128, "LEFT")
         # Initialize AES-CTR IV to 0
