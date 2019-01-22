@@ -72,7 +72,7 @@ def local_hexlify(str_in):
         return binascii.hexlify(str_in)
     else:
         return (binascii.hexlify(str_in.encode('latin-1'))).decode('latin-1')
- 
+
 
 # Python 2/3 unhexlify helper
 def local_unhexlify(str_in):
