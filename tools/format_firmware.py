@@ -185,7 +185,6 @@ if __name__ == '__main__':
         crc = expand(inttostring(dfu_crc32_update(string_to_crc, 0xffffffff)), 32, "LEFT")[::-1]
         for i in range(0, len(crc)):
             firmware_hex[flop_shr_base_addr+len(header)+i] = ord(crc[i])
-
     # Get base name
     base_path = os.path.dirname(hex_path)
     # Dump the new hex and bin files
