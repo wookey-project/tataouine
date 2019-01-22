@@ -142,7 +142,7 @@ sign_each_fn_$(1):
 		echo "\033[1;41m Error: you did not provide a firmware version, which is mandatory. Please provide it with 'version=XX'.\033[1;m"; false; \
 	fi;
 	@# Clean stuff
-	@rm -f tmp_firmware_sig_file tmp_firmware_sig_log; 
+	@rm -f tmp_firmware_sig_file tmp_firmware_sig_log;
 	@$(OBJCOPY) --only-section=.*text --only-section=.*got -O binary $(BUILD_DIR)/$(APP_NAME)/$(1).elf $(BUILD_DIR)/$(APP_NAME)/$(1).bin
 ifeq ("$(USE_SIG_TOKEN)","USE_SIG_TOKEN")
 	@# First we check the PET name
@@ -223,7 +223,7 @@ sign_check:
 	fi;
 
 $(eval $(call sign_fn,$(tosign),$(magic),$(version),$(chunksize)))
-sign: sign_check $(call all_sign_rules_fn, $(tosign))
+#sign: sign_check $(call all_sign_rules_fn, $(tosign))
 
 
 ######### Firmware verification targets
@@ -239,7 +239,7 @@ define verify_info_fn =
 	$(foreach FIRM,$(FIRM_TO_VERIFY), \
   		$(eval $(call verify_info_each_fn,$(FIRM))) \
 	)
-	
+
 endef
 
 define all_verify_info_rules_fn =
@@ -265,7 +265,7 @@ define verify_interactive_fn =
 	$(foreach FIRM,$(FIRM_TO_VERIFY), \
   		$(eval $(call verify_interactive_each_fn,$(FIRM))) \
 	)
-	
+
 endef
 
 define all_verify_interactive_rules_fn =
@@ -329,7 +329,7 @@ define verify_fn =
 	$(eval FIRM_TO_VERIFY = $(subst :, ,$(1)))
 	$(foreach FIRM,$(FIRM_TO_VERIFY), \
   		$(eval $(call verify_each_fn,$(FIRM))) \
-	)	
+	)
 endef
 
 define all_verify_rules_fn =

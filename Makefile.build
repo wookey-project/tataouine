@@ -34,7 +34,7 @@ quiet_cmd_ada_distclean = ADADCLEAN $<
 
 # classical Ada Compiling (adb => o)
 quiet_cmd_gnat_o_ada    = GNAT     $@
-      cmd_gnat_o_ada    = arm-eabi-gnatmake -gnat2012 --RTS=$(RTS) -c -cargs -c $(CONFIG_AFLAGS) -i $< -o $@ 
+      cmd_gnat_o_ada    = arm-eabi-gnatmake -gnat2012 --RTS=$(RTS) -c -cargs -c $(CONFIG_AFLAGS) -i $< -o $@
 
 # managing fw and dfu build for apps
 quiet_cmd_buildapp      = APP     $@
@@ -55,7 +55,7 @@ quiet_cmd_k_ldscript    = LDSCRIPT $@
 
 # classical Ada Compiling (adb => o)
 quiet_cmd_gnat_o_ali    = GNATBIND $@
-      cmd_gnat_o_ali    = arm-eabi-gnatmake -gnat2012 --RTS=$(RTS) -b -bargs -n $(AALI) 
+      cmd_gnat_o_ali    = arm-eabi-gnatmake -gnat2012 --RTS=$(RTS) -b -bargs -n $(AALI)
 
 # linking
 # gcc symbols (see cc_a_syms) must be prefixed again here, to avoid collision
@@ -188,10 +188,10 @@ cmd_listdefconfig = find  configs/ -type f -iname '*_defconfig' | sed -e 's:^con
 
 # documentation part
 quiet_cmd_mkman2        = MAN        $@
-      cmd_mkman2        = rst2man --title="EwoK syscalls API"  --no-generator --no-datestamp --no-source-link $</$(patsubst %.2,%.rst,$(notdir $@)) $@ 
+      cmd_mkman2        = rst2man --title="EwoK syscalls API"  --no-generator --no-datestamp --no-source-link $</$(patsubst %.2,%.rst,$(notdir $@)) $@
 
 quiet_cmd_mkman3        = MAN        $@
-      cmd_mkman3        = rst2man --title="EwoK syscalls API"  --no-generator --no-datestamp --no-source-link $</$(patsubst %.3,%.rst,$(notdir $@)) $@ 
+      cmd_mkman3        = rst2man --title="EwoK syscalls API"  --no-generator --no-datestamp --no-source-link $</$(patsubst %.3,%.rst,$(notdir $@)) $@
 
 quiet_cmd_mkhtml        = HTML       $@
       cmd_mkhtml        = BUILDDIR=../$@ make -C sphinx html >/dev/null 2>&1
@@ -213,14 +213,14 @@ quiet_cmd_kconf_app_gen = KCONF
 
 
 # as drivers are hosted by other repositories, driverlist is dynamic for Kconfig, and generated here.
-# The drivers CFLAGS list is also generated here using the below for-llop respecting the CONFIG_USR_DRV_<DRVNAME>_CFLAGS convention, 
+# The drivers CFLAGS list is also generated here using the below for-llop respecting the CONFIG_USR_DRV_<DRVNAME>_CFLAGS convention,
 # where DRVNAME is the upercase word using the lib<drvname> structure of the driver dir.
 quiet_cmd_kconf_drv_gen = KCONF
       cmd_kconf_drv_gen = rm -f $(PROJ_FILES)/drivers/Kconfig.gen; for i in $(shell find drivers -maxdepth 3 -mindepth 3 -type d ! -iname '.git'); do /bin/echo "source \"$$i/Kconfig\"" >> $(PROJ_FILES)/drivers/Kconfig.gen; done;
 
 
 # as libs are hosted by other repositories, liblist is dynamic for Kconfig, and generated here.
-# The drivers CFLAGS list is also generated here using the below for-llop respecting the CONFIG_USR_LIB_<LIBNAME>_CFLAGS convention, 
+# The drivers CFLAGS list is also generated here using the below for-llop respecting the CONFIG_USR_LIB_<LIBNAME>_CFLAGS convention,
 # where DRVNAME is the upercase word using the lib<drvname> structure of the driver dir.
 quiet_cmd_kconf_lib_gen = KCONF
       cmd_kconf_lib_gen = rm -f $(PROJ_FILES)/libs/Kconfig.gen; for i in $(shell find libs -maxdepth 1 -mindepth 1 -type d ! -iname '.git' -a ! -iname common -a ! -iname libbsp -a ! -iname libecc); do /bin/echo "source \"$$i/Kconfig\"" >> $(PROJ_FILES)/libs/Kconfig.gen; done
@@ -249,6 +249,9 @@ quiet_cmd_mkobjlist_drvs   = MAKEOBJS_DRVS
 
 quiet_cmd_devmap           = DEVMAP
       cmd_devmap           = $(PROJ_FILES)/tools/devmap.py C $(PROJ_FILES)/layouts/arch/socs/$(SOC)/soc-devmap-$(BOARDNAME).json > $(PROJ_FILES)/kernel/generated/devmap.h
+
+quiet_cmd_format_fw        = FORMAT
+      cmd_format_fw        = $(PROJ_FILES)/tools/format_firmware.py $(PROJ_FILES)/layouts/arch/socs/$(SOC)/soc-devmap-$(BOARDNAME).json $(BUILD_DIR)/$(BOARDNAME).hex
 
 quiet_cmd_sign_flip        = SIGN_FLIP
       cmd_sign_flip        = $(PROJ_FILES)/tools/encrypt_sign_firmware.py $(CONFIG_PRIVATE_DIR) $< 1337 FLIP 1 16384 dead cafe

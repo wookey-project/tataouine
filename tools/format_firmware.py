@@ -13,6 +13,10 @@ def PrintUsage():
     sys.exit(-1)
 
 
+# Swap 32-bit integer endianness
+def swap_int32(a):
+    b = ((a & 0xff) << 24) ^ ((a & 0xff00) << 8) ^ ((a & 0xff0000 >> 8)) ^ ((a & 0xff000000) >> 24)
+    return b
 
 if __name__ == '__main__':
     # Register Ctrl+C handler
@@ -75,8 +79,9 @@ if __name__ == '__main__':
     # Now fill the holes with random data
     for (hole_start, size) in holes_to_fill:
         #print("Filling 0x%x-0x%x"%(hole_start, hole_start+size))
+        # 0xaa is not a valid opcode, avoiding unvoluntary providing ROP gadget
         for i in range(hole_start, hole_start+size):
-            firmware_hex[i] = random.randint(0, 255)
+            firmware_hex[i] = 0xaa;
     # Now get flip-shr and flop-shr base address and size
     flip_shr_base_addr = int(json_data['flash-flip-shr']['address'], 0)
     flip_shr_size = int(json_data['flash-flip-shr']['size'], 0)
@@ -84,36 +89,60 @@ if __name__ == '__main__':
         flop_shr_base_addr = int(json_data['flash-flop-shr']['address'], 0)
         flop_shr_size = int(json_data['flash-flop-shr']['size'], 0)
     # magic
-    initial_flip_magic = expand(inttostring(0x0), 32, "LEFT")
+    initial_flip_magic = expand(inttostring(swap_int32(0x0)), 32, "LEFT")
     # partition type
-    initial_flip_type = expand(inttostring(partitions_types['FLIP']), 32, "LEFT")
+    initial_flip_type = expand(inttostring(swap_int32(partitions_types['FLIP'])), 32, "LEFT")
     # version = 0 for initial firmware
-    initial_flip_version = expand(inttostring(0x0), 32, "LEFT")
+    initial_flip_version = expand(inttostring(swap_int32(0x0)), 32, "LEFT")
     # length
-    initial_flip_len = expand(inttostring(flip_size), 32, "LEFT")
+    flip_subregion_mask = int(json_data['flash-flip']['memory_subregion_mask'],0);
+    active_subregion = 0;
+    for i in range (0,8):
+        if (flip_subregion_mask >> i) & 0x1 != 0:
+            active_subregion+=1;
+    flip_firmware_size = flip_size - ((active_subregion * flip_size)/8);
+    initial_flip_len = expand(inttostring(swap_int32(flip_firmware_size)), 32, "LEFT")
     # sig length to zero since original firmware is not signed (pushed through jtag)
-    initial_flip_siglen = expand(inttostring(0x0), 32, "LEFT")
+    initial_flip_siglen = expand(inttostring(swap_int32(0x0)), 32, "LEFT")
     # chunksize to zero
-    initial_flip_chunksize = expand(inttostring(0x0), 32, "LEFT") 
+    initial_flip_chunksize = expand(inttostring(swap_int32(0x0)), 32, "LEFT")
     if dual_bank == True:
         # magic
-        initial_flop_magic = expand(inttostring(0x0), 32, "LEFT")
+        initial_flop_magic = expand(inttostring(swap_int32(0x0)), 32, "LEFT")
         # partition type
-        initial_flop_type = expand(inttostring(partitions_types['FLOP']), 32, "LEFT")
+        initial_flop_type = expand(inttostring(swap_int32(partitions_types['FLOP'])), 32, "LEFT")
         # version = 0 for initial firmware
-        initial_flop_version = expand(inttostring(0x0), 32, "LEFT")
+        initial_flop_version = expand(inttostring(swap_int32(0x0)), 32, "LEFT")
         # length
-        initial_flop_len = expand(inttostring(flop_size), 32, "LEFT")
+        flop_subregion_mask = int(json_data['flash-flop']['memory_subregion_mask'],0);
+        active_subregion = 0;
+        for i in range (0,8):
+            if (flop_subregion_mask >> i) & 0x1 != 0:
+                active_subregion+=1;
+        flop_firmware_size = flop_size - ((active_subregion * flop_size)/8);
+        initial_flop_len = expand(inttostring(swap_int32(flop_firmware_size)), 32, "LEFT")
         # sig length to zero since original firmware is not signed (pushed through jtag)
-        initial_flop_siglen = expand(inttostring(0x0), 32, "LEFT")
+        initial_flop_siglen = expand(inttostring(swap_int32(0x0)), 32, "LEFT")
         # chunksize to zero
-        initial_flop_chunksize = expand(inttostring(0x0), 32, "LEFT") 
+        initial_flop_chunksize = expand(inttostring(swap_int32(0x0)), 32, "LEFT")
     # Compute the hash of binary flip and flop with prepended initial header
     flip_header = initial_flip_magic + initial_flip_type + initial_flip_version + initial_flip_len + initial_flip_siglen + initial_flip_chunksize
-    (flip_hash_value, _, _) = local_sha256(flip_header + firmware_hex[flip_shr_base_addr:flip_base_addr+flip_size].tobinstr())
+    flip_to_hash = flip_header
+    # We only hash the activated subregions
+    for i in range(0, 8):
+        if (flip_subregion_mask >> i) & 0x1 == 0:
+            print("adding block %d : from @%x to %x" % (i, flip_base_addr + (i * (flip_size / 8)), flip_base_addr + ((i+1) * (flip_size / 8))));
+            flip_to_hash += firmware_hex[flip_base_addr + (i * (flip_size / 8)):flip_base_addr + ((i+1) * (flip_size / 8))].tobinstr()
+    (flip_hash_value, _, _) = local_sha256(flip_to_hash)
+    print("string size is %x" % len(flip_to_hash));
     if dual_bank == True:
         flop_header = initial_flop_magic + initial_flop_type + initial_flop_version + initial_flop_len + initial_flop_siglen + initial_flop_chunksize
-        (flop_hash_value, _, _) = sha256(flop_header + firmware_hex[flop_shr_base_addr:flop_base_addr+flop_size].tobinstr())
+        flop_to_hash = flop_header
+        # We only hash the activated subregions
+        for i in range(0, 8):
+            if (flop_subregion_mask >> i) & 0x1 == 0:
+                flop_to_hash += firmware_hex[flop_base_addr + (i * (flop_size / 8)):flop_base_addr + ((i+1) * (flop_size / 8))].tobinstr()
+        (flop_hash_value, _, _) = local_sha256(flop_to_hash)
     # Now forge the SHR sections
     # FLIP
     for i in range(flip_shr_base_addr, flip_shr_base_addr+flip_shr_size):
@@ -122,10 +151,10 @@ if __name__ == '__main__':
     for i in range(0, len(flip_header)):
         firmware_hex[flip_shr_base_addr+i] = ord(flip_header[i])
     # Place the hash value
-    for i in range(0, len(flip_hash_value)): 
+    for i in range(0, len(flip_hash_value)):
         firmware_hex[flip_shr_base_addr+len(flip_header)+4+i] = ord(flip_hash_value[i])
     # Place the bootable value
-    for i in range(0, len(firmware_bootable_types['BOOTABLE'])): 
+    for i in range(0, len(firmware_bootable_types['BOOTABLE'])):
         firmware_hex[flip_shr_base_addr+(flip_shr_size/2)+i] = ord(firmware_bootable_types['BOOTABLE'][i])
     # Now compute the crc32 of this hole sector and place it
     string_to_crc = ""
@@ -143,11 +172,11 @@ if __name__ == '__main__':
         for i in range(0, len(header)):
             firmware_hex[flop_shr_base_addr+i] = ord(header[i])
         # Place the hash value
-        for i in range(0, len(flop_hash_value)): 
+        for i in range(0, len(flop_hash_value)):
             firmware_hex[flop_shr_base_addr+(7*4)+i] = ord(flop_hash_value[i])
         # Place the bootable value
-        for i in range(0, len(firmware_bootable_types['BOOTABLE'])): 
-            firmware_hex[flop_shr_base_addr+(flop_shr_size/2)+i] = ord(firmware_bootable_types['BOOTABLE'][i])
+        for i in range(0, len(firmware_bootable_types['NONBOOTABLE'])):
+            firmware_hex[flop_shr_base_addr+(flop_shr_size/2)+i] = ord(firmware_bootable_types['NONBOOTABLE'][i])
         # Now compute the crc32 of this hole sector and place it
         string_to_crc = ""
         for i in range(0, flop_shr_size):
@@ -162,8 +191,8 @@ if __name__ == '__main__':
     firmware_hex.tofile(base_path+"/wookey.hex", format='hex')
     firmware_hex.tofile(base_path+"/wookey.bin", format='bin')
     # Dump FLIP to sign
-    firmware_hex[flip_shr_base_addr:flip_base_addr+flip_size].tofile(base_path+"/flip_fw.hex", format='hex')
-    firmware_hex[flip_shr_base_addr:flip_base_addr+flip_size].tofile(base_path+"/flip_fw.bin", format='bin')
+    firmware_hex[flip_base_addr+flip_size-flip_firmware_size:flip_base_addr+flip_size].tofile(base_path+"/flip_fw.hex", format='hex')
+    firmware_hex[flip_base_addr+flip_size-flip_firmware_size:flip_base_addr+flip_size].tofile(base_path+"/flip_fw.bin", format='bin')
     # Dump FLOP to sign
-    firmware_hex[flop_shr_base_addr:flop_base_addr+flop_size].tofile(base_path+"/flop_fw.hex", format='hex')
-    firmware_hex[flop_shr_base_addr:flop_base_addr+flop_size].tofile(base_path+"/flop_fw.bin", format='bin')
+    firmware_hex[flop_base_addr+flop_size-flop_firmware_size:flop_base_addr+flop_size].tofile(base_path+"/flop_fw.hex", format='hex')
+    firmware_hex[flop_base_addr+flop_size-flop_firmware_size:flop_base_addr+flop_size].tofile(base_path+"/flop_fw.bin", format='bin')
