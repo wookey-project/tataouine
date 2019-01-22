@@ -80,3 +80,10 @@ def local_unhexlify(str_in):
         return binascii.unhexlify(str_in)
     else:
         return (binascii.unhexlify(str_in.encode('latin-1'))).decode('latin-1')
+
+# Python 2/3 string handling
+def bytes_to_str(b):
+    if is_python_2() == False:
+        return b.decode('latin-1')
+    else:
+        return b

@@ -12,7 +12,6 @@ def PrintUsage():
     print("Error when executing %s\n\tUsage:\t%s json_layout hex_file_to_format" % (executable, executable))
     sys.exit(-1)
 
-
 # Swap 32-bit integer endianness
 def swap_int32(a):
     b = ((a & 0xff) << 24) ^ ((a & 0xff00) << 8) ^ ((a & 0xff0000 >> 8)) ^ ((a & 0xff000000) >> 24)
@@ -36,15 +35,19 @@ if __name__ == '__main__':
     except:
         print("Error: error when opening %s as a hex file ..." % sys.argv[2]);
         sys.exit(-1);
+    # Check if we are in mono or dual bank from the file size
+    if firmware_hex.maxaddr() - firmware_hex.minaddr() > (1024 * 1024):
+        print("Dual bank firmware detected")
+        dual_bank = True
+    else:
+        print("Mono-bank firmware detected")
+        dual_bank = False
     # Get flip and flop base
-    dual_bank = True
     flip_base_addr = int(json_data['flash-flip']['address'], 0)
     flip_size = int(json_data['flash-flip']['size'], 0)
     flop_base_addr = int(json_data['flash-flop']['address'], 0)
     flop_size = int(json_data['flash-flop']['size'], 0)
     flash_base_addr = flip_base_addr
-    if (flop_base_addr == None) and (flop_size == None):
-        dual_bank = False
     if (flip_base_addr == None) or (flip_size == None):
         print("Error: FLIP not found in json layout %s" % (json_path));
         sys.exit(-1);
@@ -75,13 +78,13 @@ if __name__ == '__main__':
         last_addr_stop = addr_stop
     if last_addr_stop != flash_max_addr:
         holes_to_fill.append((last_addr_stop, flash_max_addr-last_addr_stop))
-    print("%s addresses sanity check is OK!" % (hex_path))
     # Now fill the holes with random data
     for (hole_start, size) in holes_to_fill:
-        #print("Filling 0x%x-0x%x"%(hole_start, hole_start+size))
+        print("Filling 0x%x-0x%x"%(hole_start, hole_start+size))
         # 0xaa is not a valid opcode, avoiding unvoluntary providing ROP gadget
         for i in range(hole_start, hole_start+size):
             firmware_hex[i] = 0xaa;
+    print("%s addresses sanity check is OK and holes filled!" % (hex_path))
     # Now get flip-shr and flop-shr base address and size
     flip_shr_base_addr = int(json_data['flash-flip-shr']['address'], 0)
     flip_shr_size = int(json_data['flash-flip-shr']['size'], 0)
@@ -100,7 +103,7 @@ if __name__ == '__main__':
     for i in range (0,8):
         if (flip_subregion_mask >> i) & 0x1 != 0:
             active_subregion+=1;
-    flip_firmware_size = flip_size - ((active_subregion * flip_size)/8);
+    flip_firmware_size = flip_size - ((active_subregion * flip_size) // 8);
     initial_flip_len = expand(inttostring(swap_int32(flip_firmware_size)), 32, "LEFT")
     # sig length to zero since original firmware is not signed (pushed through jtag)
     initial_flip_siglen = expand(inttostring(swap_int32(0x0)), 32, "LEFT")
@@ -119,7 +122,7 @@ if __name__ == '__main__':
         for i in range (0,8):
             if (flop_subregion_mask >> i) & 0x1 != 0:
                 active_subregion+=1;
-        flop_firmware_size = flop_size - ((active_subregion * flop_size)/8);
+        flop_firmware_size = flop_size - ((active_subregion * flop_size) // 8);
         initial_flop_len = expand(inttostring(swap_int32(flop_firmware_size)), 32, "LEFT")
         # sig length to zero since original firmware is not signed (pushed through jtag)
         initial_flop_siglen = expand(inttostring(swap_int32(0x0)), 32, "LEFT")
@@ -131,17 +134,15 @@ if __name__ == '__main__':
     # We only hash the activated subregions
     for i in range(0, 8):
         if (flip_subregion_mask >> i) & 0x1 == 0:
-            print("adding block %d : from @%x to %x" % (i, flip_base_addr + (i * (flip_size / 8)), flip_base_addr + ((i+1) * (flip_size / 8))));
-            flip_to_hash += firmware_hex[flip_base_addr + (i * (flip_size / 8)):flip_base_addr + ((i+1) * (flip_size / 8))].tobinstr()
+            flip_to_hash += bytes_to_str(firmware_hex[flip_base_addr + (i * (flip_size // 8)):flip_base_addr + ((i+1) * (flip_size // 8))].tobinstr())
     (flip_hash_value, _, _) = local_sha256(flip_to_hash)
-    print("string size is %x" % len(flip_to_hash));
     if dual_bank == True:
         flop_header = initial_flop_magic + initial_flop_type + initial_flop_version + initial_flop_len + initial_flop_siglen + initial_flop_chunksize
         flop_to_hash = flop_header
         # We only hash the activated subregions
         for i in range(0, 8):
             if (flop_subregion_mask >> i) & 0x1 == 0:
-                flop_to_hash += firmware_hex[flop_base_addr + (i * (flop_size / 8)):flop_base_addr + ((i+1) * (flop_size / 8))].tobinstr()
+                flop_to_hash += bytes_to_str(firmware_hex[flop_base_addr + (i * (flop_size // 8)):flop_base_addr + ((i+1) * (flop_size // 8))].tobinstr())
         (flop_hash_value, _, _) = local_sha256(flop_to_hash)
     # Now forge the SHR sections
     # FLIP
@@ -155,7 +156,7 @@ if __name__ == '__main__':
         firmware_hex[flip_shr_base_addr+len(flip_header)+4+i] = ord(flip_hash_value[i])
     # Place the bootable value
     for i in range(0, len(firmware_bootable_types['BOOTABLE'])):
-        firmware_hex[flip_shr_base_addr+(flip_shr_size/2)+i] = ord(firmware_bootable_types['BOOTABLE'][i])
+        firmware_hex[flip_shr_base_addr+(flip_shr_size // 2)+i] = ord(firmware_bootable_types['BOOTABLE'][i])
     # Now compute the crc32 of this hole sector and place it
     string_to_crc = ""
     for i in range(0, flip_shr_size):
@@ -176,14 +177,14 @@ if __name__ == '__main__':
             firmware_hex[flop_shr_base_addr+(7*4)+i] = ord(flop_hash_value[i])
         # Place the bootable value
         for i in range(0, len(firmware_bootable_types['NONBOOTABLE'])):
-            firmware_hex[flop_shr_base_addr+(flop_shr_size/2)+i] = ord(firmware_bootable_types['NONBOOTABLE'][i])
+            firmware_hex[flop_shr_base_addr+(flop_shr_size // 2)+i] = ord(firmware_bootable_types['NONBOOTABLE'][i])
         # Now compute the crc32 of this hole sector and place it
         string_to_crc = ""
         for i in range(0, flop_shr_size):
             string_to_crc += chr(firmware_hex[flop_shr_base_addr+i])
         crc = expand(inttostring(dfu_crc32_update(string_to_crc, 0xffffffff)), 32, "LEFT")[::-1]
         for i in range(0, len(crc)):
-            firmware_hex[flop_shr_base_addr+(6*4)+i] = ord(crc[i])
+            firmware_hex[flop_shr_base_addr+len(header)+i] = ord(crc[i])
 
     # Get base name
     base_path = os.path.dirname(hex_path)
