@@ -53,7 +53,7 @@ if __name__ == '__main__':
 
     print("Magic         : 0x" + local_hexlify(magic))
     print("Partition type: '"  + inverse_mapping(partitions_types)[stringtoint(partition_type)]+"'")
-    print("Version       : 0x" + local_hexlify(version))
+    print("Version       : " + str(ord(version[0])) + "." + str(ord(version[1])) + "." + str(ord(version[2])) + "." + str(ord(version[3])) + " (0x" + local_hexlify(version)+")")
     print("Data length   : 0x" + local_hexlify(data_len))
     print("Sig length    : 0x" + local_hexlify(siglen))
 
@@ -138,7 +138,7 @@ if __name__ == '__main__':
     # Now check the signature on the decrypted firmware with the header
     # NOTE1: since we want to check the firmware once it is written on flash, we
     # have to verify its clear text form (and not the encrypted one).
-    (to_verify, _, _) = sha256(header + firmware_chunk_size_str + decrypted_firmware)
+    (to_verify, _, _) = local_sha256(header + firmware_chunk_size_str + decrypted_firmware)
 
     # Verify ECDSA_VERIF(SHA-256(to_verify))
     c = Curve(a, b, prime, order, cofactor, gx, gy, cofactor * order, ret_alg, None)

@@ -25,14 +25,21 @@ if __name__ == '__main__':
     firmware_magic = int(sys.argv[3], 0)
     firmware_partition_type = sys.argv[4]
 
-    firmware_string_version = [ int(x) for x in sys.argv[5].replace('-','.').split(".") ]
-    print firmware_string_version;
-    firmware_version=0;
-    pos=24;
+    # Check if the firmware is provided as an integer or as a string version
+    firmware_string_version = None
+    try:
+        firmware_int_version = int(sys.argv[5], 0)
+        if firmware_int_version > 0xffffffff:
+            print("Error: invalid version field: %d (too big)" % firmware_int_version);
+            sys.exit(-1);      
+        firmware_string_version = [ (firmware_int_version & 0xff000000) >> 24, (firmware_int_version & 0xff0000) >> 16, (firmware_int_version & 0xff00) >> 8, firmware_int_version & 0xff ]
+    except:
+        firmware_string_version = [ int(x) for x in sys.argv[5].replace('-','.').split(".") ]
+    firmware_version = 0;
+    pos = 24;
     if len(firmware_string_version) > 4:
-            print("Error: version string too long");
-            sys.exit(-1);
-    print("firmware version integer is %x" % firmware_version);
+        print("Error: version string too long");
+        sys.exit(-1);
     for value in firmware_string_version:
         if int(value)>255:
             print("Error: invalid version field: %d" % value);
@@ -40,7 +47,6 @@ if __name__ == '__main__':
         firmware_version = firmware_version + (int(value) << pos);
         pos -= 8;
 
-    #firmware_version = int(sys.argv[5], 0)
     firmware_chunk_size = int(sys.argv[6], 0)
     # Default values for the DFU suffix
     usb_vid = usb_pid = 0xffff
@@ -142,7 +148,7 @@ if __name__ == '__main__':
     # compute ECDSA on raw data since the card performs the hash function. Hence, we are
     # deemed to compute ECDSA with double SHA-256:
     # firmware_sig = ECDSA_SIG(SHA-256(header || firmware))
-    (to_sign, _, _) = sha256(header + firmware_chunk_size_str + firmware_to_sign)
+    (to_sign, _, _) = local_sha256(header + firmware_chunk_size_str + firmware_to_sign)
     sig = None
     if USE_SIG_TOKEN == True:
         sig, sw1, sw2  = scp_sig.token_sig_sign_firmware(to_sign)

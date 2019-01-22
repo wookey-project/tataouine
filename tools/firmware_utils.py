@@ -6,6 +6,11 @@ partitions_types = {
     'FLOP'      : 1,
 }
 
+firmware_bootable_types = {
+    'BOOTABLE'    : "\x21\x74\x74\x53",
+    'NONBOOTABLE' : "\x55\xbe\x19\x5e",
+}
+
 # The firmware header layout
 firmware_header_layout = {
     'MAGIC_OFFSET'      : 0,
