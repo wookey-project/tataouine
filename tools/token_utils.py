@@ -30,7 +30,7 @@ def connect_to_token(token_type=None):
         sys.stderr.flush()
         time.sleep(1)
         card = _connect_to_token()
-    return card    
+    return card
 
 # Helper to check the enctropy of a string
 def check_pin_security_policy(instr):
@@ -40,7 +40,7 @@ def check_pin_security_policy(instr):
 def send_apdu(cardservice, apdu):
     apdu = local_unhexlify(apdu)
     a = datetime.datetime.now()
-    to_transmit = [ord(x) for x in apdu] 
+    to_transmit = [ord(x) for x in apdu]
     response, sw1, sw2 = cardservice.connection.transmit(to_transmit)
     b = datetime.datetime.now()
     delta = b - a
@@ -129,9 +129,9 @@ class APDU:
         self.data = data
         self.le   = le
         return
-       
+
 # The common instructions
-def token_common_instructions(applet_id): 
+def token_common_instructions(applet_id):
     return {
                              'TOKEN_INS_SELECT_APPLET'       : APDU(0x00, 0xA4, 0x04, 0x00, local_unhexlify(applet_id), 0x00),
                              'TOKEN_INS_SECURE_CHANNEL_INIT' : APDU(0x00, 0x00, 0x00, 0x00, None, 0x00),
@@ -152,19 +152,19 @@ def token_common_instructions(applet_id):
 
 # The AUTH token instructions
 auth_token_instructions =  {
-                             'TOKEN_INS_GET_KEY'             : APDU(0x00, 0x10, 0x00, 0x00, None, 0x00),                            
+                             'TOKEN_INS_GET_KEY'             : APDU(0x00, 0x10, 0x00, 0x00, None, 0x00),
                            }
 
 # The DFU token instructions
-dfu_token_instructions =   { 
-                             'TOKEN_INS_BEGIN_DECRYPT_SESSION' : APDU(0x00, 0x20, 0x00, 0x00, None, 0x00),                            
-                             'TOKEN_INS_DERIVE_KEY'            : APDU(0x00, 0x21, 0x00, 0x00, None, 0x00),                            
+dfu_token_instructions =   {
+                             'TOKEN_INS_BEGIN_DECRYPT_SESSION' : APDU(0x00, 0x20, 0x00, 0x00, None, 0x00),
+                             'TOKEN_INS_DERIVE_KEY'            : APDU(0x00, 0x21, 0x00, 0x00, None, 0x00),
                            }
 
 # The SIG token instructions
 sig_token_instructions =   {
                              'TOKEN_INS_BEGIN_SIGN_SESSION' : APDU(0x00, 0x30, 0x00, 0x00, None, 0x00),
-                             'TOKEN_INS_DERIVE_KEY'         : APDU(0x00, 0x31, 0x00, 0x00, None, 0x00),                            
+                             'TOKEN_INS_DERIVE_KEY'         : APDU(0x00, 0x31, 0x00, 0x00, None, 0x00),
                              'TOKEN_INS_SIGN_FIRMWARE'      : APDU(0x00, 0x32, 0x00, 0x00, None, 0x00),
                              'TOKEN_INS_VERIFY_FIRMWARE'    : APDU(0x00, 0x33, 0x00, 0x00, None, 0x00),
                              'TOKEN_INS_GET_SIG_TYPE'       : APDU(0x00, 0x34, 0x00, 0x00, None, 0x00),
@@ -232,7 +232,7 @@ class SCP:
          aes = local_AES.new(key, AES.MODE_CBC, iv=iv)
          enc_data = aes.encrypt(data)
          return enc_data
-        
+
     # Send a message through the secure channel
     def send(self, orig_apdu, pin=None, update_session_keys=False, pin_decrypt=False):
         apdu = deepcopy(orig_apdu)
@@ -327,7 +327,7 @@ class SCP:
         self.cardservice = card
         self.token_type = data_type
         # Decrypt local platform keys. We also keep the current salt and PBKDF2 iterations for later usage
-        dec_token_pub_key_data, dec_platform_priv_key_data, dec_platform_pub_key_data, self.dec_firmware_sig_pub_key_data, _, _, self.pbkdf2_salt, self.pbkdf2_iterations = decrypt_platform_data_with_token(encrypted_platform_bin_file, pin, data_type, card) 
+        dec_token_pub_key_data, dec_platform_priv_key_data, dec_platform_pub_key_data, self.dec_firmware_sig_pub_key_data, _, _, self.pbkdf2_salt, self.pbkdf2_iterations = decrypt_platform_data_with_token(encrypted_platform_bin_file, pin, data_type, card)
 	# Get the algorithm and the curve
         ret_alg, ret_curve, prime, a, b, gx, gy, order, cofactor = get_curve_from_key(dec_platform_pub_key_data)
         if (ret_alg == None) or (ret_curve == None):
@@ -416,7 +416,7 @@ class SCP:
     def token_set_pet_name(self, new_pet_name = None):
         if new_pet_name == None:
             new_pet_name =  get_user_input("Please provide the *new* "+self.token_type.upper()+" PET name:\n")
-        return self.send(token_ins(self.token_type, "TOKEN_INS_SET_PET_NAME", data=new_pet_name))   
+        return self.send(token_ins(self.token_type, "TOKEN_INS_SET_PET_NAME", data=new_pet_name))
     def token_get_random(self, size):
         if size > 255:
             # This is an error
@@ -433,20 +433,20 @@ class SCP:
             print("AUTH Token Error: asked for TOKEN_INS_GET_KEY for non AUTH token ("+self.token_type.upper()+")")
             # This is an error
             return None, None, None
-        return self.send(token_ins(self.token_type, "TOKEN_INS_GET_KEY"), pin=pin, pin_decrypt=True) 
+        return self.send(token_ins(self.token_type, "TOKEN_INS_GET_KEY"), pin=pin, pin_decrypt=True)
     # ====== DFU specific helpers
     def token_dfu_begin_decrypt_session(self, header_data):
         if self.token_type != "dfu":
             print("DFU Token Error: asked for TOKEN_INS_BEGIN_DECRYPT_SESSION for non DFU token ("+self.token_type.upper()+")")
             # This is an error
             return None, None, None
-        return self.send(token_ins(self.token_type, "TOKEN_INS_BEGIN_DECRYPT_SESSION", data=header_data)) 
+        return self.send(token_ins(self.token_type, "TOKEN_INS_BEGIN_DECRYPT_SESSION", data=header_data))
     def token_dfu_derive_key(self, chunk_num):
         if self.token_type != "dfu":
             print("DFU Token Error: asked for TOKEN_INS_DERIVE_KEY for non DFU token ("+self.token_type.upper()+")")
             # This is an error
             return None, None, None
-        return self.send(token_ins(self.token_type, "TOKEN_INS_DERIVE_KEY", data=chr((chunk_num >> 8) & 0xff)+chr(chunk_num & 0xff))) 
+        return self.send(token_ins(self.token_type, "TOKEN_INS_DERIVE_KEY", data=chr((chunk_num >> 8) & 0xff)+chr(chunk_num & 0xff)))
     # ====== SIG specific helpers
     def token_sig_begin_sign_session(self, header_data):
         if self.token_type != "sig":
