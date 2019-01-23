@@ -134,7 +134,7 @@ if __name__ == '__main__':
     # We only hash the activated subregions
     for i in range(0, 8):
         if (flip_subregion_mask >> i) & 0x1 == 0:
-            flip_to_hash += bytes_to_str(firmware_hex[flip_base_addr + (i * (flip_size // 8)):flip_base_addr + ((i+1) * (flip_size // 8))].tobinstr())
+            flip_to_hash += str_decode(firmware_hex[flip_base_addr + (i * (flip_size // 8)):flip_base_addr + ((i+1) * (flip_size // 8))].tobinstr())
     (flip_hash_value, _, _) = local_sha256(flip_to_hash)
     if dual_bank == True:
         flop_header = initial_flop_magic + initial_flop_type + initial_flop_version + initial_flop_len + initial_flop_siglen + initial_flop_chunksize
@@ -142,7 +142,7 @@ if __name__ == '__main__':
         # We only hash the activated subregions
         for i in range(0, 8):
             if (flop_subregion_mask >> i) & 0x1 == 0:
-                flop_to_hash += bytes_to_str(firmware_hex[flop_base_addr + (i * (flop_size // 8)):flop_base_addr + ((i+1) * (flop_size // 8))].tobinstr())
+                flop_to_hash += str_decode(firmware_hex[flop_base_addr + (i * (flop_size // 8)):flop_base_addr + ((i+1) * (flop_size // 8))].tobinstr())
         (flop_hash_value, _, _) = local_sha256(flop_to_hash)
     # Now forge the SHR sections
     # FLIP

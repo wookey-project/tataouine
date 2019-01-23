@@ -74,13 +74,11 @@ def local_sha256(arg_in):
 class local_hmac:
     hm = None
     def __init__(self, key, digestmod=hashlib.sha256):
-        if is_python_2() == False: 
-            key = key.encode('latin-1')
+        key = str_encode(key)
         self.hm = hmac.new(key, digestmod=digestmod)
         return
     def update(self, in_str):
-        if is_python_2() == False: 
-            in_str = in_str.encode('latin-1')
+        in_str = str_encode(in_str)
         if self.hm == None:
             return
         else:
@@ -91,10 +89,7 @@ class local_hmac:
             return None
         else:
             d = self.hm.digest()
-            if is_python_2() == False:
-                return d.decode('latin-1')
-            else:
-                return d
+            return str_decode(d)
     @staticmethod
     def new(key, digestmod=hashlib.sha256):
         return local_hmac(key, digestmod=digestmod)
@@ -104,12 +99,10 @@ class local_AES:
     aes = None
     iv = None
     def  __init__(self, key, mode, iv=None, counter=None):
-        if is_python_2() == False: 
-            key = key.encode('latin-1')
+        key = str_encode(key)
         if iv != None:
             self.iv = iv
-            if is_python_2() == False: 
-                iv = iv.encode('latin-1')
+            iv = str_encode(iv)
             if mode == AES.MODE_CTR:
                 if counter == None:
                     self.aes = AES.new(key, mode, counter=self.counter_inc)
@@ -131,22 +124,15 @@ class local_AES:
     def counter_inc(self):
         curr_iv = expand(inttostring((stringtoint(self.iv))), 128, "LEFT")
         self.iv = expand(inttostring((stringtoint(self.iv)+1)), 128, "LEFT")
-        if is_python_2() == False:
-            curr_iv = curr_iv.encode('latin-1')
+        curr_iv = str_encode(curr_iv)
         return curr_iv
     def encrypt(self, data):
-        if is_python_2() == False:
-            data = data.encode('latin-1')
-        ret = self.aes.encrypt(data)
-        if is_python_2() == False:
-            ret = ret.decode('latin-1')
+        data = str_encode(data)
+        ret = str_decode(self.aes.encrypt(data))
         return ret
     def decrypt(self, data):
-        if is_python_2() == False:
-            data = data.encode('latin-1')
-        ret = self.aes.decrypt(data)
-        if is_python_2() == False:
-            ret = ret.decode('latin-1')
+        data = str_encode(data)
+        ret = str_decode(self.aes.decrypt(data))
         return ret
     @staticmethod
     def new(key, mode, iv=None, counter=None):
@@ -155,13 +141,10 @@ class local_AES:
 # Python 2/3 abstraction layer for PBKDF2
 def local_pbkdf2_hmac(hash_func, pin, salt, pbkdf2_iterations):
     if is_python_2() == False:
-        pin = pin.encode('latin-1')
-        salt = salt.encode('latin-1')
+        pin = str_encode(pin)
+        salt = str_encode(salt)
     dk = hashlib.pbkdf2_hmac(hash_func, pin, salt, pbkdf2_iterations)
-    if is_python_2() == False:
-        return dk.decode('latin-1')
-    else:
-        return dk
+    return str_decode(dk)
 
 # Encrypt the local pet key using PBKDF2
 def enc_local_pet_key(pet_pin, salt, pbkdf2_iterations, master_symmetric_local_pet_key):

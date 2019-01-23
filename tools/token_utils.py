@@ -240,10 +240,7 @@ class SCP:
         def counter_inc():
             curr_iv = expand(inttostring((stringtoint(self.IV))), 128, "LEFT")
             self.IV = expand(inttostring((stringtoint(self.IV)+1)), 128, "LEFT")
-            if is_python_2() == True:
-                return curr_iv
-            else:
-                return curr_iv.encode('latin-1')
+            return str_encode(curr_iv.encode)
         if self.initialized == False:
             # Secure channel not initialized, quit
             print("SCP Error: secure channel not initialized ...")
