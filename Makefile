@@ -117,6 +117,7 @@ TODEL_DISTCLEAN = .config include $(CONFIG_BUILD_DIR) $(CONFIG_PRIVATE_DIR)
 menuconfig: check-env
 	rm -rf $(BUILD_DIR)/kernel
 	$(call cmd,kconf_app_gen)
+	$(call cmd,kconf_drvlist_gen)
 	$(call cmd,kconf_drv_gen)
 	$(call cmd,kconf_lib_gen)
 	$(call cmd,kconf_root)
@@ -191,7 +192,7 @@ layout: $(MEM_LAYOUT_DEF)
 # make prepare and make menuconfig to create the
 # .config file.
 
-.PHONY: libs prepare loader prove externals $(DRVS) $(APPS) $(APPS_PATHS) $(BUILD_LIBECC_DIR) $(BUILD_DIR)
+.PHONY: libs prepare loader prove externals $(DRVS) $(APPS) $(APPS_PATHS) $(BUILD_LIBECC_DIR) $(BUILD_DIR) foo
 
 
 applet:

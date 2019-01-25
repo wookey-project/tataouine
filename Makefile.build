@@ -215,8 +215,8 @@ quiet_cmd_kconf_app_gen = KCONF
 # as drivers are hosted by other repositories, driverlist is dynamic for Kconfig, and generated here.
 # The drivers CFLAGS list is also generated here using the below for-llop respecting the CONFIG_USR_DRV_<DRVNAME>_CFLAGS convention,
 # where DRVNAME is the upercase word using the lib<drvname> structure of the driver dir.
-quiet_cmd_kconf_drv_gen = KCONF
-      cmd_kconf_drv_gen = rm -f $(PROJ_FILES)/drivers/Kconfig.gen; for i in $(shell find drivers -maxdepth 3 -mindepth 3 -type d ! -iname '.git'); do /bin/echo "source \"$$i/Kconfig\"" >> $(PROJ_FILES)/drivers/Kconfig.gen; done;
+quiet_cmd_kconf_drvlist_gen = KCONF
+      cmd_kconf_drvlist_gen = rm -f $(PROJ_FILES)/drivers/Kconfig.gen; for i in $(shell find drivers -maxdepth 3 -mindepth 3 -type d ! -iname '.git'); do /bin/echo "source \"$$i/Kconfig\"" >> $(PROJ_FILES)/drivers/Kconfig.gen; done;
 
 
 # as libs are hosted by other repositories, liblist is dynamic for Kconfig, and generated here.
@@ -224,6 +224,10 @@ quiet_cmd_kconf_drv_gen = KCONF
 # where DRVNAME is the upercase word using the lib<drvname> structure of the driver dir.
 quiet_cmd_kconf_lib_gen = KCONF
       cmd_kconf_lib_gen = rm -f $(PROJ_FILES)/libs/Kconfig.gen; for i in $(shell find libs -maxdepth 1 -mindepth 1 -type d ! -iname '.git' -a ! -iname common -a ! -iname libbsp -a ! -iname libecc); do /bin/echo "source \"$$i/Kconfig\"" >> $(PROJ_FILES)/libs/Kconfig.gen; done
+
+quiet_cmd_kconf_drv_gen = KCONF
+      cmd_kconf_drv_gen = for i in $(shell find drivers/socs/*/ -mindepth 1 -maxdepth 1 -type d -exec basename {} \;); do upper=`/bin/echo "$$i" |tr '[:lower:]' '[:upper:]'`; /bin/echo "config USR_DRV_$${upper}_CFLAGS" >>$(PROJ_FILES)/drivers/Kconfig.gen; /bin/echo "  string" >>$(PROJ_FILES)/drivers/Kconfig.gen; /bin/echo "  default \" -I../../drivers/socs/$(CONFIG_SOCNAME)/$$i/api \" if USR_DRV_$$upper" >>$(PROJ_FILES)/drivers/Kconfig.gen; /bin/echo "" >>$(PROJ_FILES)/drivers/Kconfig.gen; done
+
 
 #
 # Depending on the manifest, some Kconfig and Kconfig-associated files may not exsit. If not
