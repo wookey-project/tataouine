@@ -27,17 +27,6 @@ $(app-y): outdir
 	$(call if_changed,buildapp)
 
 
-#	cp $(BUILD_DIR)/libs/*/lib*.a $(BUILD_DIR)/apps/$@
-#	cp $(BUILD_DIR)/drivers/*/lib*.a $(BUILD_DIR)/apps/$@
-#	if [ -f $(BUILD_DIR)/apps/$@/$@.fw1.ld ]; then make -C $@ all EXTRA_LDFLAGS=-T$@.fw1.ld APP_NAME=$@.fw1; fi
-#ifeq ($(CONFIG_FIRMWARE_DUALBANK),y)
-#	if [ -f $(BUILD_DIR)/apps/$@/$@.fw2.ld ]; then make -C $@ all EXTRA_LDFLAGS=-T$@.fw2.ld APP_NAME=$@.fw2; fi
-#endif
-#	if [ -f $(BUILD_DIR)/apps/$@/$@.dfu1.ld ]; then make -C $@ all EXTRA_LDFLAGS=-T$@.dfu1.ld APP_NAME=$@.dfu1; fi
-#ifeq ($(CONFIG_FIRMWARE_DUALBANK),y)
-#	if [ -f $(BUILD_DIR)/apps/$@/$@.dfu2.ld ]; then make -C $@ all EXTRA_LDFLAGS=-T$@.dfu2.ld APP_NAME=$@.dfu2; fi
-#endif
-
 outdir:
 	for dir in $(app-fw-y); do mkdir -p $(BUILD_DIR)/apps/$$dir; done
 ifeq ($(CONFIG_FIRMWARE_DFU),y)
@@ -50,6 +39,7 @@ ifeq ($(CONFIG_FIRMWARE_DFU),y)
 	for dir in $(app-dfu-y); do make -C $$dir clean; done
 endif
 	$(RM) $(RMFLAGS) Kconfig.gen
+	$(RM) $(RMFLAGS) Makefile.objs.gen
 
 __distclean:
 	for dir in $(app-fw-y); do make -C $$dir distclean; done

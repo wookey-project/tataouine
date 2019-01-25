@@ -26,6 +26,7 @@ libs: $(libs-y)
 __clean:
 	for dir in $(libs-y); do make -C $$dir clean; done
 	$(RM) $(RMFLAGS) Kconfig.gen
+	$(RM) $(RMFLAGS) Makefile.objs.gen
 
 __distclean:
 	for dir in $(libs-y); do make -C $$dir distclean; done

@@ -119,6 +119,7 @@ menuconfig: check-env
 	$(call cmd,kconf_app_gen)
 	$(call cmd,kconf_drvlist_gen)
 	$(call cmd,kconf_drv_gen)
+	$(call cmd,kconf_liblist_gen)
 	$(call cmd,kconf_lib_gen)
 	$(call cmd,kconf_root)
 	$(call cmd,nokconfig)
@@ -165,15 +166,18 @@ clean_kernel_headers:
 # as defines in their code
 __prepare:
 	$(call cmd,kconf_app_gen)
+	$(call cmd,kconf_drvlist_gen)
 	$(call cmd,kconf_drv_gen)
+	$(call cmd,kconf_liblist_gen)
 	$(call cmd,kconf_lib_gen)
+	$(call cmd,kconf_root)
 	$(call cmd,nokconfig)
 	$(call cmd,mkincludedir)
 	$(call cmd,prepareada)
-	$(call cmd,prepare)
 	$(call cmd,mkobjlist_libs)
 	$(call cmd,mkobjlist_apps)
 	$(call cmd,mkobjlist_drvs)
+	$(call cmd,prepare)
 
 prepare: $(BUILD_DIR) __prepare layout devmap $(CONFIG_PRIVATE_DIR) libs
 
@@ -192,7 +196,7 @@ layout: $(MEM_LAYOUT_DEF)
 # make prepare and make menuconfig to create the
 # .config file.
 
-.PHONY: libs prepare loader prove externals $(DRVS) $(APPS) $(APPS_PATHS) $(BUILD_LIBECC_DIR) $(BUILD_DIR) foo
+.PHONY: libs prepare loader prove externals $(DRVS) $(APPS) $(APPS_PATHS) $(BUILD_LIBECC_DIR) $(BUILD_DIR)
 
 
 applet:
@@ -319,6 +323,7 @@ __clean:
 	$(MAKE) -C drivers clean
 	$(MAKE) -C externals clean
 	$(RM) $(RMFLAGS) include
+	$(RM) $(RMFLAGS) Kconfig.gen
 
 dumpconfig:
 	@echo '======================'
@@ -383,6 +388,8 @@ defconfig_list:
 %_defconfig:
 	$(call cmd,rm_builddir)
 	$(call cmd,kconf_app_gen)
+	$(call cmd,kconf_drvlist_gen)
+	$(call cmd,kconf_liblist_gen)
 	$(call cmd,kconf_drv_gen)
 	$(call cmd,kconf_lib_gen)
 	$(call cmd,kconf_root)
