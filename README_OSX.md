@@ -136,7 +136,7 @@ or:
 ```
 
 If you want to compile the Ada/Spark kernel, you will need the **Ada cross-toolchain**. This toolchain
-can be downloaded [here](https://www.adacore.com/download). [Here is](http://mirrors.cdn.adacore.com/art/5b071301c7a447e5727f2a86) 
+can be downloaded [here](https://www.adacore.com/download). [Here is](http://mirrors.cdn.adacore.com/art/5b071301c7a447e5727f2a86)
 the current version (SHA-1: 10303d2822001364257562dc3e56d52c5780c8d0).
 
 You can download the toolchain for various host types and architectures. Beware to download the ARM ELF gnat
@@ -195,7 +195,7 @@ all paths that are required by the SDK to work correctly.
      ST_FLASH      = /usr/local/bin/st-flash
      ST_UTIL       = /usr/local/bin/st-flash
      CROSS_COMPILE = arm-none-eabi-
-   
+
    =========================================================
 ```
 
@@ -213,7 +213,7 @@ some of the variables of the `setenv.sh` script, just add them to your own `sete
      ST_FLASH      = /usr/local/bin/st-flash
      ST_UTIL       = /usr/local/bin/st-flash
      CROSS_COMPILE = arm-none-eabi-
-   
+
    =========================================================
 ```
 
@@ -302,12 +302,17 @@ In Terminal 1: launch openocd which is required to debug the target
    $ openocd -f tools/stm32f4disco<X>.cfg"
 ```
 
-In Terminal 2: launch your favorite ELF debugger, for example arm-none-eabi-gdb:
+In Terminal 2: launch your favorite ELF debugger, for example arm-none-eabi-gdb, and select the binary
+you which to debug (user application, kernel...)
 
 ```
    $ cd <wookey repository>
-   $ arm-none-eabi-gdb build/armv7-m/32f407discovery/wookey.elf"
-   gdb>target extended-remote 127.0.0.1:3333
-   gdb>symbols build/armv7-m/32f407discovery/wookey.elf
+   $ arm-none-eabi-gdb
+   gdb> target extended-remote 127.0.0.1:3333
+   gdb> symbols build/armv7-m/32f407discovery/apps/mysampleapp/mysampleapp.elf
+   gdb> monitor reset halt
+   gdb> continue
    gdb>
 ```
+
+You can now use usual gdb commands such as breakpoints, step-by-step execution, etc.

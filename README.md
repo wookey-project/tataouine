@@ -3,7 +3,7 @@
 ## Introduction
 
 This help is deliberately brief, and mostly here for a quick setup of the SDK.
-A thorough and complete documentation about the WooKey project, the EwoK microkernel, 
+A thorough and complete documentation about the WooKey project, the EwoK microkernel,
 the Tataouine SDK can be found on the [dedicated WooKey documentation](https://wookey-project.github.io/).
 
 ## Licensing
@@ -136,7 +136,7 @@ all paths that are required by the SDK to work correctly.
      ST_FLASH      = /usr/local/bin/st-flash
      ST_UTIL       = /usr/local/bin/st-flash
      CROSS_COMPILE = arm-none-eabi-
-   
+
    =========================================================
 ```
 
@@ -154,7 +154,7 @@ some of the variables of the `setenv.sh` script, just add them to your own `sete
      ST_FLASH      = /usr/local/bin/st-flash
      ST_UTIL       = /usr/local/bin/st-flash
      CROSS_COMPILE = arm-none-eabi-
-   
+
    =========================================================
 ```
 
@@ -243,13 +243,17 @@ In Terminal 1: launch openocd which is required to debug the target
    $ openocd -f tools/stm32f4disco<X>.cfg"
 ```
 
-In Terminal 2: launch your favorite ELF debugger, for example arm-none-eabi-gdb:
+In Terminal 2: launch your favorite ELF debugger, for example arm-none-eabi-gdb, and select the binary
+you which to debug (user application, kernel...)
 
 ```
    $ cd <wookey repository>
-   $ arm-none-eabi-gdb build/armv7-m/32f407discovery/wookey.elf"
+   $ arm-none-eabi-gdb
    gdb> target extended-remote 127.0.0.1:3333
-   gdb> symbols build/armv7-m/32f407discovery/wookey.elf
+   gdb> symbols build/armv7-m/32f407discovery/apps/mysampleapp/mysampleapp.elf
+   gdb> monitor reset halt
+   gdb> continue
    gdb>
 ```
 
+You can now use usual gdb commands such as breakpoints, step-by-step execution, etc.
