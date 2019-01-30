@@ -54,11 +54,6 @@ def save_in_file(data, outfilename):
     outfile.write(data)
     outfile.close()
 
-# Helper to ask the user for something
-def get_user_input(prompt):
-    # Handle the Python 2/3 issue
-    return input(prompt)
-
 # Helper to generate a random string with proper entropy
 def gen_rand_string(size):
     if is_python_2() == True:
