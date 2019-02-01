@@ -179,36 +179,23 @@ is
       perm    : ewok.perm.t_perm_name;
    end record;
 
---
--- \\var struct device_soc_infos *soc_device_list
--- \\brief STM32F4 devices map
---
--- This structure define all available devices and associated informations. This
--- informations are separated in two parts:
---   - physical information (IRQ lines, RCC references, physical address and size...)
---   - security information (required permissions, usage restriction (RO mapping, etc.)
---
--- This structure is used in remplacement of a full device tree for simplicity in small
--- embedded systems.
---
-   soc_devices_list : constant array of device_soc_info_t := (
+   --
+   -- \\var struct device_soc_infos *soc_device_list
+   -- \\brief STM32F4 devices map
+   --
+   -- This structure define all available devices and associated informations. This
+   -- informations are separated in two parts:
+   --   - physical information (IRQ lines, RCC references, physical address and size...)
+   --   - security information (required permissions, usage restriction (RO mapping, etc.)
+   --
+   -- This structure is used in remplacement of a full device tree for simplicity in small
+   -- embedded systems.
+   --
 """;
 
 
 ada_footer= """
    };
-
-   -- TODO
-   static const uint8_t soc_devices_list_size =
-       sizeof(soc_devices_list) / sizeof(struct device_soc_infos);
-   
-   struct device_soc_infos* soc_devmap_find_device
-       (physaddr_t addr, uint16_t size);
-   
-   void soc_devmap_enable_clock (const struct device_soc_infos *device);
-   
-   struct device_soc_infos *soc_devices_get_dma // FIXME rename
-       (enum dma_controller id, uint8_t stream);
 
 end devmap;
 """;
@@ -224,48 +211,137 @@ elif re.match(r'^ADA$', mode):
 else:
     print("Error ! Unsupported mode: %s" % mode);
     exit(1);
-    
+
 
 with open(filename, "r") as jsonfile:
     data = json.load(jsonfile, object_pairs_hook=collections.OrderedDict);
 
 
+def hex_to_adahex(val):
+    if not re.match(r'^0$', val):
+        hexa = re.sub(r'0x', '16#', val);
+        hexa = re.sub(r'$', '#', hexa);
+    else:
+        hexa = val;
+    return hexa;
 
-print(header);
+def bin_to_adabin(val):
+    if not re.match(r'^0$', val):
+        hexa = re.sub(r'0b', '2#', val);
+        hexa = re.sub(r'$', '#', hexa);
+    else:
+        hexa = val;
+    return hexa;
+
+def lookahead(iterable):
+    """Pass through all values from the given iterable, augmented by the
+       information if there are more values to come after the current one
+       (True), or if it is the last value (False).
+    """
+    # Get an iterator and pull the first value.
+    it = iter(iterable)
+    last = next(it)
+    # Run the iterator to exhaustion (starting from the second value).
+    for val in it:
+        # Report the *previous* value (more to come).
+        yield last, True
+        last = val
+        # Report the last value.
+    yield last, False
+
+
+def generate_c():
+    for device in data:
+        # device name
+        print("  { \"%s\", " % device, end='');
+        dev = data[device];
+        # device address
+        print("%s, " % dev["address"], end='');
+        # device control register
+        print("%s, " % dev["enable_register"], end='');
+        # device control register bit(s)
+        enbrbits = dev["enable_register_bits"];
+
+        print("%s" % enbrbits[0], end='');
+        if len(enbrbits) > 1: # other bits ?
+            for enb in enbrbits[1:]:
+                print (" | %s" % enb, end='');
+        print(", ", end='');
+
+        # device size
+        print("%s, " % dev["size"], end='');
+        # device memory mapping mask
+        print("%s, " % dev["memory_subregion_mask"], end='');
+        # device irq
+        irqs = dev["irqs"];
+        print("( ", end='');
+        print(irqs[0], end='');
+        for irq in irqs[1:]:
+            print(", %s" % irq, end='');
+        print(" ), ", end='');
+        # device mapping ro ?
+        print("%s, " % dev["read_only"], end='');
+        # device permissions
+        print("%s )," %  dev["permission"]);
+
+
+def generate_ada():
+    print("   type t_device_id is (");
+    for device, has_more in lookahead(data):
+        dev_id = device.upper();
+        dev_id = re.sub(r'-', '_', dev_id);
+        if has_more:
+            print("      %s," % dev_id);
+        else:
+            print("      %s);\n\n" % dev_id);
+
+
+    print("   soc_devices_list : constant array (t_device_id'range) of device_soc_info_t := (");
+    for device, has_more in lookahead(data):
+        # device name
+        print("      ( \"%s\", " % device, end='');
+        dev = data[device];
+        # device address
+        print("%s, " % hex_to_adahex(dev["address"]), end='');
+        # device control register
+        print("%s, " % dev["enable_register"], end='');
+        # device control register bit(s)
+        enbrbits = dev["enable_register_bits"];
+
+        print("%s" % enbrbits[0], end='');
+        if len(enbrbits) > 1: # other bits ?
+            for enb in enbrbits[1:]:
+                print (" | %s" % enb, end='');
+        print(", ", end='');
+
+        # device size
+        print("%s, " % hex_to_adahex(dev["size"]), end='');
+        # device memory mapping mask
+        print("%s, " % bin_to_adabin(dev["memory_subregion_mask"]), end='');
+        # device irq
+        irqs = dev["irqs"];
+        print("( ", end='');
+        print(irqs[0], end='');
+        for irq in irqs[1:]:
+            print(", %s" % irq, end='');
+        print(" ), ", end='');
+        # device mapping ro ?
+        print("%s, " % dev["read_only"], end='');
+        # device permissions
+        if has_more:
+            print("%s )," %  dev["permission"]);
+        else:
+            print("%s )" %  dev["permission"], end='');
+
 
 
 #print data;
-for device in data:
-    # device name
-    print("  { \"%s\", " % device, end='');
-    dev = data[device];
-    # device address
-    print("%s, " % dev["address"], end='');
-    # device control register
-    print("%s, " % dev["enable_register"], end='');
-    # device control register bit(s)
-    enbrbits = dev["enable_register_bits"];
 
-    print("%s" % enbrbits[0], end='');
-    if len(enbrbits) > 1: # other bits ?
-        for enb in enbrbits[1:]:
-            print (" | %s" % enb, end='');
-    print(", ", end='');
+print(header);
 
-    # device size
-    print("%s, " % dev["size"], end='');
-    # device memory mapping mask
-    print("%s, " % dev["memory_subregion_mask"], end='');
-    # device irq
-    irqs = dev["irqs"];
-    print("{ ", end='');
-    print(irqs[0], end='');
-    for irq in irqs[1:]:
-        print(", %s" % irq, end='');
-    print(" }, ", end='');
-    # device mapping ro ?
-    print("%s, " % dev["read_only"], end='');
-    # device permissions
-    print("%s }," %  dev["permission"]);
+if re.match(r'^C$', mode):
+   generate_c();
+elif re.match(r'^ADA$', mode):
+   generate_ada();
 
 print(footer);
