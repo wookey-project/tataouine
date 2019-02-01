@@ -274,15 +274,15 @@ def generate_c():
         print("%s, " % dev["memory_subregion_mask"], end='');
         # device irq
         irqs = dev["irqs"];
-        print("( ", end='');
+        print("{ ", end='');
         print(irqs[0], end='');
         for irq in irqs[1:]:
             print(", %s" % irq, end='');
-        print(" ), ", end='');
+        print(" }, ", end='');
         # device mapping ro ?
         print("%s, " % dev["read_only"], end='');
         # device permissions
-        print("%s )," %  dev["permission"]);
+        print("%s }," %  dev["permission"]);
 
 
 def generate_ada():
