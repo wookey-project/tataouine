@@ -56,6 +56,8 @@ if __name__ == '__main__':
         sys.exit(-1);
     if dual_bank == True:
         flash_size = flip_size + flop_size
+    else:
+        flash_size = flip_size
     flash_max_addr = flash_base_addr + flash_size
     print("FLIP base = 0x%x, size = 0x%x" % (flip_base_addr, flip_size))
     print("FLOP base = 0x%x, size = 0x%x" % (flop_base_addr, flop_size))
@@ -194,5 +196,6 @@ if __name__ == '__main__':
     firmware_hex[flip_base_addr+flip_size-flip_firmware_size:flip_base_addr+flip_size].tofile(base_path+"/flip_fw.hex", format='hex')
     firmware_hex[flip_base_addr+flip_size-flip_firmware_size:flip_base_addr+flip_size].tofile(base_path+"/flip_fw.bin", format='bin')
     # Dump FLOP to sign
-    firmware_hex[flop_base_addr+flop_size-flop_firmware_size:flop_base_addr+flop_size].tofile(base_path+"/flop_fw.hex", format='hex')
-    firmware_hex[flop_base_addr+flop_size-flop_firmware_size:flop_base_addr+flop_size].tofile(base_path+"/flop_fw.bin", format='bin')
+    if dual_bank == True:
+        firmware_hex[flop_base_addr+flop_size-flop_firmware_size:flop_base_addr+flop_size].tofile(base_path+"/flop_fw.hex", format='hex')
+        firmware_hex[flop_base_addr+flop_size-flop_firmware_size:flop_base_addr+flop_size].tofile(base_path+"/flop_fw.bin", format='bin')
