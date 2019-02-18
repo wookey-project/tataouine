@@ -26,6 +26,9 @@ quiet_cmd_cc_o_c        = CC       $@
 quiet_cmd_ada_lib       = ADA      $@
       cmd_ada_lib       = ADA_ARCH=$(CONFIG_ADA_ARCH) ADA_RUNTIME=$(ADA_RUNTIME) ADA_PROFILE=$(CONFIG_ADA_PROFILE) BUILD_DIR=$(APP_BUILD_DIR) ARCH=$(CONFIG_ARCH) SOCNAME=$(CONFIG_SOCNAME) gprbuild -P$<
 
+quiet_cmd_ada_exe       = ADA      $@
+      cmd_ada_exe       = ADA_ARCH=$(CONFIG_ADA_ARCH) ADA_RUNTIME=$(ADA_RUNTIME) ADA_PROFILE=$(CONFIG_ADA_PROFILE) BUILD_DIR=$(APP_BUILD_DIR) ARCH=$(CONFIG_ARCH) SOCNAME=$(CONFIG_SOCNAME) gprbuild -P$<
+
 quiet_cmd_ada_clean     = ADACLEAN $<
       cmd_ada_clean     = ADA_ARCH=$(CONFIG_ADA_ARCH) ADA_RUNTIME=$(ADA_RUNTIME) ADA_PROFILE=$(CONFIG_ADA_PROFILE) BUILD_DIR=$(APP_BUILD_DIR) ARCH=$(CONFIG_ARCH) SOCNAME=$(CONFIG_SOCNAME) gprclean -c -P$< >/dev/null 2>&1
 
@@ -172,6 +175,9 @@ quiet_cmd_mkincludedir  = MKINCLUDEDIR
 
 quiet_cmd_pepareada     = PREPAREADA
       cmd_prepareada    = for i in $(shell cat kernel/Ada/libgnat/gnat/link_list.txt); do ln -fs $(ADA_RUNTIME)/arm-eabi/lib/gnat/zfp-stm32f4/gnat/$$i $(PWD)/kernel/Ada/libgnat/gnat/$$i; done
+
+quiet_cmd_pepareada_l   = PREPAREADA_LDR
+      cmd_prepareada_l  = for i in $(shell cat loader/libgnat/gnat/link_list.txt); do ln -fs $(ADA_RUNTIME)/arm-eabi/lib/gnat/zfp-stm32f4/gnat/$$i $(PWD)/loader/libgnat/gnat/$$i; done
       # as file read is supported only since gmake 1.2, shell read is required here :-/
 
 quiet_cmd_prepare       = PREPARE
