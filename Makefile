@@ -165,6 +165,7 @@ clean_kernel_headers:
 # .config file. This allows source files to use configured values
 # as defines in their code
 __prepare:
+	$(Q)$(MAKE) -C kernel prepare
 	$(call cmd,kconf_app_gen)
 	$(call cmd,kconf_drvlist_gen)
 	$(call cmd,kconf_drv_gen)
@@ -235,7 +236,7 @@ loader:  libbsp
 	$(Q)$(MAKE) -C $@ EXTRA_CFLAGS="-DLOADER"
 
 libbsp:
-	ADAKERNEL= make LOADER=y -C kernel/arch
+	ADAKERNEL= make LOADER=y -C kernel/src/arch
 
 libs:
 	$(Q)$(MAKE) -C $@

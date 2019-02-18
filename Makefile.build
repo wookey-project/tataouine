@@ -80,27 +80,27 @@ quiet_cmd_adalink_o_target = ADALD    $@
 
 quiet_cmd_prepare_kernel_header_for_fw1 = KERNHEADER_FW1
       cmd_prepare_kernel_header_for_fw1 = \
-         ./tools/gen_ld.pl $(CONFIG_ARCH) $(CONFIG_BOARDNAME) $(BUILD_DIR)/apps_sections.fw1.ld fw1 $(PROJ_FILES)/.config; \
-		 ./tools/gen_symhdr.pl $(CONFIG_ARCH) $(CONFIG_BOARDNAME) fw1 .config; \
-	     ./tools/apps/permissions.pl FW $(PROJ_FILES)/.config $(PROJ_FILES)/apps/ipc.config $(PROJ_FILES)/apps/dmashm.config
+         ./kernel/tools/gen_ld.pl $(CONFIG_ARCH) $(CONFIG_BOARDNAME) $(BUILD_DIR)/apps_sections.fw1.ld fw1 $(PROJ_FILES)/.config; \
+		 ./kernel/tools/gen_symhdr.pl $(CONFIG_ARCH) $(CONFIG_BOARDNAME) fw1 .config; \
+	     ./kernel/tools/permissions.pl FW $(PROJ_FILES)/.config $(PROJ_FILES)/apps/ipc.config $(PROJ_FILES)/apps/dmashm.config
 
 quiet_cmd_prepare_kernel_header_for_fw2 = KERNHEADER_FW2
       cmd_prepare_kernel_header_for_fw2 = \
-         ./tools/gen_ld.pl $(CONFIG_ARCH) $(CONFIG_BOARDNAME) $(BUILD_DIR)/apps_sections.fw2.ld fw2 $(PROJ_FILES)/.config; \
-		 ./tools/gen_symhdr.pl $(CONFIG_ARCH) $(CONFIG_BOARDNAME) fw2 .config; \
-	     ./tools/apps/permissions.pl FW $(PROJ_FILES)/.config $(PROJ_FILES)/apps/ipc.config $(PROJ_FILES)/apps/dmashm.config
+         ./kernel/tools/gen_ld.pl $(CONFIG_ARCH) $(CONFIG_BOARDNAME) $(BUILD_DIR)/apps_sections.fw2.ld fw2 $(PROJ_FILES)/.config; \
+		 ./kernel/tools/gen_symhdr.pl $(CONFIG_ARCH) $(CONFIG_BOARDNAME) fw2 .config; \
+	     ./kernel/tools/permissions.pl FW $(PROJ_FILES)/.config $(PROJ_FILES)/apps/ipc.config $(PROJ_FILES)/apps/dmashm.config
 
 quiet_cmd_prepare_kernel_header_for_dfu1 = KERNHEADER_DFU1
       cmd_prepare_kernel_header_for_dfu1 = \
-         ./tools/gen_ld.pl $(CONFIG_ARCH) $(CONFIG_BOARDNAME) $(BUILD_DIR)/apps_sections.dfu1.ld dfu1 $(PROJ_FILES)/.config; \
-		 ./tools/gen_symhdr.pl $(CONFIG_ARCH) $(CONFIG_BOARDNAME) dfu1 .config; \
-	     ./tools/apps/permissions.pl DFU $(PROJ_FILES)/.config $(PROJ_FILES)/apps/ipc.config $(PROJ_FILES)/apps/dmashm.config
+         ./kernel/tools/gen_ld.pl $(CONFIG_ARCH) $(CONFIG_BOARDNAME) $(BUILD_DIR)/apps_sections.dfu1.ld dfu1 $(PROJ_FILES)/.config; \
+		 ./kernel/tools/gen_symhdr.pl $(CONFIG_ARCH) $(CONFIG_BOARDNAME) dfu1 .config; \
+	     ./kernel/tools/permissions.pl DFU $(PROJ_FILES)/.config $(PROJ_FILES)/apps/ipc.config $(PROJ_FILES)/apps/dmashm.config
 
 quiet_cmd_prepare_kernel_header_for_dfu2 = KERNHEADER_DFU2
       cmd_prepare_kernel_header_for_dfu2 = \
-         ./tools/gen_ld.pl $(CONFIG_ARCH) $(CONFIG_BOARDNAME) $(BUILD_DIR)/apps_sections.dfu2.ld dfu2 $(PROJ_FILES)/.config; \
-		 ./tools/gen_symhdr.pl $(CONFIG_ARCH) $(CONFIG_BOARDNAME) dfu2 .config; \
-	     ./tools/apps/permissions.pl DFU $(PROJ_FILES)/.config $(PROJ_FILES)/apps/ipc.config $(PROJ_FILES)/apps/dmashm.config
+         ./kernel/tools/gen_ld.pl $(CONFIG_ARCH) $(CONFIG_BOARDNAME) $(BUILD_DIR)/apps_sections.dfu2.ld dfu2 $(PROJ_FILES)/.config; \
+		 ./kernel/tools/gen_symhdr.pl $(CONFIG_ARCH) $(CONFIG_BOARDNAME) dfu2 .config; \
+	     ./kernel/tools/permissions.pl DFU $(PROJ_FILES)/.config $(PROJ_FILES)/apps/ipc.config $(PROJ_FILES)/apps/dmashm.config
 
 
 
@@ -120,8 +120,8 @@ quiet_cmd_objcopy_bin   = OBJ/BIN  $@
 
 # layout build
 quiet_cmd_layout        = LAYOUT   $@
-      cmd_layout        = $(CC) $(AFLAGS) $(WARN_CFLAGS) $(EMBED_CFLAGS) -E -x c $(MEM_LAYOUT_DEF) -I. -Iinclude/generated -Ikernel/arch/socs/$(SOC) -Ikernel/arch/cores/$(CONFIG_ARCH) -Ikernel/arch/boards/$(CONFIG_BOARDNAME) $(LDS) $(LDS_GEN) | grep -v '^\#' > $(MEM_LAYOUT); \
-                          $(CC) $(AFLAGS) $(WARN_CFLAGS) $(EMBED_CFLAGS) -E -x c $(MEM_APP_LAYOUT_DEF) -I. -Iinclude/generated -Ikernel/arch/socs/$(SOC) -Ikernel/arch/cores/$(CONFIG_ARCH) -Ikernel/arch/boards/$(CONFIG_BOARDNAME) $(LDS) $(LDS_GEN) | grep -v '^\#' > $(MEM_APP_LAYOUT)
+      cmd_layout        = $(CC) $(AFLAGS) $(WARN_CFLAGS) $(EMBED_CFLAGS) -E -x c $(MEM_LAYOUT_DEF) -I. -Iinclude/generated -Ikernel/src/arch/socs/$(SOC) -Ikernel/src/arch/cores/$(CONFIG_ARCH) -Ikernel/src/arch/boards/$(CONFIG_BOARDNAME) $(LDS) $(LDS_GEN) | grep -v '^\#' > $(MEM_LAYOUT); \
+                          $(CC) $(AFLAGS) $(WARN_CFLAGS) $(EMBED_CFLAGS) -E -x c $(MEM_APP_LAYOUT_DEF) -I. -Iinclude/generated -Ikernel/src/arch/socs/$(SOC) -Ikernel/src/arch/cores/$(CONFIG_ARCH) -Ikernel/src/arch/boards/$(CONFIG_BOARDNAME) $(LDS) $(LDS_GEN) | grep -v '^\#' > $(MEM_APP_LAYOUT)
 
 # final layout build
 quiet_cmd_final_layout  = END/LAY  $@
@@ -181,7 +181,7 @@ quiet_cmd_pepareada_l   = PREPAREADA_LDR
       # as file read is supported only since gmake 1.2, shell read is required here :-/
 
 quiet_cmd_prepare       = PREPARE
-      cmd_prepare       = $(CONF) $(CONF_ARGS) Kconfig; ./tools/gen_autoconf_ada.pl .config; \
+      cmd_prepare       = $(CONF) $(CONF_ARGS) Kconfig; ./kernel/tools/gen_autoconf_ada.pl .config; \
 						  $(CONFGEN) $(CONFGEN_ARGS) Kconfig
 
 # tiny defconfig support, please don't call any other target depending on config here,
@@ -208,7 +208,7 @@ quiet_cmd_doxygen       = DOXY       $@
 			  if [ -d $@/../sphinx/html ]; then cp $@/`basename $@`.pdf $@/../sphinx/html/_downloads; fi
 
 quiet_cmd_doxy_custom   = DOXY+      $@
-      cmd_doxy_custom   = if [ -d $@/latex ]; then ../tools/gen_devmap.pl $(BUILD_DIR) $@/latex/devmap.tex ../kernel/arch/socs/stm32f439/soc-devmap.h; \
+      cmd_doxy_custom   = if [ -d $@/latex ]; then ../tools/gen_devmap.pl $(BUILD_DIR) $@/latex/devmap.tex ../kernel/src/arch/socs/stm32f439/soc-devmap.h; \
 			  TMP=`sed -e 's:.*End generated contents.*:\\input{devmap}:g' $@/latex/refman.tex;`; printf "$${TMP}" > $@/latex/refman.tex; unset TMP \
       			  make -C $@/latex >/dev/null 2>&1 && cp $@/latex/refman.pdf $@/`basename $@`.pdf; fi; \
 			  if [ -d $@/../sphinx/html/docs ]; then cp $@/`basename $@`.pdf $@/../sphinx/html/_downloads; fi
@@ -261,7 +261,7 @@ quiet_cmd_mkobjlist_drvs   = MAKEOBJS_DRVS
       cmd_mkobjlist_drvs   = /bin/echo "DRVSRC_DIR = \$$(PROJ_FILES)/drivers/socs/$(CONFIG_SOCNAME)" > drivers/socs/$(CONFIG_SOCNAME)/Makefile.objs; /bin/echo "drv-y :=" >> drivers/socs/$(CONFIG_SOCNAME)/Makefile.objs; rm -f drivers/socs/$(CONFIG_SOCNAME)/Makefile.objs.gen; for i in $(shell find drivers/socs/$(CONFIG_SOCNAME) -mindepth 1 -maxdepth 1 -type d -exec basename {} \;); do upper=`/bin/echo "$$i" |tr '[:lower:]' '[:upper:]'`; /bin/echo "drv-\$$(CONFIG_USR_DRV_$${upper}) += $$i" >> drivers/socs/$(CONFIG_SOCNAME)/Makefile.objs.gen; done; if [ -d $(PROJ_FILES)/drivers/boards/$(CONFIG_BOARDNAME) ]; then /bin/echo "BOARD_DRVSRC_DIR = \$$(PROJ_FILES)/drivers/boards/$(CONFIG_BOARDNAME)" > drivers/boards/$(CONFIG_BOARDNAME)/Makefile.objs; /bin/echo "board-drv-y :=" >> drivers/boards/$(CONFIG_BOARDNAME)/Makefile.objs; rm -f drivers/boards/$(CONFIG_BOARDNAME)/Makefile.objs.gen; for i in $(shell find drivers/boards/$(CONFIG_BOARDNAME) -mindepth 1 -maxdepth 1 -type d -exec basename {} \;); do upper=`/bin/echo "$$i" |tr '[:lower:]' '[:upper:]'`; /bin/echo "board-drv-\$$(CONFIG_USR_DRV_$${upper}) += $$i" >> drivers/boards/$(CONFIG_BOARDNAME)/Makefile.objs.gen; done; fi
 
 quiet_cmd_devmap           = DEVMAP
-      cmd_devmap           = $(PROJ_FILES)/tools/devmap.py C $(PROJ_FILES)/layouts/arch/socs/$(SOC)/soc-devmap-$(BOARDNAME).json > $(PROJ_FILES)/kernel/generated/devmap.h
+      cmd_devmap           = $(PROJ_FILES)/kernel/tools/devmap.py C $(PROJ_FILES)/layouts/arch/socs/$(SOC)/soc-devmap-$(BOARDNAME).json > $(PROJ_FILES)/kernel/generated/devmap.h
 
 quiet_cmd_format_fw        = FORMAT
       cmd_format_fw        = $(PROJ_FILES)/tools/format_firmware.py $(PROJ_FILES)/layouts/arch/socs/$(SOC)/soc-devmap-$(BOARDNAME).json $(BUILD_DIR)/$(BOARDNAME).hex
