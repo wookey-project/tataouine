@@ -52,7 +52,8 @@ export CROSS_COMPILE="arm-eabi-"
 
 # 6) By default, the SDK is using GCC for cross-compiling. It is possible to
 # use LLVM to get a better static analysis through clang and build-check.
-# Although, *this requires clang 7 and higher*.
+# Although, *this requires clang 7 and higher*. By now, LLVM support is
+# *EXPERIMENTAL* and is not yet fully integrated.
 # set this variable to 'y' if you which to use LLVM/Clang instead of gcc
 
 export USE_LLVM=n
