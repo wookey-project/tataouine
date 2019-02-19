@@ -158,6 +158,25 @@ choice
         enough flash in the target.
 endchoice
 
+choice
+   prompt "Firmware build mode"
+   default FIRMWARE_BUILD_MODE_DEBUG
+   config FIRMWARE_BUILD_MODE_DEBUG
+     bool "Build the firmware in debug mode"
+     ---help---
+       Keep debug flags and local UART activated. Freeze on panic,
+       no RDP2 check at boot time.
+   config FIRMWARE_BUILD_MODE_PROD
+     bool "Build the firmware in prod mode"
+     select KERNEL_NOSERIAL
+     select KERNEL_PANIC_REBOOT
+     ---help---
+       Deactivate all debug, deactivate local uart, make the firmware
+       reboot in case of panic, activate the RDP2 flag check at boot
+       reseting when bootable firmware version is greater than 0.
+endchoice
+
+
 config FIRMWARE_DUALBANK
   bool
   default y if FIRMWARE_MODE_DUAL_BANK || FIRMWARE_MODE_DUAL_BANK_DFU
@@ -252,3 +271,4 @@ config DONE
   default y
 
 endmenu
+
