@@ -200,17 +200,17 @@ layout: $(MEM_LAYOUT_DEF)
 applet:
 	$(Q)$(MAKE) -C javacard $@
 
-$(BUILD_DIR)/kernel/kernel.fw1.hex:
+$(BUILD_DIR)/kernel/kernel.fw1.hex: $(BUILD_DIR)/apps/.apps_done
 	$(call cmd,prepare_kernel_header_for_fw1)
 	$(Q)$(MAKE) -C kernel all EXTRA_LDFLAGS=-Tkernel.fw1.ld APP_NAME=kernel.fw1
 
-$(BUILD_DIR)/kernel/kernel.fw2.hex:
+$(BUILD_DIR)/kernel/kernel.fw2.hex: $(BUILD_DIR)/apps/.apps_done
 ifeq ($(CONFIG_FIRMWARE_DUALBANK),y)
 	$(call cmd,prepare_kernel_header_for_fw2)
 	$(Q)$(MAKE) -C kernel all EXTRA_LDFLAGS=-Tkernel.fw2.ld APP_NAME=kernel.fw2
 endif
 
-$(BUILD_DIR)/kernel/kernel.dfu1.hex:
+$(BUILD_DIR)/kernel/kernel.dfu1.hex: $(BUILD_DIR)/apps/.apps_done
 ifeq ($(CONFIG_FIRMWARE_MODE_MONO_BANK_DFU),y)
 	$(call cmd,prepare_kernel_header_for_dfu1)
 	$(Q)$(MAKE) -C kernel all EXTRA_LDFLAGS=-Tkernel.dfu1.ld APP_NAME=kernel.dfu1
@@ -221,12 +221,14 @@ ifeq ($(CONFIG_FIRMWARE_MODE_DUAL_BANK_DFU),y)
 endif
 
 
-$(BUILD_DIR)/kernel/kernel.dfu2.hex:
+$(BUILD_DIR)/kernel/kernel.dfu2.hex: $(BUILD_DIR)/apps/.apps_done
 ifeq ($(CONFIG_FIRMWARE_MODE_DUAL_BANK_DFU),y)
 	$(call cmd,prepare_kernel_header_for_dfu2)
 	$(Q)$(MAKE) -C kernel all EXTRA_LDFLAGS=-Tkernel.dfu2.ld APP_NAME=kernel.dfu2
 endif
 
+
+$(BUILD_DIR)/apps/.apps_done: $(APPS)
 
 
 loader:  libbsp

@@ -21,6 +21,7 @@ CONFIG_MK = $(PROJ_FILES)/Makefile.conf
 app-y := $(sort $(app-fw-y) $(app-dfu-y))
 
 all: $(app-y)
+	@touch $(BUILD_DIR)/apps/.apps_done
 
 $(app-y): outdir
 	$(call if_changed,ldscript)
