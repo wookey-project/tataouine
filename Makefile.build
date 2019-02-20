@@ -41,7 +41,8 @@ quiet_cmd_gnat_o_ada    = GNAT     $@
 
 # managing fw and dfu build for apps
 quiet_cmd_buildapp      = APP     $@
-      cmd_buildapp      = cp $(BUILD_DIR)/libs/*/lib*.a $(BUILD_DIR)/apps/$@; \
+      cmd_buildapp      = make -C $@ alldeps; \
+	                      cp $(BUILD_DIR)/libs/*/lib*.a $(BUILD_DIR)/apps/$@; \
 						  cp $(BUILD_DIR)/drivers/*/lib*.a $(BUILD_DIR)/apps/$@; \
 						  if [ -f $(BUILD_DIR)/apps/$@/$@.fw1.ld ]; then make -C $@ all EXTRA_LDFLAGS="-T$@.fw1.ld" APP_NAME=$@.fw1; fi; \
 						  if [ ! -z "$(CONFIG_FIRMWARE_DUALBANK)" ]; then if [ -f $(BUILD_DIR)/apps/$@/$@.fw2.ld ]; then make -C $@ all EXTRA_LDFLAGS="-T$@.fw2.ld" APP_NAME=$@.fw2; fi; fi; \

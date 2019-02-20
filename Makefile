@@ -180,7 +180,7 @@ __prepare:
 	$(call cmd,mkobjlist_drvs)
 	$(call cmd,prepare)
 
-prepare: $(BUILD_DIR) __prepare layout devmap $(CONFIG_PRIVATE_DIR) libs
+prepare: $(BUILD_DIR) __prepare layout devmap $(CONFIG_PRIVATE_DIR)
 
 devmap:
 	$(call cmd,devmap)
@@ -457,4 +457,5 @@ check-env:
 ifndef WOOKEY_ENV
 	$(error Please, edit 'setenv.sh' and run '. setenv.sh')
 endif
+
 
