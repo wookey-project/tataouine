@@ -96,9 +96,6 @@ LDFLAGS         += -T$(MEM_LAYOUT) $(AFLAGS) -fno-builtin -nostdlib
 # The apps dir(s)
 APPS             = apps
 
-# the userspace drivers dir
-DRVS             = drivers
-
 # Documentation files
 DOC_DIR ?= ./doc/
 
@@ -197,7 +194,7 @@ layout: $(MEM_LAYOUT_DEF)
 # make prepare and make menuconfig to create the
 # .config file.
 
-.PHONY: libs prepare loader prove externals $(DRVS) $(APPS) $(APPS_PATHS) $(BUILD_LIBECC_DIR) $(BUILD_DIR)
+.PHONY: libs prepare loader prove externals $(APPS) $(APPS_PATHS) $(BUILD_LIBECC_DIR) $(BUILD_DIR)
 
 
 applet:
@@ -238,16 +235,7 @@ loader:  libbsp
 libbsp:
 	ADAKERNEL= make LOADER=y -C kernel/src/arch
 
-libs:
-	$(Q)$(MAKE) -C $@
-
-$(DRVS):
-	$(Q)$(MAKE) -C $@
-
 $(APPS):
-	$(Q)$(MAKE) -C $@
-
-externals:
 	$(Q)$(MAKE) -C $@
 
 prove:
@@ -278,9 +266,9 @@ prove:
 # from all elf, finalize into one single binary file
 $(BUILD_DIR)/loader/loader.hex: libs loader
 
-$(APPS_FW1_HEXFILES): layout libs externals $(DRVS) $(APPS)
+$(APPS_FW1_HEXFILES): layout libs externals $(APPS)
 
-$(APPS_FW2_HEXFILES): layout libs externals $(DRVS) $(APPS)
+$(APPS_FW2_HEXFILES): layout libs externals $(APPS)
 
 # binary to flash through JTAG (initial flashing)
 $(BUILD_DIR)/$(HEX_NAME): $(APPS_HEXFILES) $(KERNEL_HEXFILES) $(BUILD_DIR)/loader/loader.hex
