@@ -170,6 +170,7 @@ choice
      bool "Build the firmware in prod mode"
      select KERNEL_NOSERIAL
      select KERNEL_PANIC_REBOOT
+     select LOADER_FLASH_LOCK
      ---help---
        Deactivate all debug, deactivate local uart, make the firmware
        reboot in case of panic, activate the RDP2 flag check at boot
