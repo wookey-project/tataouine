@@ -175,7 +175,9 @@ choice
      ---help---
        Deactivate all debug, deactivate local uart, make the firmware
        reboot in case of panic, activate the RDP2 flag check at boot
-       reseting when bootable firmware version is greater than 0.
+       reseting if RDP2 protection is not active.
+       INFO: this option is for production firmwares. The board must
+       be locked (RDP2, JTAG lock) just after the initial flash.
 endchoice
 
 
