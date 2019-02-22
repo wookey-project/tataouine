@@ -171,6 +171,7 @@ choice
      select KERNEL_NOSERIAL
      select KERNEL_PANIC_REBOOT
      select LOADER_FLASH_LOCK
+     select LOADER_FLASH_RDP_CHECK
      ---help---
        Deactivate all debug, deactivate local uart, make the firmware
        reboot in case of panic, activate the RDP2 flag check at boot
