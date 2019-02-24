@@ -342,7 +342,7 @@ dumpconfig:
 # these targets manage the device itself
 # See the various README for complete information
 
-burn: $(BUILD_DIR)/$(BIN_NAME)
+burn:
 	$(ST_FLASH) write $(BUILD_DIR)/$(BIN_NAME) 0x8000000
 
 tburn: $(BUILD_DIR)/$(BIN_NAME)

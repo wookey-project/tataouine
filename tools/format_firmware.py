@@ -69,10 +69,10 @@ if __name__ == '__main__':
         holes_to_fill.append(addr_start, flash_base_addr)
     for (addr_start, addr_stop) in firmware_hex.segments():
         if (addr_start < flash_base_addr) or (addr_start > flash_max_addr):
-            print("Error: segment [0x%x, 0x%x] is not in flash range (0x%x, 0x%x)" % (addr_start, addr_stop, size, flash_base_addr, flash_max_addr));
+            print("Error: segment [0x%x, 0x%x] is not in flash range (0x%x, 0x%x)" % (addr_start, addr_stop,flash_base_addr, flash_max_addr));
             sys.exit(-1)
         if (addr_stop < flash_base_addr) or (addr_stop > flash_max_addr):
-            print("Error: segment [0x%x, 0x%x] is not in flash range (0x%x, 0x%x)" % (addr_start, addr_stop, size, flash_base_addr, flash_max_addr));
+            print("Error: segment [0x%x, 0x%x] is not in flash range (0x%x, 0x%x)" % (addr_start, addr_stop, flash_base_addr, flash_max_addr));
             sys.exit(-1)
         if last_addr_stop != None:
             if(addr_start != last_addr_stop):

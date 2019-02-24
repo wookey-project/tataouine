@@ -27,6 +27,12 @@ ifeq ($(CONFIG_USR_LIB_SIGN),y)
 external_targets += libsign $(EC_UTILS)
 endif
 
+ifeq ($(USE_LLVM),y)
+HOST_CC=$(CLANG_PATH)
+else
+HOST_CC=gcc
+endif
+
 all: $(external_targets)
 
 
@@ -38,7 +44,7 @@ libsign: $(BUILD_DIR)
 	fi; \
 	if test ! -f $(BUILD_DIR)/$@/libsign.a; then \
 	  mkdir -p $(BUILD_DIR)/libs/$@; \
-	  $(MAKE) -C $(PROJ_FILES)/externals/libecc CFLAGS="$(LIBSIGN_CFLAGS) $(AFLAGS) $(WARN_CFLAGS) $(HARDEN_CFLAGS) -pedantic -fno-builtin -std=c99 -D_FORTIFY_SOURCE=2 $(LIB_OPTIM_CFLAGS) -ffunction-sections -fdata-sections -fno-pie -fno-pic" \
+	  $(MAKE) -C $(PROJ_FILES)/externals/libecc CFLAGS="$(LIBSIGN_CFLAGS) $(AFLAGS) $(WARN_CFLAGS) $(HARDEN_CFLAGS) -pedantic -fno-builtin -std=c99 -D_FORTIFY_SOURCE=2 $(LIB_OPTIM_CFLAGS) -ffunction-sections -fdata-sections -fno-pie -fno-pic -O3" \
 	  BUILD_DIR="build" CC=$(CC) AR=$(AR) RANLIB=$(RANLIB) LIBECC_NOSTDLIB=1 build/libsign.a; \
 	  cp $(PROJ_FILES)/externals/libecc/build/libsign.a $(BUILD_DIR)/libs/$@/libsign.a; \
 	fi; \
@@ -46,7 +52,7 @@ libsign: $(BUILD_DIR)
 $(EC_UTILS): $(BUILD_DIR)/tools
 	mkdir -p $(PROJ_FILES)/externals/libecc/build; \
 	CFLAGS="-DWITH_LIBECC_CONFIG_OVERRIDE $(LIBSIGN_CFLAGS)" BUILD_DIR="build" make -C $(PROJ_FILES)/externals/libecc clean; \
-	CFLAGS="-DWITH_LIBECC_CONFIG_OVERRIDE $(LIBSIGN_CFLAGS)" BUILD_DIR="build" CC=gcc AR=ar AS=as OBJCOPY=objcopy LD=ld RANLIB=ranlib $(MAKE) -C $(PROJ_FILES)/externals/libecc; \
+	CFLAGS="-DWITH_LIBECC_CONFIG_OVERRIDE $(LIBSIGN_CFLAGS) -fPIC" BUILD_DIR="build" CC=$(HOST_CC) AR=ar AS=as OBJCOPY=objcopy LD=ld RANLIB=ranlib $(MAKE) -C $(PROJ_FILES)/externals/libecc; \
 	cp $(PROJ_FILES)/externals/libecc/build/ec_utils $@; \
 
 $(BUILD_DIR)/tools:
