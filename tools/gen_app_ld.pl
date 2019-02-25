@@ -69,9 +69,9 @@ for my $mode ("FW1", "FW2", "DFU1", "DFU2") {
     # slot size ...
     # DFU slots are 2*smallers than FW ones. if the task exists in both
     # mode, it uses 2n slots in DFU mode for n slots in FW mode
-    #if ($stem_mode eq 'DFU' and defined($hash{"${i}_FW"})) {
-    #    $num_slots = $num_slots * 2;
-    #}
+    if ($stem_mode eq 'DFU' and defined($hash{"${i}_FW"})) {
+        $num_slots = $num_slots * 2;
+    }
     my $stacksize = $hash{"${i}_STACKSIZE"} // 8192;
     my $totalslot = ${slot} + ${num_slots} - 1;
 
@@ -114,7 +114,7 @@ SECTIONS
 		KEEP (*(.fini))
 		__e_text = .;        	/* define a global symbols at end of code */
 	}>${mode}_APP${slot}_APP${totalslot}
-	
+
 	. = ALIGN(4);
 
 	/* used by the startup to initialize got */
@@ -136,7 +136,7 @@ SECTIONS
 		. = . + ${stacksize}; /*  thread stack */
 		_e_stack = .;         /* define a global symbol after .data+.bss+.stack size content */
 	}>RAM_APP${slot}_APP${totalslot}
-	
+
 	. = ALIGN(4);
 
 	/* Initialized data sections goes into RAM, load LMA copy after code *
@@ -150,7 +150,7 @@ SECTIONS
 	}>RAM_APP${slot}_APP${totalslot}
 
 	. = ALIGN(4);
-	
+
 	/* Uninitialized data section */
 	.bss : AT (.)
 	{
@@ -163,7 +163,7 @@ SECTIONS
 		*(COMMON)
 		_e_bss = .;         /* define a global symbol at bss end */
 	}>RAM_APP${slot}_APP${totalslot}
-	
+
 	. = ALIGN(4);
 
 	/* Remove information from the standard libraries */
