@@ -44,7 +44,7 @@ libsign: $(BUILD_DIR)
 	fi; \
 	if test ! -f $(BUILD_DIR)/$@/libsign.a; then \
 	  mkdir -p $(BUILD_DIR)/libs/$@; \
-	  $(MAKE) -C $(PROJ_FILES)/externals/libecc CFLAGS="$(LIBSIGN_CFLAGS) $(AFLAGS) $(WARN_CFLAGS) $(HARDEN_CFLAGS) -pedantic -fno-builtin -std=c99 -D_FORTIFY_SOURCE=2 $(LIB_OPTIM_CFLAGS) -ffunction-sections -fdata-sections -fno-pie -fno-pic -O3" \
+	  $(MAKE) -C $(PROJ_FILES)/externals/libecc CFLAGS="$(LIBSIGN_CFLAGS) $(AFLAGS) $(WARN_CFLAGS) $(HARDEN_CFLAGS) -pedantic -fno-builtin -std=c99 -D_FORTIFY_SOURCE=2 $(LIB_OPTIM_CFLAGS) -ffunction-sections -fdata-sections -fno-pie -fno-pic" \
 	  BUILD_DIR="build" CC=$(CC) AR=$(AR) RANLIB=$(RANLIB) LIBECC_NOSTDLIB=1 build/libsign.a; \
 	  cp $(PROJ_FILES)/externals/libecc/build/libsign.a $(BUILD_DIR)/libs/$@/libsign.a; \
 	fi; \
