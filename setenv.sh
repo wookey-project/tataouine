@@ -54,6 +54,8 @@ export CROSS_COMPILE="arm-eabi-"
 # use LLVM to get a better static analysis through clang and build-check.
 # Although, *this requires clang 7 and higher*. By now, LLVM support is
 # *EXPERIMENTAL* and is not yet fully integrated.
+# Using LLVM still requires GNU LD greater than 2.30 (which is typically not
+# the case if you use the Ada Cross-toolchain integrated CC compiler suite).
 # set this variable to 'y' if you which to use LLVM/Clang instead of gcc
 
 export USE_LLVM=n
