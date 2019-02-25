@@ -378,9 +378,3 @@ sanitize:
 	scan-build --use-cc=$(CC) --analyzer-target=thumbv7m-none-eabi --use-analyzer=$(CLANG_PATH) -enable-checker alpha.security.ArrayBoundV2 -enable-checker alpha.security.ReturnPtrRange -enable-checker alpha.core.CastToStruct -enable-checker alpha.core.DynamicTypeChecker -enable-checker alpha.core.FixedAddr -enable-checker alpha.core.IdenticalExpr -enable-checker alpha.core.PointerArithm -enable-checker alpha.core.PointerSub -enable-checker alpha.core.SizeofPtr -enable-checker alpha.core.TestAfterDivZero -enable-checker alpha.deadcode.UnreachableCode -o $(APP_BUILD_DIR)/scan make
 endif
 
-#
-##rust toolchain
-#RUSTBUILD=$(shell rustc --version |sed -n 's/^rustc [^ ]* (\([^ ]*\) .*)$$/\1/p')
-#LIBCORE_PATH=rust/libcore/$(TARGET)/$(RUSTBUILD)
-#RUSTCOREURL=https://github.com/rust-lang/rust/tarball/$(RUSTBUILD)
-#
