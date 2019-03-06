@@ -65,6 +65,11 @@ export USE_LLVM=n
 #
 export CLANG_PATH="/usr/bin/clang"
 
+# 8) Specify the Javacard Oracle SDK installation path. This SDK is used in
+# order to compile the Javacard applets. Please specify the SDK root directory
+# (for e.g. /opt/java_sc_3.0.4)
+export JAVA_SC_SDK="$PWD/javacard/applet/sdks/jc303_kit/"
+
 # All the above variables are "standard values". Now you can override any of
 # them by rewriting 'export VARNAME="content" on your own setenv.local.sh file
 # if needed to overload any of the above. For that, just create the setenv.local.sh
@@ -95,5 +100,6 @@ echo "  ST_UTIL       = $ST_UTIL"
 echo "  CROSS_COMPILE = $CROSS_COMPILE"
 echo "  USE_LLVM      = $USE_LLVM"
 echo "  CLANG_PATH    = $CLANG_PATH"
+echo "  JAVA_SC_SDK   = $JAVA_SC_SDK"
 echo
 echo "========================================================="
