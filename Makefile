@@ -315,6 +315,7 @@ __clean:
 	$(MAKE) -C externals clean
 	$(RM) $(RMFLAGS) include
 	$(RM) $(RMFLAGS) Kconfig.gen
+	$(RM) $(RMFLAGS) $(PROJ_FILES)/layouts/arch/socs/$(SOC)/generated
 
 dumpconfig:
 	@echo '======================'
