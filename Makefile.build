@@ -21,7 +21,7 @@
 
 # classical C Compiling (c => o)
 quiet_cmd_cc_o_c        = CC       $@
-      cmd_cc_o_c        = test -d $(dir $@) || mkdir -p $(dir $@); $(CC) $< -c $(CFLAGS) -o $@
+      cmd_cc_o_c        = test -d $(dir $@) || mkdir -p $(dir $@); $(CROSS_CC) $< -c $(CFLAGS) -o $@
 
 quiet_cmd_ada_lib       = ADA      $@
       cmd_ada_lib       = ADA_ARCH=$(CONFIG_ADA_ARCH) ADA_RUNTIME=$(ADA_RUNTIME) ADA_PROFILE=$(CONFIG_ADA_PROFILE) BUILD_DIR=$(APP_BUILD_DIR) ARCH=$(CONFIG_ARCH) SOCNAME=$(CONFIG_SOCNAME) Build_Size=$(CONFIG_KERNEL_ADA_BUILDSIZE) gprbuild -P$<
@@ -113,16 +113,16 @@ quiet_cmd_rc_o_rs       = RC       $@
 
 # hex file generation
 quiet_cmd_objcopy_ihex  = OBJ/HEX  $@
-      cmd_objcopy_ihex  = $(OBJCOPY) -O ihex $< $@
+      cmd_objcopy_ihex  = $(CROSS_OBJCOPY) -O ihex $< $@
 
 # bin file generation
 quiet_cmd_objcopy_bin   = OBJ/BIN  $@
-      cmd_objcopy_bin   = $(OBJCOPY) -O binary $< $@
+      cmd_objcopy_bin   = $(CROSS_OBJCOPY) -O binary $< $@
 
 # layout build
 quiet_cmd_layout        = LAYOUT   $@
-      cmd_layout        = $(CC) $(AFLAGS) $(WARN_CFLAGS) $(EMBED_CFLAGS) -E -x c $(MEM_LAYOUT_DEF) -I. -Iinclude/generated -Ikernel/src/arch/socs/$(SOC) -Ikernel/src/arch/cores/$(CONFIG_ARCH) -Ikernel/src/arch/boards/$(CONFIG_BOARDNAME) $(LDS) $(LDS_GEN) | grep -v '^\#' > $(MEM_LAYOUT); \
-                          $(CC) $(AFLAGS) $(WARN_CFLAGS) $(EMBED_CFLAGS) -E -x c $(MEM_APP_LAYOUT_DEF) -I. -Iinclude/generated -Ikernel/src/arch/socs/$(SOC) -Ikernel/src/arch/cores/$(CONFIG_ARCH) -Ikernel/src/arch/boards/$(CONFIG_BOARDNAME) $(LDS) $(LDS_GEN) | grep -v '^\#' > $(MEM_APP_LAYOUT)
+      cmd_layout        = $(CROSS_CC) $(AFLAGS) $(WARN_CFLAGS) $(EMBED_CFLAGS) -E -x c $(MEM_LAYOUT_DEF) -I. -Iinclude/generated -Ikernel/src/arch/socs/$(SOC) -Ikernel/src/arch/cores/$(CONFIG_ARCH) -Ikernel/src/arch/boards/$(CONFIG_BOARDNAME) $(LDS) $(LDS_GEN) | grep -v '^\#' > $(MEM_LAYOUT); \
+                          $(CROSS_CC) $(AFLAGS) $(WARN_CFLAGS) $(EMBED_CFLAGS) -E -x c $(MEM_APP_LAYOUT_DEF) -I. -Iinclude/generated -Ikernel/src/arch/socs/$(SOC) -Ikernel/src/arch/cores/$(CONFIG_ARCH) -Ikernel/src/arch/boards/$(CONFIG_BOARDNAME) $(LDS) $(LDS_GEN) | grep -v '^\#' > $(MEM_APP_LAYOUT)
 
 # final layout build
 quiet_cmd_final_layout  = END/LAY  $@
@@ -130,7 +130,7 @@ quiet_cmd_final_layout  = END/LAY  $@
 
 # final elf file generation
 quiet_cmd_final_elf     = END/ELF  $@
-      cmd_final_elf     = $(LD) -T$< -b elf32-littlearm -o $@ $(BUILD_DIR)/kernel/kernel.elf $(APPS_ELFFILES)
+      cmd_final_elf     = $(CROSS_LD) -T$< -b elf32-littlearm -o $@ $(BUILD_DIR)/kernel/kernel.elf $(APPS_ELFFILES)
 
 # final hex file generation
 quiet_cmd_final_hex     = END/HEX  $@
@@ -138,15 +138,15 @@ quiet_cmd_final_hex     = END/HEX  $@
 
 # final hex file generation
 quiet_cmd_final_bin     = END/BIN  $@
-      cmd_final_bin     = $(OBJCOPY) -I ihex --output-target=binary $< $@
+      cmd_final_bin     = $(CROSS_OBJCOPY) -I ihex --output-target=binary $< $@
 
 # make static library
 quiet_cmd_mklib         = AR       $@
-      cmd_mklib         = $(AR) rcs $@ $(KERNEL_OBJS) $(ARCH_OBJ) $(ROBJ) $(SOBJ) $(OBJ) $(DRVOBJ) $(CORE_OBJ) $(SOC_OBJ) $(BOARD_OBJ) $(ASM_OBJ)
+      cmd_mklib         = $(CROSS_AR) $(CROSS_ARFLAGS) $@ $(KERNEL_OBJS) $(ARCH_OBJ) $(ROBJ) $(SOBJ) $(OBJ) $(DRVOBJ) $(CORE_OBJ) $(SOC_OBJ) $(BOARD_OBJ) $(ASM_OBJ)
 
 # make static library
 quiet_cmd_ranlib        = RANLIB   $@
-      cmd_ranlib        = $(RANLIB) $@
+      cmd_ranlib        = $(CROSS_RANLIB) $@
 
 quiet_cmd_mkapplet      = APPLET   $@
       cmd_mkapplet      = mkdir -p $(BUILD_DIR)/javacard/applet; touch $(BUILD_DIR)/javacard/applet/.applet.cmd.ant; cp $(PRIVATE_DIR)/Keys.java $(PROJ_FILES)/javacard/applet/src/goodusb/; cd $(PROJ_FILES)/javacard/applet && ant -Dbuilddir=../$(BUILD_DIR)/javacard/applet -logfile ../$(BUILD_DIR)/javacard/applet/.applet.cmd.ant
