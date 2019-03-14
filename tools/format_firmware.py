@@ -12,6 +12,13 @@ def PrintUsage():
     print("Error when executing %s\n\tUsage:\t%s json_layout hex_file_to_format" % (executable, executable))
     sys.exit(-1)
 
+def get_device_index_from_json(json_data, name):
+    for index, device in enumerate(json_data):
+        if device["name"] == name:
+            return index;
+    return -1;
+
+
 # Swap 32-bit integer endianness
 def swap_int32(a):
     b = ((a & 0xff) << 24) ^ ((a & 0xff00) << 8) ^ ((a & 0xff0000 >> 8)) ^ ((a & 0xff000000) >> 24)
@@ -43,10 +50,21 @@ if __name__ == '__main__':
         print("Mono-bank firmware detected")
         dual_bank = False
     # Get flip and flop base
-    flip_base_addr = int(json_data['flash-flip']['address'], 0)
-    flip_size = int(json_data['flash-flip']['size'], 0)
-    flop_base_addr = int(json_data['flash-flop']['address'], 0)
-    flop_size = int(json_data['flash-flop']['size'], 0)
+    dev_idx = get_device_index_from_json(json_data, 'flash-flip');
+    if dev_idx == -1:
+        print("Error: flash-flip device not found!");
+        sys.exit(-1);
+    flip_base_addr = int(json_data[dev_idx]['address'], 0)
+    flip_size = int(json_data[dev_idx]['size'], 0)
+    flip_subregion_mask = int(json_data[dev_idx]['memory_subregion_mask'],0);
+
+    dev_idx = get_device_index_from_json(json_data, 'flash-flop');
+    if dev_idx == -1:
+        print("Error: flash-flip device not found!");
+        sys.exit(-1);
+    flop_base_addr = int(json_data[dev_idx]['address'], 0)
+    flop_size = int(json_data[dev_idx]['size'], 0)
+    flop_subregion_mask = int(json_data[dev_idx]['memory_subregion_mask'],0);
     flash_base_addr = flip_base_addr
     if (flip_base_addr == None) or (flip_size == None):
         print("Error: FLIP not found in json layout %s" % (json_path));
@@ -88,11 +106,20 @@ if __name__ == '__main__':
             firmware_hex[i] = 0xaa;
     print("%s addresses sanity check is OK and holes filled!" % (hex_path))
     # Now get flip-shr and flop-shr base address and size
-    flip_shr_base_addr = int(json_data['flash-flip-shr']['address'], 0)
-    flip_shr_size = int(json_data['flash-flip-shr']['size'], 0)
+
+    dev_idx = get_device_index_from_json(json_data, 'flash-flip-shr');
+    if dev_idx == -1:
+        print("Error: flash-flip-shr device not found!");
+        sys.exit(-1);
+    flip_shr_base_addr = int(json_data[dev_idx]['address'], 0)
+    flip_shr_size = int(json_data[dev_idx]['size'], 0)
     if dual_bank == True:
-        flop_shr_base_addr = int(json_data['flash-flop-shr']['address'], 0)
-        flop_shr_size = int(json_data['flash-flop-shr']['size'], 0)
+        dev_idx = get_device_index_from_json(json_data, 'flash-flop-shr');
+        if dev_idx == -1:
+            print("Error: flash-flop-shr device not found!");
+            sys.exit(-1);
+        flop_shr_base_addr = int(json_data[dev_idx]['address'], 0)
+        flop_shr_size = int(json_data[dev_idx]['size'], 0)
     # magic
     initial_flip_magic = expand(inttostring(swap_int32(0x0)), 32, "LEFT")
     # partition type
@@ -100,7 +127,6 @@ if __name__ == '__main__':
     # version = 0 for initial firmware
     initial_flip_version = expand(inttostring(swap_int32(0x0)), 32, "LEFT")
     # length
-    flip_subregion_mask = int(json_data['flash-flip']['memory_subregion_mask'],0);
     active_subregion = 0;
     for i in range (0,8):
         if (flip_subregion_mask >> i) & 0x1 != 0:
@@ -119,7 +145,6 @@ if __name__ == '__main__':
         # version = 0 for initial firmware
         initial_flop_version = expand(inttostring(swap_int32(0x0)), 32, "LEFT")
         # length
-        flop_subregion_mask = int(json_data['flash-flop']['memory_subregion_mask'],0);
         active_subregion = 0;
         for i in range (0,8):
             if (flop_subregion_mask >> i) & 0x1 != 0:
