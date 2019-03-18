@@ -36,12 +36,16 @@ endif
 all: $(external_targets)
 
 gp:
-	cd globalplatformpro && mvn package
-	cp globalplatformpro/target/gp.jar $(PROJ_FILES)/javacard/applet/gp.jar
+	if test ! -f $(PROJ_FILES)/javacard/applet/gp.jar; then \
+	cd $(PROJ_FILES)/externals/globalplatformpro && mvn package; \
+	cp $(PROJ_FILES)/../externals/globalplatformpro/target/gp.jar $(PROJ_FILES)/../javacard/applet/gp.jar; \
+	fi
 
 antjavacard:
-	cd ant-javacard && mvn package && ant dist
-	cp globalplatformpro/target/gp.jar $(PROJ_FILES)/javacard/applet/ant-javacard.jar
+	if test ! -f $(PROJ_FILES)/javacard/applet/ant-javacard.jar; then \
+	cd $(PROJ_FILES)/externals/ant-javacard && mvn package && ant dist; \
+	cp $(PROJ_FILES)/../externals/ant-javacard/ant-javacard.jar $(PROJ_FILES)/../javacard/applet/ant-javacard.jar; \
+	fi
 
 libsign: $(BUILD_DIR)
 	if test -f $(PROJ_FILES)/externals/libecc/build/ec_utils; then \
@@ -54,7 +58,7 @@ libsign: $(BUILD_DIR)
 	  $(MAKE) -C $(PROJ_FILES)/externals/libecc CFLAGS="$(LIBSIGN_CFLAGS) $(AFLAGS) $(WARN_CFLAGS) $(HARDEN_CFLAGS) -pedantic -fno-builtin -std=c99 -D_FORTIFY_SOURCE=2 $(LIB_OPTIM_CFLAGS) -ffunction-sections -fdata-sections -fno-pie -fno-pic" \
 	  BUILD_DIR="build" CC=$(CROSS_CC) AR=$(CROSS_AR) AR_FLAGS=$(CROSS_ARFLAGS) RANLIB=$(CROSS_RANLIB) LIBECC_NOSTDLIB=1 build/libsign.a; \
 	  cp $(PROJ_FILES)/externals/libecc/build/libsign.a $(BUILD_DIR)/libs/$@/libsign.a; \
-	fi; \
+	fi
 
 $(EC_UTILS): $(BUILD_DIR)/tools
 	mkdir -p $(PROJ_FILES)/externals/libecc/build; \
