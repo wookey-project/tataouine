@@ -24,7 +24,7 @@ KEY2HEADER       = $(PROJ_FILES)/tools/key2header.py
 external_targets :=
 
 ifeq ($(CONFIG_USR_LIB_SIGN),y)
-external_targets += libsign gp $(EC_UTILS)
+external_targets += libsign gp antjavacard $(EC_UTILS)
 endif
 
 ifeq ($(USE_LLVM),y)
