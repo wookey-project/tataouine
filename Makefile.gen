@@ -348,31 +348,6 @@ verify_check:
 $(eval $(call verify_fn,$(toverify)))
 verify: verify_check $(call all_verify_rules_fn, $(toverify))
 
-######### Javacard applet compilation and provisioning targets
-javacard_compile:
-	@cd javacard && make applet_auth
-	@cd javacard && make applet_dfu
-ifeq ("$(USE_SIG_TOKEN)","USE_SIG_TOKEN")
-	@cd javacard && make applet_sig
-endif
-
-javacard_push_auth:
-	@cd javacard && make push_auth
-
-javacard_push_dfu:
-	@cd javacard && make push_dfu
-
-ifeq ("$(USE_SIG_TOKEN)","USE_SIG_TOKEN")
-javacard_push_sig:
-	@cd javacard && make push_sig
-
-javacard_push: javacard_push_auth javacard_push_dfu javacard_push_sig
-else
-javacard_push: javacard_push_auth javacard_push_dfu
-endif
-
-javacard: javacard_compile javacard_push
-
 ifeq (y,$(USE_LLVM))
 sanitize:
 	scan-build --use-cc=$(CC) --analyzer-target=thumbv7m-none-eabi --use-analyzer=$(CLANG_PATH) -enable-checker alpha.security.ArrayBoundV2 -enable-checker alpha.security.ReturnPtrRange -enable-checker alpha.core.CastToStruct -enable-checker alpha.core.DynamicTypeChecker -enable-checker alpha.core.FixedAddr -enable-checker alpha.core.IdenticalExpr -enable-checker alpha.core.PointerArithm -enable-checker alpha.core.PointerSub -enable-checker alpha.core.SizeofPtr -enable-checker alpha.core.TestAfterDivZero -enable-checker alpha.deadcode.UnreachableCode -o $(APP_BUILD_DIR)/scan make

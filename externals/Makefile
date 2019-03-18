@@ -25,6 +25,8 @@ external_targets :=
 
 ifeq ($(CONFIG_USR_LIB_SIGN),y)
 external_targets += libsign gp antjavacard $(EC_UTILS)
+else
+external_targets += gp antjavacard
 endif
 
 ifeq ($(USE_LLVM),y)

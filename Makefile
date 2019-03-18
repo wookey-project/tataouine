@@ -197,7 +197,7 @@ layout: $(MEM_LAYOUT_DEF)
 .PHONY: libs prepare loader prove externals $(APPS) $(APPS_PATHS) $(BUILD_LIBECC_DIR) $(BUILD_DIR)
 
 
-applet:
+applet: externals
 	$(Q)$(MAKE) -C javacard $@
 
 $(BUILD_DIR)/kernel/kernel.fw1.hex: $(BUILD_DIR)/apps/.apps_done
@@ -459,5 +459,34 @@ check-env:
 ifndef WOOKEY_ENV
 	$(error Please, edit 'setenv.sh' and run '. setenv.sh')
 endif
+
+######### Javacard applet compilation and provisioning targets
+javacard_compile:
+	@cd javacard && make applet_auth
+	@cd javacard && make applet_dfu
+ifeq ("$(USE_SIG_TOKEN)","USE_SIG_TOKEN")
+	@cd javacard && make applet_sig
+endif
+
+javacard_push_auth:
+	@cd javacard && make push_auth
+
+javacard_push_dfu:
+	@cd javacard && make push_dfu
+
+ifeq ("$(USE_SIG_TOKEN)","USE_SIG_TOKEN")
+javacard_push_sig:
+	@cd javacard && make push_sig
+
+javacard_push: javacard_push_auth javacard_push_dfu javacard_push_sig
+else
+javacard_push: javacard_push_auth javacard_push_dfu
+endif
+
+externals:
+	@make -C $@ all
+
+
+javacard: externals javacard_compile javacard_push
 
 
