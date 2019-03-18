@@ -24,7 +24,7 @@ KEY2HEADER       = $(PROJ_FILES)/tools/key2header.py
 external_targets :=
 
 ifeq ($(CONFIG_USR_LIB_SIGN),y)
-external_targets += libsign $(EC_UTILS)
+external_targets += libsign gp $(EC_UTILS)
 endif
 
 ifeq ($(USE_LLVM),y)
@@ -35,6 +35,13 @@ endif
 
 all: $(external_targets)
 
+gp:
+	cd globalplatformpro && mvn package
+	cp globalplatformpro/target/gp.jar $(PROJ_FILES)/javacard/applet/gp.jar
+
+antjavacard:
+	cd ant-javacard && mvn package && ant dist
+	cp globalplatformpro/target/gp.jar $(PROJ_FILES)/javacard/applet/ant-javacard.jar
 
 libsign: $(BUILD_DIR)
 	if test -f $(PROJ_FILES)/externals/libecc/build/ec_utils; then \
