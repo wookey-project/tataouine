@@ -24,9 +24,9 @@ KEY2HEADER       = $(PROJ_FILES)/tools/key2header.py
 external_targets :=
 
 ifeq ($(CONFIG_USR_LIB_SIGN),y)
-external_targets += libsign gp antjavacard $(EC_UTILS)
+external_targets += libsign gp antjavacard secaes $(EC_UTILS)
 else
-external_targets += gp antjavacard
+external_targets += gp antjavacard secaes
 endif
 
 ifeq ($(USE_LLVM),y)
@@ -49,17 +49,22 @@ antjavacard:
 	cp $(PROJ_FILES)/../externals/ant-javacard/ant-javacard.jar $(PROJ_FILES)/../javacard/applet/ant-javacard.jar; \
 	fi
 
-libsign: $(BUILD_DIR)
+secaes: $(BUILD_DIR)/externals
+	if ! test -f $(BUILD_DIR)/externals/libmaskedaes.a; then \
+		$(MAKE) -C secaesstm32 libaes; \
+		cp $(PROJ_FILES)/externals/secaesstm32/build/libmaskedaes.a $(BUILD_DIR)/externals/libmaskedaes.a; \
+	fi
+
+libsign: $(BUILD_DIR)/externals
 	if test -f $(PROJ_FILES)/externals/libecc/build/ec_utils; then \
 	  CFLAGS="-DWITH_LIBECC_CONFIG_OVERRIDE $(LIBSIGN_CFLAGS)" $(MAKE) BUILD_DIR="$(BUILD_DIR)" -C $(PROJ_FILES)/externals/libecc clean; \
 	else \
 	  mkdir -p $(PROJ_FILES)/externals/libecc/build; \
 	fi; \
-	if test ! -f $(BUILD_DIR)/$@/libsign.a; then \
-	  mkdir -p $(BUILD_DIR)/libs/$@; \
+	if test ! -f $(BUILD_DIR)/externals/libsign.a; then \
 	  $(MAKE) -C $(PROJ_FILES)/externals/libecc CFLAGS="$(LIBSIGN_CFLAGS) $(AFLAGS) $(WARN_CFLAGS) $(HARDEN_CFLAGS) -pedantic -fno-builtin -std=c99 -D_FORTIFY_SOURCE=2 $(LIB_OPTIM_CFLAGS) -ffunction-sections -fdata-sections -fno-pie -fno-pic" \
 	  BUILD_DIR="build" CC=$(CROSS_CC) AR=$(CROSS_AR) AR_FLAGS=$(CROSS_ARFLAGS) RANLIB=$(CROSS_RANLIB) LIBECC_NOSTDLIB=1 build/libsign.a; \
-	  cp $(PROJ_FILES)/externals/libecc/build/libsign.a $(BUILD_DIR)/libs/$@/libsign.a; \
+	  cp $(PROJ_FILES)/externals/libecc/build/libsign.a $(BUILD_DIR)/externals/libsign.a; \
 	fi
 
 $(EC_UTILS): $(BUILD_DIR)/tools
@@ -70,3 +75,7 @@ $(EC_UTILS): $(BUILD_DIR)/tools
 
 $(BUILD_DIR)/tools:
 	$(call cmd,mkdir)
+
+$(BUILD_DIR)/externals:
+	$(call cmd,mkdir)
+
