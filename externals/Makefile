@@ -51,7 +51,7 @@ antjavacard:
 
 secaes: $(BUILD_DIR)/externals
 	if ! test -f $(BUILD_DIR)/externals/libmaskedaes.a; then \
-		$(MAKE) EXTRA_CFLAGS="-mfloat-abi=hard -mfpu=fpv4-sp-d16" -C secaesstm32 libaes; \
+		$(MAKE) COMPILER=$(CROSS_CC) EXTRA_CFLAGS="-mfloat-abi=hard -mfpu=fpv4-sp-d16" -C secaesstm32 libaes; \
 		cp $(PROJ_FILES)/externals/secaesstm32/build/libmaskedaes.a $(BUILD_DIR)/externals/libmaskedaes.a; \
 	fi
 
