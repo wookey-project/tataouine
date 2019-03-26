@@ -345,6 +345,7 @@ dumpconfig:
 	@echo 'OBJCOPY      : $(OBJCOPY)'
 	@echo 'GDB          : $(GDB)'
 	@echo 'RANLIB       : $(RANLIB)'
+	@echo 'LIBTOOL      : $(LIBTOOL)'
 	@echo '======================'
 	@echo 'KERNEL_HEXFILES: $(KERNEL_HEXFILES)'
 	@echo 'APPS_HEXFILES : $(APPS_HEXFILES)'

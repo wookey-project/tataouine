@@ -142,7 +142,11 @@ quiet_cmd_final_bin     = END/BIN  $@
 
 # make static library
 quiet_cmd_mklib         = AR       $@
-      cmd_mklib         = $(CROSS_AR) $(CROSS_ARFLAGS) $@ $(KERNEL_OBJS) $(ARCH_OBJ) $(ROBJ) $(SOBJ) $(OBJ) $(DRVOBJ) $(CORE_OBJ) $(SOC_OBJ) $(BOARD_OBJ) $(ASM_OBJ)
+      cmd_mklib         = $(CROSS_AR) $(CROSS_ARFLAGS) $@ $^
+
+# make static library from multiple static libraries
+quiet_cmd_fusionlib     = FUSION   $@
+cmd_fusionlib           = for i in $^; do $(CROSS_AR) -x $$i; done; $(CROSS_AR) $(CROSS_ARFLAGS) $@ *.o; $(CROSS_RANLIB) $@; $(RM) *.o
 
 # make static library
 quiet_cmd_ranlib        = RANLIB   $@
