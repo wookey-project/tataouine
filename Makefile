@@ -194,7 +194,7 @@ layout: $(MEM_LAYOUT_DEF)
 # make prepare and make menuconfig to create the
 # .config file.
 
-.PHONY: libs prepare loader prove externals $(APPS) $(APPS_PATHS) $(BUILD_LIBECC_DIR) $(BUILD_DIR)
+.PHONY: libs drivers prepare loader prove externals $(APPS) $(APPS_PATHS) $(BUILD_LIBECC_DIR) $(BUILD_DIR)
 
 
 applet: externals
@@ -268,9 +268,17 @@ prove:
 # from all elf, finalize into one single binary file
 $(BUILD_DIR)/loader/loader.hex: libs loader
 
-$(APPS_FW1_HEXFILES): layout libs externals $(APPS)
+$(APPS_FW1_HEXFILES): layout externals libs drivers $(APPS)
 
-$(APPS_FW2_HEXFILES): layout libs externals $(APPS)
+$(APPS_FW2_HEXFILES): layout externals libs drivers $(APPS)
+
+libs:
+	$(Q)$(MAKE) -C libs all
+
+drivers:
+	$(Q)$(MAKE) -C drivers all
+
+$(APPS_HEXFILES):
 
 # binary to flash through JTAG (initial flashing)
 $(BUILD_DIR)/$(HEX_NAME): $(APPS_HEXFILES) $(KERNEL_HEXFILES) $(BUILD_DIR)/loader/loader.hex
