@@ -207,6 +207,10 @@ quiet_cmd_mkman3        = MAN        $@
 quiet_cmd_mkhtml        = HTML       $@
       cmd_mkhtml        = BUILDDIR=../$@ make -C sphinx html >/dev/null 2>&1
 
+quiet_cmd_mklatex       = HTML       $@
+      cmd_mklatex       = BUILDDIR=../$@ make -C sphinx latex >/dev/null 2>&1
+
+
 quiet_cmd_doxygen       = DOXY       $@
       cmd_doxygen       = cat $< | sed -e 's:BUILDDIR:$(BUILD_DIR):g' | doxygen -; \
 			  if [ -d $@/latex ]; then make -C $@/latex >/dev/null 2>&1 && cp $@/latex/refman.pdf $@/`basename $@`.pdf; fi; \
