@@ -120,6 +120,8 @@ menuconfig: check-env
 	$(call cmd,kconf_lib_gen)
 	$(call cmd,kconf_root)
 	$(call cmd,nokconfig)
+	$(call cmd,mkincludedir)
+	$(call cmd,prepareada)
 	$(call cmd,menuconfig)
 	$(call cmd,mkobjlist_libs)
 	$(call cmd,mkobjlist_apps)

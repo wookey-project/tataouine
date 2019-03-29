@@ -179,10 +179,10 @@ quiet_cmd_mkincludedir  = MKINCLUDEDIR
       cmd_mkincludedir  = mkdir -p $(PWD)/include && mkdir -p $(PWD)/include/config $(PWD)/include/generated
 
 quiet_cmd_pepareada     = PREPAREADA
-      cmd_prepareada    = for i in $(shell cat kernel/src/Ada/libgnat/gnat/link_list.txt); do ln -fs $(ADA_RUNTIME)/arm-eabi/lib/gnat/zfp-stm32f4/gnat/$$i $(PWD)/kernel/src/Ada/libgnat/gnat/$$i; done
+      cmd_prepareada    = if [ "y" = "$(ADAKERNEL)" ]; then for i in $(shell cat kernel/src/Ada/libgnat/gnat/link_list.txt); do ln -fs $(ADA_RUNTIME)/arm-eabi/lib/gnat/zfp-stm32f4/gnat/$$i $(PWD)/kernel/src/Ada/libgnat/gnat/$$i; done; fi
 
 quiet_cmd_pepareada_l   = PREPAREADA_LDR
-      cmd_prepareada_l  = for i in $(shell cat loader/libgnat/gnat/link_list.txt); do ln -fs $(ADA_RUNTIME)/arm-eabi/lib/gnat/zfp-stm32f4/gnat/$$i $(PWD)/loader/libgnat/gnat/$$i; done
+      cmd_prepareada_l  = if [ "y" = "$(ADAKERNEL)" ]; then for i in $(shell cat loader/libgnat/gnat/link_list.txt); do ln -fs $(ADA_RUNTIME)/arm-eabi/lib/gnat/zfp-stm32f4/gnat/$$i $(PWD)/loader/libgnat/gnat/$$i; done; fi
       # as file read is supported only since gmake 1.2, shell read is required here :-/
 
 quiet_cmd_prepare       = PREPARE
