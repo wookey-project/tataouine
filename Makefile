@@ -391,6 +391,7 @@ $(DOCDIR):
 	$(MKDIR) $@
 
 doc:
+	$(call cmd,techdoc)
 	$(MAKE) -C doc
 
 #########################################

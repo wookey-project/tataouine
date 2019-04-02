@@ -211,6 +211,9 @@ quiet_cmd_mklatex       = HTML       $@
       cmd_mklatex       = BUILDDIR=../$@ make -C sphinx latex >/dev/null 2>&1
 
 
+quiet_cmd_techdoc       = TECHDOC
+cmd_techdoc       = rm -f $(PROJ_FILES)/doc/sphinx/source/publi.rst.gen; for i in $(PROJ_FILES)/libs/* kernel; do if test -d $$i; then  make -C $$i doc; fi; done; builddir=$(BUILD_DIR); for i in `find $$builddir/libs -type f -iname '*.pdf'` $(BUILD_DIR)/kernel/doc/latex/ewok.pdf; do prefix=`basename $${i%%.pdf}`; cp $$i $(PROJ_FILES)/doc/sphinx/source/_downloads/; echo "   * $$prefix :download:\`technical manual <_downloads/$$prefix.pdf>\`" >> $(PROJ_FILES)/doc/sphinx/source/publi.rst.gen; done;
+
 quiet_cmd_doxygen       = DOXY       $@
       cmd_doxygen       = cat $< | sed -e 's:BUILDDIR:$(BUILD_DIR):g' | doxygen -; \
 			  if [ -d $@/latex ]; then make -C $@/latex >/dev/null 2>&1 && cp $@/latex/refman.pdf $@/`basename $@`.pdf; fi; \
