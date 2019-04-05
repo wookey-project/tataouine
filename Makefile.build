@@ -212,7 +212,7 @@ quiet_cmd_mklatex       = HTML       $@
 
 
 quiet_cmd_techdoc       = TECHDOC
-cmd_techdoc       = rm -f $(PROJ_FILES)/doc/sphinx/source/publi.rst.gen; for i in $(PROJ_FILES)/libs/* kernel; do if test -d $$i; then  make -C $$i doc; fi; done; builddir=$(BUILD_DIR); for i in `find $$builddir/libs -type f -iname '*.pdf'` $(BUILD_DIR)/kernel/doc/latex/ewok.pdf; do prefix=`basename $${i%%.pdf}`; cp $$i $(PROJ_FILES)/doc/sphinx/source/_downloads/; echo "   * $$prefix :download:\`technical manual <_downloads/$$prefix.pdf>\`" >> $(PROJ_FILES)/doc/sphinx/source/publi.rst.gen; done;
+cmd_techdoc       = rm -f $(PROJ_FILES)/doc/sphinx/source/publi.rst.gen; for i in $(PROJ_FILES)/drivers/socs/$(SOC)/* $(PROJ_FILES)/libs/* kernel; do if test -d $$i; then  make -C $$i doc; fi; done; builddir=$(BUILD_DIR); for i in `find $$builddir/drivers -type f -iname '*.pdf'` `find $$builddir/libs -type f -iname '*.pdf'` $(BUILD_DIR)/kernel/doc/latex/ewok.pdf; do prefix=`basename $${i%%.pdf}`; cp $$i $(PROJ_FILES)/doc/sphinx/source/_downloads/; echo "   * $$prefix :download:\`technical manual <_downloads/$$prefix.pdf>\`" >> $(PROJ_FILES)/doc/sphinx/source/publi.rst.gen; done;
 
 quiet_cmd_doxygen       = DOXY       $@
       cmd_doxygen       = cat $< | sed -e 's:BUILDDIR:$(BUILD_DIR):g' | doxygen -; \
@@ -287,10 +287,10 @@ quiet_cmd_sign_flop        = SIGN_FLOP
 
 # extract existing sphinx doc from libs and drivers to fusion with wookeypedia in a single global website
 quiet_cmd_load_libs_docs    = LOAD_LIBS_DOCS
-      cmd_load_libs_docs    = echo ".. toctree::" > autogen.libs.rst; for i in $(shell find $(PROJ_FILES)/libs -mindepth 1 -maxdepth 1 -type d -exec basename {} \;); do if test -d $(PROJ_FILES)/libs/$$i/doc ; then rm -f $$i; ln -s $(PROJ_FILES)/libs/$$i/doc $$i; /bin/echo "   lib$$i <$$i/index>" >> autogen.libs.rst; fi; done
+      cmd_load_libs_docs    = echo ".. toctree::" > autogen.libs.rst; for i in $(shell find $(PROJ_FILES)/libs -mindepth 1 -maxdepth 1 -type d -exec basename {} \;); do if test -d $(PROJ_FILES)/libs/$$i/doc ; then rm -f $$i; ln -s $(PROJ_FILES)/libs/$$i/doc lib$$i; /bin/echo "   lib$$i <lib$$i/index>" >> autogen.libs.rst; fi; done
 
 quiet_cmd_load_drvs_docs    = LOAD_DRVS_DOCS
-      cmd_load_drvs_docs    = echo ".. toctree::" > autogen.drvs.rst; for i in $(shell find $(PROJ_FILES)/drivers/socs/$(CONFIG_SOCNAME) -mindepth 1 -maxdepth 1 -type d -exec basename {} \;); do if test -d $(PROJ_FILES)/libs/$$i/doc ; then rm -f $$i; ln -s $(PROJ_FILES)/drivers/socs/$(CONFIG_SOCNAME)/$$i/doc $$i; /bin/echo "   lib$$i <$$i/index>" >> autogen.drvs.rst; fi; done
+      cmd_load_drvs_docs    = echo ".. toctree::" > autogen.drvs.rst; for i in $(shell find $(PROJ_FILES)/drivers/socs/$(CONFIG_SOCNAME) -mindepth 1 -maxdepth 1 -type d -exec basename {} \;); do if test -d $(PROJ_FILES)/drivers/socs/$(CONFIG_SOCNAME)/$$i/doc ; then rm -f $$i; ln -s $(PROJ_FILES)/drivers/socs/$(CONFIG_SOCNAME)/$$i/doc drv$$i; /bin/echo "   driver $$i <drv$$i/index>" >> autogen.drvs.rst; fi; done
 
 quiet_cmd_load_ewok_docs    = LOAD_EWOK_DOCS
       cmd_load_ewok_docs    = echo ".. toctree::" > autogen.ewok.rst; if test -d $(PROJ_FILES)/kernel/doc ; then rm -f ewok; ln -s $(PROJ_FILES)/kernel/doc ewok; /bin/echo "   EwoK kernel <ewok/index>" >> autogen.ewok.rst; fi
