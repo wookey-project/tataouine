@@ -169,6 +169,7 @@ choice
    config FIRMWARE_BUILD_MODE_PROD
      bool "Build the firmware in prod mode"
      select KERNEL_NOSERIAL
+     select ADAKERNEL
      select KERNEL_PANIC_REBOOT
      select LOADER_FLASH_LOCK
      select LOADER_FLASH_RDP_CHECK
@@ -176,6 +177,7 @@ choice
        Deactivate all debug, deactivate local uart, make the firmware
        reboot in case of panic, activate the RDP2 flag check at boot
        reseting if RDP2 protection is not active.
+       The kernel is compiled in Ada/SPARK mode.
        INFO: this option is for production firmwares. The board must
        be locked (RDP2, JTAG lock) just after the initial flash.
 endchoice
