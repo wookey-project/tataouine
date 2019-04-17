@@ -646,10 +646,9 @@ sign_check:
 	@if [ "$(tosign)" = "" ]; then \
 		echo "Error: 'sign' rule expects as argument the firmware list to sign: 'tosign=fw1:fw2:dfu1'"; \
 	fi;
+	$(eval $(call sign_fn,$(tosign),$(magic),$(version),$(chunksize)))
 
-$(eval $(call sign_fn,$(tosign),$(magic),$(version),$(chunksize)))
-
-sign: sign_check $(call all_sign_rules_fn, $(tosign))
+#sign: sign_check $(call all_sign_rules_fn, $(tosign))
 
 
 ######### Firmware verification targets
@@ -706,8 +705,8 @@ verify_interactive_check:
 	@if [ "$(toverify)" = "" ]; then \
 		echo "Error: 'verify_interactive' rule expects as argument the firmware list to verify: 'toverify=fw1:fw2:dfu1'"; \
 	fi;
+	$(eval $(call verify_interactive_fn,$(toverify)))
 
-$(eval $(call verify_interactive_fn,$(toverify)))
 verify_interactive: verify_interactive_check $(call all_verify_interactive_rules_fn, $(toverify))
 
 
