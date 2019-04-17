@@ -228,7 +228,7 @@ endchoice
 config DBGFLAGS_GCC
   string
   default "-g3 -finline-functions-called-once -fipa-pure-const -fmerge-constants -O0" if DEBUG && OPTIM_NONE
-  default "-g3 -fno-caller-saves -fno-cse-follow-jumps -fno-hoist-adjacent-loads -fno-inline-small-functions -fno-optimize-sibling-calls -fno-peephole2 -fno-reorder-functions -fno-rerun-cse-after-loop -fno-tree-vrp -fno-reorder-blocks -fno-tree-vect-loop-version -finline-functions-called-once -fno-align-functions  -fno-align-jumps  -fno-align-loops -fno-align-labels -fno-reorder-blocks-and-partition  -fno-prefetch-loop-arrays -finline-functions-called-once -fipa-pure-const -fmerge-constants -Os" if DEBUG && OPTIM_SIZE
+  default "-ggdb -Os" if DEBUG && OPTIM_SIZE
   default "-ggdb -O1" if DEBUG && OPTIM_PERF1
   default "-ggdb -O2" if DEBUG && OPTIM_PERF2
   default "-ggdb -O3" if DEBUG && OPTIM_PERF3
@@ -236,11 +236,10 @@ config DBGFLAGS_GCC
 config DBGFLAGS_LLVM
   string
   default "-g3 -finline-functions-called-once -fipa-pure-const -fmerge-constants -O0" if DEBUG && OPTIM_NONE
-  default "-g3 -Os" if DEBUG && OPTIM_SIZE
+  default "-ggdb -Os" if DEBUG && OPTIM_SIZE
   default "-ggdb -O1" if DEBUG && OPTIM_PERF1
   default "-ggdb -O2" if DEBUG && OPTIM_PERF2
   default "-ggdb -O3" if DEBUG && OPTIM_PERF3
-
 
 
 config STACK_PROT_FLAG
@@ -250,11 +249,11 @@ config STACK_PROT_FLAG
 # invisible by now... as consider as fixed
 config WARNFLAGS_GCC
     string
-    default "-Wall -Werror -Wextra -Wno-reserved-id-macro -Wno-padded -Wno-packed -Wno-covered-switch-default -Wno-used-but-marked-unused -Wno-unused-but-set-variable -Wno-unused-function -Werror"
+    default "-Wl,--gc-sections -Wall -Werror -Wextra -Wno-reserved-id-macro -Wno-padded -Wno-packed -Wno-covered-switch-default -Wno-used-but-marked-unused -Wno-unused-but-set-variable -Wno-unused-function -Werror"
 
 config WARNFLAGS_LLVM
     string
-    default "-fintegrated-as -fno-builtin -Wno-error=unused-command-line-argument -Wno-incompatible-library-redeclaration -Wall -Werror -Wextra -Wno-reserved-id-macro -Wno-padded -Wno-packed -Wno-covered-switch-default -Wno-used-but-marked-unused -Wno-unused-function -Werror"
+    default "-fintegrated-as -sed-command-line-argument -Wno-incompatible-library-redeclaration -Wall -Werror -Wextra -Wno-reserved-id-macro -Wno-padded -Wno-packed -Wno-covered-switch-default -Wno-used-but-marked-unused -Wno-unused-function -Werror"
 
 config STACKPROTFLAGS
     string
@@ -264,7 +263,7 @@ config STACKPROTFLAGS
 
 config EMBEDCFLAGS
     string
-    default "-fno-builtin -nostdlib -D_FORTIFY_SOURCE=2"
+    default "-Wl,--gc-sections -ffunction-sections -fno-builtin -ffreestanding -nolibc -nostdlib -nodefaultlibs -D_FORTIFY_SOURCE=2"
 
 
 config EC_UTILS

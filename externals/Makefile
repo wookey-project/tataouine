@@ -51,7 +51,7 @@ antjavacard:
 
 secaes: $(BUILD_DIR)/externals
 	if ! test -f $(BUILD_DIR)/externals/libmaskedaes.a; then \
-		$(MAKE) COMPILER=$(CROSS_CC) EXTRA_CFLAGS="-mfloat-abi=hard -mfpu=fpv4-sp-d16" -C secaesstm32 libaes; \
+		CC=$(CROSS_CC) AR=$(CROSS_AR) COMPILER=$(CROSS_CC) EXTRA_CFLAGS="$(AFLAGS) -Os" $(MAKE) -C secaesstm32 libaes; \
 		cp $(PROJ_FILES)/externals/secaesstm32/build/libmaskedaes.a $(BUILD_DIR)/externals/libmaskedaes.a; \
 	fi
 
@@ -63,8 +63,8 @@ libsign: $(BUILD_DIR)/externals
 	    mkdir -p $(PROJ_FILES)/externals/libecc/build; \
 	  fi; \
 	  if test ! -f $(BUILD_DIR)/externals/libsign.a; then \
-	    $(MAKE) -C $(PROJ_FILES)/externals/libecc CFLAGS="$(LIBSIGN_CFLAGS) $(AFLAGS) $(WARN_CFLAGS) $(HARDEN_CFLAGS) -pedantic -fno-builtin -std=c99 -D_FORTIFY_SOURCE=2 $(LIB_OPTIM_CFLAGS) -ffunction-sections -fdata-sections -fno-pie -fno-pic" \
-	    BUILD_DIR="build" CC=$(CROSS_CC) AR=$(CROSS_AR) AR_FLAGS=$(CROSS_ARFLAGS) RANLIB=$(CROSS_RANLIB) LIBECC_NOSTDLIB=1 build/libsign.a; \
+	    AR_FLAGS=$(CROSS_ARFLAGS) RANLIB=$(CROSS_RANLIB) CC=$(CROSS_CC) AR=$(CROSS_AR) $(MAKE) -C $(PROJ_FILES)/externals/libecc CFLAGS="$(LIBSIGN_CFLAGS) $(AFLAGS) $(WARN_CFLAGS) $(HARDEN_CFLAGS) -pedantic -fno-builtin -std=c99 -Os -D_FORTIFY_SOURCE=2 $(LIB_OPTIM_CFLAGS) -ffunction-sections -fdata-sections -fno-pie -fno-pic" \
+	    BUILD_DIR="build"  LIBECC_NOSTDLIB=1 build/libsign.a; \
 	    cp $(PROJ_FILES)/externals/libecc/build/libsign.a $(BUILD_DIR)/externals/libsign.a; \
 	  fi; \
 	fi
