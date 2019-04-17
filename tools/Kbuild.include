@@ -180,10 +180,10 @@ dtc-option = $(call try-run,\
 ######
 
 ###
-# Shorthand for $(Q)$(MAKE) -f scripts/Makefile.build obj=
+# Shorthand for $(Q)$(MAKE) -f scripts/m_build.mk obj=
 # Usage:
 # $(Q)$(MAKE) $(build)=dir
-build := -f $(srctree)/scripts/Makefile.build obj
+build := -f $(srctree)/scripts/m_build.mk obj
 
 ###
 # Shorthand for $(Q)$(MAKE) -f scripts/Makefile.modbuiltin obj=

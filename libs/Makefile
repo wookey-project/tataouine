@@ -6,16 +6,16 @@ VERSION = 1
 ######### menuconfig inclusion.
 # these rules are accessible only wen the configuration is done
 # These rules requires a consistent .conf to use properly its content
-include $(PROJ_FILES)/Makefile.conf
+include $(PROJ_FILES)/m_config.mk
 
 # generic rules for all Makefiles. These rules can be used at
 # any sublevel of the sources
-include $(PROJ_FILES)/Makefile.gen
+include $(PROJ_FILES)/m_generic.mk
 
 -include Makefile.objs
 -include Makefile.objs.gen
 
-# add potential userspace specific cflags (see Makefile.conf)
+# add potential userspace specific cflags (see m_config.mk)
 
 .PHONY: $(libs-y)
 

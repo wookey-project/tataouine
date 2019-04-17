@@ -190,7 +190,7 @@ quiet_cmd_prepare       = PREPARE
 						  $(CONFGEN) $(CONFGEN_ARGS) Kconfig
 
 # tiny defconfig support, please don't call any other target depending on config here,
-# Makefile.conf should be relaoded
+# m_config.mk should be relaoded
 quiet_cmd_defconfig     = DEFCONFIG  $@
       cmd_defconfig     = cp configs/$@ .config && $(CONF) $(CONF_ARGS) Kconfig
 

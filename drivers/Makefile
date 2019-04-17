@@ -6,9 +6,9 @@ PROJ_FILES = ../
 VERSION = 1
 #############################
 
-CONFIG_MK = $(PROJ_FILES)/Makefile.conf
+CONFIG_MK = $(PROJ_FILES)/m_config.mk
 include $(CONFIG_MK)
-include $(PROJ_FILES)/Makefile.gen
+include $(PROJ_FILES)/m_generic.mk
 
 # include (if found) various drivers)
 -include socs/$(SOC)/Makefile.objs

@@ -12,11 +12,11 @@ VERSION = 1
 ######### menuconfig inclusion.
 # these rules are accessible only wen the configuration is done
 # These rules requires a consistent .conf to use properly its content
-include Makefile.conf
+include m_config.mk
 
 # generic rules for all Makefiles. These rules can be used at
 # any sublevel of the sources
-include Makefile.gen
+include m_generic.mk
 
 #########################################
 ######### apps, drivers, libs inclusion

@@ -34,7 +34,7 @@ export quiet Q KBUILD_VERBOSE MAKE MAKEFLAGS
 
 # including Kbuild related tools for silent CC
 include $(PROJ_FILES)/tools/Kbuild.include
-include $(PROJ_FILES)/Makefile.build
+include $(PROJ_FILES)/m_build.mk
 
 # generic CFLAGS
 CFLAGS += -I$(PROJ_FILES)/include/generated
