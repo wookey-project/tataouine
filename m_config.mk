@@ -189,7 +189,7 @@ CFLAGS_DRVLAYOUT  = "-I$(PROJ_FILES)/layouts/arch/socs/$(SOC)"
 
 
 # kernel cflags
-KERN_CFLAGS  = $(subst ",, $(CONFIG_KERN_CFLAGS))
+KERN_CFLAGS  = $(subst ",, $(CONFIG_KERN_CFLAGS)) -I$(PROJ_FILES)/include/generated $(CFLAGS)
 
 # all userspace (lib, drv, applications) cflags
 # for userspace only, GCC bug generating unaligned access
