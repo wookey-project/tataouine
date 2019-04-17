@@ -27,6 +27,7 @@ include m_generic.mk
 -include apps/Makefile.objs.gen
 
 
+
 #########################################
 ######### root Makefile variables declaration
 
@@ -69,6 +70,9 @@ ifeq ($(CONFIG_FIRMWARE_MODE_DUAL_BANK_DFU),y)
   KERNEL_HEXFILES += $(KERNEL_DFU2_HEXFILE)
   APPS_HEXFILES   += $(APPS_DFU2_HEXFILES)
 endif
+
+# each instance of the kernel must be built independently of the other
+.NOTPARALLEL: $(KERNEL_HEXFILES)
 
 showapps:
 	@echo $(APPS_FW1_HEXFILES)

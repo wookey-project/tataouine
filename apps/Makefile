@@ -18,6 +18,8 @@ CONFIG_MK = $(PROJ_FILES)/m_config.mk
 
 .PHONY: $(app-fw-y) $(app-dfu-y)
 
+.NOTPARALLEL: $(app-fw-y) $(app-dfu-y)
+
 app-y := $(sort $(app-fw-y) $(app-dfu-y))
 
 all: $(app-y)
