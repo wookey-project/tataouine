@@ -16,7 +16,7 @@ ifeq ($(PROJ_FILES),)
 PROJ_FILES = ./
 CONFIGFILE = .config
 else
-CONFIGFILE = $(PROJ_FILES).config
+CONFIGFILE = $(PROJ_FILES)/.config
 endif
 
 # detect if the .config file exists, or just include... nothing
@@ -63,7 +63,7 @@ RTS             = zfp-stp32f4
 # instead of a local submodule
 #
 ifeq ("$(CONFIG_BUILD_DIR)","")
-BUILD_DIR      = $(PROJ_FILES)build/unconfigured
+BUILD_DIR      = $(PROJ_FILES)/build/unconfigured
 else
 BUILD_DIR      = $(PROJ_FILES)$(CONFIG_BUILD_DIR:"%"=%)/$(ARCH)/$(BOARD)
 PRIVATE_DIR    = $(PROJ_FILES)/$(CONFIG_PRIVATE_DIR:"%"=%)

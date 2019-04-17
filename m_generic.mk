@@ -27,6 +27,17 @@ ifneq ($(findstring s,$(filter-out --%,$(MAKEFLAGS))),)
   tools_silent=s
 endif
 
+# here, we update the drivers and libs inclusion cflags
+# to be relative to the current compoent build directory.
+# For this, we update the CFLAGS value, replacing the
+# @PROJFILES@ with the local value of $(PROJ_FILES)
+#
+LIBS_CFLAGS := $(subst @PROJFILES@,$(PROJ_FILES),$(LIBS_CFLAGS))
+DRIVERS_CFLAGS := $(subst @PROJFILES@,$(PROJ_FILES),$(DRIVERS_CFLAGS))
+APPS_CFLAGS := $(subst @PROJFILES@,$(PROJ_FILES),$(APPS_CFLAGS))
+
+
+
 # disable directory entering/leaving printout
 #MAKEFLAGS += --no-print-directory
 
