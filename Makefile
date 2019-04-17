@@ -72,7 +72,7 @@ ifeq ($(CONFIG_FIRMWARE_MODE_DUAL_BANK_DFU),y)
 endif
 
 # each instance of the kernel must be built independently of the other
-.NOTPARALLEL: $(KERNEL_HEXFILES)
+.NOTPARALLEL: $(KERNEL_HEXFILES) loader
 
 showapps:
 	@echo $(APPS_FW1_HEXFILES)
