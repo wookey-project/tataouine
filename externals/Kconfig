@@ -43,15 +43,15 @@ config ECC_CURVNAME
 
 endmenu
 
-config GP_PRO
+config EXT_GP_PRO
    bool "GlobalPlatform Pro toolkit"
    default n
 
-config ANT_JAVACARD
+config EXT_ANT_JAVACARD
    bool "Ant Javacard toolkit"
    default n
 
-config SECAES
+config EXT_SECAES
    bool "Secure STM32 software AES"
    default n
 
