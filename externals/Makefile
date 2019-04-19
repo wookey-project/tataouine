@@ -27,15 +27,15 @@ ifeq ($(CONFIG_USR_LIB_SIGN),y)
 external_targets += libsign $(EC_UTILS)
 endif
 
-ifeq ($(CONFIG_GP_PRO),y)
+ifeq ($(CONFIG_EXT_GP_PRO),y)
 external_targets += gp
 endif
 
-ifeq ($(CONFIG_ANT_JAVACARD),y)
+ifeq ($(CONFIG_EXT_ANT_JAVACARD),y)
 external_targets += antjavacard
 endif
 
-ifeq ($(CONFIG_SECAES),y)
+ifeq ($(CONFIG_EXT_SECAES),y)
 external_targets += secaes
 endif
 
