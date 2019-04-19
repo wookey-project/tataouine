@@ -14,7 +14,7 @@ def PrintUsage():
 
 def get_device_index_from_json(json_data, name):
     for index, device in enumerate(json_data):
-        if device["name"] == name:
+        if str(device["name"]) == str(name):
             return index;
     return -1;
 
@@ -58,13 +58,14 @@ if __name__ == '__main__':
     flip_size = int(json_data[dev_idx]['size'], 0)
     flip_subregion_mask = int(json_data[dev_idx]['memory_subregion_mask'],0);
 
-    dev_idx = get_device_index_from_json(json_data, 'flash-flop');
-    if dev_idx == -1:
-        print("Error: flash-flip device not found!");
-        sys.exit(-1);
-    flop_base_addr = int(json_data[dev_idx]['address'], 0)
-    flop_size = int(json_data[dev_idx]['size'], 0)
-    flop_subregion_mask = int(json_data[dev_idx]['memory_subregion_mask'],0);
+    if (dual_bank == True):
+        dev_idx = get_device_index_from_json(json_data, 'flash-flop');
+        if dev_idx == -1:
+            print("Error: flash-flop device not found!");
+            sys.exit(-1);
+        flop_base_addr = int(json_data[dev_idx]['address'], 0)
+        flop_size = int(json_data[dev_idx]['size'], 0)
+        flop_subregion_mask = int(json_data[dev_idx]['memory_subregion_mask'],0);
     flash_base_addr = flip_base_addr
     if (flip_base_addr == None) or (flip_size == None):
         print("Error: FLIP not found in json layout %s" % (json_path));
@@ -78,7 +79,8 @@ if __name__ == '__main__':
         flash_size = flip_size
     flash_max_addr = flash_base_addr + flash_size
     print("FLIP base = 0x%x, size = 0x%x" % (flip_base_addr, flip_size))
-    print("FLOP base = 0x%x, size = 0x%x" % (flop_base_addr, flop_size))
+    if (dual_bank == True):
+        print("FLOP base = 0x%x, size = 0x%x" % (flop_base_addr, flop_size))
     # Now sanity check on all the addresses of the hex file, and fill
     last_addr_stop = None
     holes_to_fill = []
