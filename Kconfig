@@ -263,7 +263,7 @@ config STACKPROTFLAGS
 
 config EMBEDCFLAGS
     string
-    default "-Wl,--gc-sections -ffunction-sections -fno-builtin -ffreestanding -nolibc -nostdlib -nodefaultlibs -D_FORTIFY_SOURCE=2"
+    default "-Wl,--gc-sections -ffunction-sections -fno-builtin -ffreestanding -nostdlib -nodefaultlibs -D_FORTIFY_SOURCE=2"
 
 
 config EC_UTILS
