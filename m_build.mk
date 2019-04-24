@@ -292,5 +292,3 @@ quiet_cmd_load_libs_docs    = LOAD_LIBS_DOCS
 quiet_cmd_load_drvs_docs    = LOAD_DRVS_DOCS
 cmd_load_drvs_docs    = echo ".. toctree::\n   :maxdepth: 2\n" > autogen.drvs.rst; for i in $(shell find $(PROJ_FILES)/drivers/socs/$(CONFIG_SOCNAME) -mindepth 1 -maxdepth 1 -type d -exec basename {} \;); do if test -d $(PROJ_FILES)/drivers/socs/$(CONFIG_SOCNAME)/$$i/doc ; then rm -f drv$$i; ln -s $(PROJ_FILES)/drivers/socs/$(CONFIG_SOCNAME)/$$i/doc drv$$i; /bin/echo "   drivers/$$i <drv$$i/index>" >> autogen.drvs.rst; fi; done
 
-quiet_cmd_load_ewok_docs    = LOAD_EWOK_DOCS
-      cmd_load_ewok_docs    = echo ".. toctree::\n   :maxdepth: 2\n" > autogen.ewok.rst; if test -d $(PROJ_FILES)/kernel/doc ; then rm -f ewok; ln -s $(PROJ_FILES)/kernel/doc ewok; /bin/echo "   EwoK kernel <ewok/index>" >> autogen.ewok.rst; fi
