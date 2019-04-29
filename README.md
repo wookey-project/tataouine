@@ -21,8 +21,9 @@ In order to do that, we use a manifest file (standard Google repo tool mechanism
 deploy a complete image of the SDK by cloning multiple git repositories depending on the
 required profile.
 
-To properly download the WooKey project, you will need to install both `repo` and `git`. In a
-Debian environment:
+To properly download the WooKey project, you will need to install both `repo`
+and `git`.
+In a Debian environment:
 
 ```
   $ apt-get install git repo
