@@ -31,9 +31,13 @@ endif
 # For this, we update the CFLAGS value, replacing the
 # @PROJFILES@ with the local value of $(PROJ_FILES)
 #
+# This action is done only if the .config file exists
+#
+ifneq ("$(wildcard $(CONFIGFILE))","")
 LIBS_CFLAGS := $(subst @PROJFILES@,$(PROJ_FILES),$(LIBS_CFLAGS))
 DRIVERS_CFLAGS := $(subst @PROJFILES@,$(PROJ_FILES),$(DRIVERS_CFLAGS))
 APPS_CFLAGS := $(subst @PROJFILES@,$(PROJ_FILES),$(APPS_CFLAGS))
+endif
 
 
 

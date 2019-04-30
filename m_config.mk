@@ -12,7 +12,7 @@
 # set PROJ_FILE according to the source root directory, where both .config and
 # config.mk are set
 
-ifeq ($(PROJ_FILES),)
+ifeq ("$(PROJ_FILES)","")
 PROJ_FILES = ./
 CONFIGFILE = .config
 else
@@ -20,7 +20,7 @@ CONFIGFILE = $(PROJ_FILES)/.config
 endif
 
 # detect if the .config file exists, or just include... nothing
-ifneq ($(wildcard $(CONFIGFILE)),)
+ifneq ("$(wildcard $(CONFIGFILE))","")
 include $(CONFIGFILE)
 endif
 
