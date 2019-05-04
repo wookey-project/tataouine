@@ -296,7 +296,7 @@ $(BUILD_DIR)/$(HEX_NAME): $(APPS_HEXFILES) $(KERNEL_HEXFILES) $(BUILD_DIR)/loade
 $(BUILD_DIR)/$(BIN_NAME): $(BUILD_DIR)/$(HEX_NAME)
 	$(call if_changed,final_bin)
 
-sign: sign_flip sign_flop
+#sign: sign_flip sign_flop
 
 sign_flip: $(BUILD_DIR)/flip_fw.bin
 	$(call if_changed,sign_flip)
@@ -521,9 +521,8 @@ sign_interactive_each_fn_$(1):
 	@if [ "$(3)" = "" ]; then \
 		echo "\033[1;41m Error: you did not provide a firmware version, which is mandatory. Please provide it with 'version=XX'.\033[1;m"; false; \
 	fi
-	@$(OBJCOPY) --only-section=.*text --only-section=.*got -O binary $(BUILD_DIR)/$(APP_NAME)/$(1).elf $(BUILD_DIR)/$(APP_NAME)/$(1).bin
 	@# Get the firmware type from the ELF file
-	@FIRMWARE_TYPE=$$$$(cat $(BUILD_DIR)/$(APP_NAME)/layout.ld | grep `$(OBJDUMP) -h $(BUILD_DIR)/$(APP_NAME)/$(1).elf |grep "\.isr_vector" | cut -d " " -f9` | sed 's/_.*//g' | sed 's/ //g'); \
+	@FIRMWARE_TYPE=$$$$(echo $(1) | tr '[:lower:]' '[:upper:]'); \
 	if [ "$(2)" != "" ]; then \
 		FIRMWARE_MAGIC=$(2); \
 	else \
@@ -534,8 +533,8 @@ sign_interactive_each_fn_$(1):
 	else \
 		FIRMWARE_CHUNK_SIZE=16384; \
 	fi; \
-	echo "++++++++++ Interactive signing $(1), magic=$$$$FIRMWARE_MAGIC, version=$(3), chunk size=$$$$FIRMWARE_CHUNK_SIZE +++++++++++++++"; \
-	$(SIGNFIRMWARE) $(KEYS_DIR) $(BUILD_DIR)/$(APP_NAME)/$(1).bin $$$$FIRMWARE_MAGIC $$$$FIRMWARE_TYPE $(3) $$$$FIRMWARE_CHUNK_SIZE
+	echo "++++++++++ Interactive signing $$$$FIRMWARE_TYPE, magic=$$$$FIRMWARE_MAGIC, version=$(3), chunk size=$$$$FIRMWARE_CHUNK_SIZE +++++++++++++++"; \
+	$(SIGNFIRMWARE) $(KEYS_DIR) $(BUILD_DIR)/$(1)_fw.bin $$$$FIRMWARE_MAGIC $$$$FIRMWARE_TYPE $(3) $$$$FIRMWARE_CHUNK_SIZE
 endef
 
 define sign_interactive_fn =
@@ -558,7 +557,7 @@ endef
 
 sign_interactive_check:
 	@if [ "$(tosign)" = "" ]; then \
-		echo "Error: 'sign_interactive' rule expects as argument the firmware list to sign: 'tosign=fw1:fw2:dfu1'"; \
+		echo "Error: 'sign_interactive' rule expects as argument the firmware list to sign: 'tosign=flip:flop'"; \
 	fi;:
 
 $(eval $(call sign_interactive_fn,$(tosign),$(magic),$(version),$(chunksize)))
@@ -570,15 +569,12 @@ sign_each_fn_$(1):
 	@if [ "$(3)" = "" ]; then \
 		echo "\033[1;41m Error: you did not provide a firmware version, which is mandatory. Please provide it with 'version=XX'.\033[1;m"; false; \
 	fi;
-	@# Clean stuff
-	@rm -f tmp_firmware_sig_file tmp_firmware_sig_log;
-	@$(OBJCOPY) --only-section=.*text --only-section=.*got -O binary $(BUILD_DIR)/$(APP_NAME)/$(1).elf $(BUILD_DIR)/$(APP_NAME)/$(1).bin
 ifeq ("$(USE_SIG_TOKEN)","USE_SIG_TOKEN")
 	@# First we check the PET name
 	@echo $(SIG_TOKEN_PET_PIN) >  tmp_firmware_sig_file
 	@echo "n"                  >> tmp_firmware_sig_file
-	@# Get the firmware type from the ELF file
-	@FIRMWARE_TYPE=$$$$(cat $(BUILD_DIR)/$(APP_NAME)/layout.ld | grep `$(OBJDUMP) -h $(BUILD_DIR)/$(APP_NAME)/$(1).elf | grep "\.isr_vector" | cut -d " " -f9` | sed 's/_.*//g' | sed 's/ //g'); \
+	@# Get the firmware type
+	@FIRMWARE_TYPE=$$$$(echo $(1) | tr '[:lower:]' '[:upper:]'); \
 	if [ "$(2)" != "" ]; then \
 		FIRMWARE_MAGIC=$(2); \
 	else \
@@ -589,7 +585,7 @@ ifeq ("$(USE_SIG_TOKEN)","USE_SIG_TOKEN")
 	else \
 		FIRMWARE_CHUNK_SIZE=16384; \
 	fi; \
-	(($(SIGNFIRMWARE) $(KEYS_DIR) $(BUILD_DIR)/$(APP_NAME)/$(1).bin $$$$FIRMWARE_MAGIC $$$$FIRMWARE_TYPE $(3) $$$$FIRMWARE_CHUNK_SIZE < tmp_firmware_sig_file) 1> tmp_firmware_sig_log) | true
+	(($(SIGNFIRMWARE) $(KEYS_DIR) $(BUILD_DIR)/$(1)_fw.bin $$$$FIRMWARE_MAGIC $$$$FIRMWARE_TYPE $(3) $$$$FIRMWARE_CHUNK_SIZE < tmp_firmware_sig_file) 1> tmp_firmware_sig_log) | true
 	@# Check for error
 	@CHECK_ERROR=$$$$(cat tmp_firmware_sig_log | grep -i "Error"); \
 	if [ "$$$$CHECK_ERROR" != "" ]; then \
@@ -612,7 +608,8 @@ ifeq ("$(USE_SIG_TOKEN)","USE_SIG_TOKEN")
 else
 	@echo $(LOCAL_PASSWORD)    > tmp_firmware_sig_file
 endif
-	@FIRMWARE_TYPE=$$$$(cat $(BUILD_DIR)/$(APP_NAME)/layout.ld | grep `$(OBJDUMP) -h $(BUILD_DIR)/$(APP_NAME)/$(1).elf | grep "\.isr_vector" | cut -d " " -f9` | sed 's/_.*//g' | sed 's/ //g'); \
+	@# Get the firmware type
+	@FIRMWARE_TYPE=$$$$(echo $(1) | tr '[:lower:]' '[:upper:]'); \
 	if [ "$(2)" != "" ]; then \
 		FIRMWARE_MAGIC=$(2); \
 	else \
@@ -623,8 +620,8 @@ endif
 	else \
 		FIRMWARE_CHUNK_SIZE=16384; \
 	fi; \
-	echo "++++++++++ Automatic signing $(1), magic=$$$$FIRMWARE_MAGIC, version=$(3), chunk size=$$$$FIRMWARE_CHUNK_SIZE +++++++++++++++"; \
-	$(SIGNFIRMWARE) $(KEYS_DIR) $(BUILD_DIR)/$(APP_NAME)/$(1).bin $$$$FIRMWARE_MAGIC $$$$FIRMWARE_TYPE $(3) $$$$FIRMWARE_CHUNK_SIZE < tmp_firmware_sig_file
+	echo "++++++++++ Automatic signing $$$$FIRMWARE_TYPE, magic=$$$$FIRMWARE_MAGIC, version=$(3), chunk size=$$$$FIRMWARE_CHUNK_SIZE +++++++++++++++"; \
+	$(SIGNFIRMWARE) $(KEYS_DIR) $(BUILD_DIR)/$(1)_fw.bin $$$$FIRMWARE_MAGIC $$$$FIRMWARE_TYPE $(3) $$$$FIRMWARE_CHUNK_SIZE < tmp_firmware_sig_file
 	@rm -f tmp_firmware_sig_file tmp_firmware_sig_log
 endef
 
@@ -648,11 +645,11 @@ endef
 
 sign_check:
 	@if [ "$(tosign)" = "" ]; then \
-		echo "Error: 'sign' rule expects as argument the firmware list to sign: 'tosign=fw1:fw2:dfu1'"; \
+		echo "Error: 'sign' rule expects as argument the firmware list to sign: 'tosign=flip:flop'"; \
 	fi;
-	$(eval $(call sign_fn,$(tosign),$(magic),$(version),$(chunksize)))
 
-#sign: sign_check $(call all_sign_rules_fn, $(tosign))
+$(eval $(call sign_fn,$(tosign),$(magic),$(version),$(chunksize)))
+sign: sign_check $(call all_sign_rules_fn, $(tosign))
 
 
 ######### Firmware verification targets
@@ -660,7 +657,7 @@ sign_check:
 define verify_info_each_fn =
 verify_info_each_fn_$(1):
 	@echo "++++++++++ Info on $(1) ++++++++++++++++++++++++++++++"
-	@$(VERIFYFIRMWARE) $(KEYS_DIR) $(BUILD_DIR)/$(APP_NAME)/$(1).bin.signed only_info
+	@$(VERIFYFIRMWARE) $(KEYS_DIR) $(BUILD_DIR)/$(APP_NAME)/$(1)_fw.bin.signed only_info
 endef
 
 define verify_info_fn =
@@ -686,7 +683,7 @@ verify_info: $(call all_verify_info_rules_fn, $(toverify))
 define verify_interactive_each_fn =
 verify_interactive_each_fn_$(1):
 	@echo "++++++++++ Automatic verification $(1) +++++++++++++++"
-	@$(VERIFYFIRMWARE) $(KEYS_DIR) $(BUILD_DIR)/$(APP_NAME)/$(1).bin.signed
+	@$(VERIFYFIRMWARE) $(KEYS_DIR) $(BUILD_DIR)/$(APP_NAME)/$(1)_fw.bin.signed
 endef
 
 define verify_interactive_fn =
@@ -707,10 +704,10 @@ endef
 
 verify_interactive_check:
 	@if [ "$(toverify)" = "" ]; then \
-		echo "Error: 'verify_interactive' rule expects as argument the firmware list to verify: 'toverify=fw1:fw2:dfu1'"; \
+		echo "Error: 'verify_interactive' rule expects as argument the firmware list to verify: 'toverify=flip:flop'"; \
 	fi;
-	$(eval $(call verify_interactive_fn,$(toverify)))
 
+$(eval $(call verify_interactive_fn,$(toverify)))
 verify_interactive: verify_interactive_check $(call all_verify_interactive_rules_fn, $(toverify))
 
 
@@ -723,7 +720,7 @@ verify_each_fn_$(1):
 	@# First we check the PET name
 	@echo $(DFU_TOKEN_PET_PIN) >  tmp_firmware_verif_file
 	@echo "n"                  >> tmp_firmware_verif_file
-	@(($(VERIFYFIRMWARE) $(KEYS_DIR) $(BUILD_DIR)/$(APP_NAME)/$(1).bin.signed < tmp_firmware_verif_file) 1> tmp_firmware_verif_log) | true
+	@(($(VERIFYFIRMWARE) $(KEYS_DIR) $(BUILD_DIR)/$(1)_fw.bin.signed < tmp_firmware_verif_file) 1> tmp_firmware_verif_log) | true
 	@# Check signature
 	@CHECK_SIG=$$$$(cat tmp_firmware_verif_log | grep "bad signature"); \
 	if [ "$$$$CHECK_SIG" != "" ]; then \
@@ -750,7 +747,7 @@ verify_each_fn_$(1):
 	@echo $(DFU_TOKEN_PET_PIN) >  tmp_firmware_verif_file
 	@echo "y"                  >> tmp_firmware_verif_file
 	@echo $(DFU_TOKEN_USER_PIN)>> tmp_firmware_verif_file
-	@$(VERIFYFIRMWARE) $(KEYS_DIR) $(BUILD_DIR)/$(APP_NAME)/$(1).bin.signed < tmp_firmware_verif_file
+	@$(VERIFYFIRMWARE) $(KEYS_DIR) $(BUILD_DIR)/$(1)_fw.bin.signed < tmp_firmware_verif_file
 	@rm -f tmp_firmware_verif_file tmp_firmware_verif_log
 endef
 
@@ -771,7 +768,7 @@ endef
 
 verify_check:
 	@if [ "$(toverify)" = "" ]; then \
-		echo "Error: 'verify' rule expects as argument the firmware list to verify: 'toverify=fw1:fw2:dfu1'"; \
+		echo "Error: 'verify' rule expects as argument the firmware list to verify: 'toverify=flip:flop'"; \
 	fi;
 
 $(eval $(call verify_fn,$(toverify)))
