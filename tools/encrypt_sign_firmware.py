@@ -35,6 +35,11 @@ if __name__ == '__main__':
         firmware_string_version = [ (firmware_int_version & 0xff000000) >> 24, (firmware_int_version & 0xff0000) >> 16, (firmware_int_version & 0xff00) >> 8, firmware_int_version & 0xff ]
     except:
         firmware_string_version = [ int(x) for x in sys.argv[5].replace('-','.').split(".") ]
+    if len(firmware_string_version) > 4:
+        print("Error: provided version %s exceeds maximumum version value (on 32 bits)" % sys.argv[5])
+    if len(firmware_string_version) < 4:
+        # Perform padding on the left
+        firmware_string_version = ([0]*(4-len(firmware_string_version))) + firmware_string_version
     firmware_version = 0;
     pos = 24;
     if len(firmware_string_version) > 4:
