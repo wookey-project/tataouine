@@ -205,9 +205,9 @@ quiet_cmd_mkman3        = MAN        $@
       cmd_mkman3        = rst2man --title="EwoK syscalls API"  --no-generator --no-datestamp --no-source-link $</$(patsubst %.3,%.rst,$(notdir $@)) $@
 
 quiet_cmd_mkhtml        = HTML       $@
-      cmd_mkhtml        = BUILDDIR=../$@ make -C sphinx html >/dev/null 2>&1
+      cmd_mkhtml        = rm -rf ../$@/html; BUILDDIR=../$@ make -C sphinx html >/dev/null 2>&1
 
-quiet_cmd_mklatex       = HTML       $@
+quiet_cmd_mklatex       = LATEX      $@
       cmd_mklatex       = BUILDDIR=../$@ make -C sphinx latex >/dev/null 2>&1
 
 
@@ -287,7 +287,7 @@ quiet_cmd_sign_flop        = SIGN_FLOP
 
 # extract existing sphinx doc from libs and drivers to fusion with wookeypedia in a single global website
 quiet_cmd_load_libs_docs    = LOAD_LIBS_DOCS
-      cmd_load_libs_docs    = echo ".. toctree::\n   :maxdepth: 1\n" > autogen.libs.rst; for i in $(shell find $(PROJ_FILES)/libs -mindepth 1 -maxdepth 1 -type d -exec basename {} \;); do if test -d $(PROJ_FILES)/libs/$$i/doc ; then rm -f lib$$i; ln -s $(PROJ_FILES)/libs/$$i/doc lib$$i; /bin/echo "   libs/$$i <lib$$i/index>" >> autogen.libs.rst; fi; done
+      cmd_load_libs_docs    = echo ".. toctree::\n   :maxdepth: 2\n" > autogen.libs.rst; for i in $(shell find $(PROJ_FILES)/libs -mindepth 1 -maxdepth 1 -type d -exec basename {} \;); do if test -d $(PROJ_FILES)/libs/$$i/doc ; then rm -f lib$$i; ln -s $(PROJ_FILES)/libs/$$i/doc lib$$i; /bin/echo "   libs/$$i <lib$$i/index>" >> autogen.libs.rst; fi; done
 
 quiet_cmd_load_drvs_docs    = LOAD_DRVS_DOCS
       cmd_load_drvs_docs    = echo ".. toctree::\n   :maxdepth: 2\n" > autogen.drvs.rst; for i in $(shell find $(PROJ_FILES)/drivers/socs/$(CONFIG_SOCNAME) -mindepth 1 -maxdepth 1 -type d -exec basename {} \;); do if test -d $(PROJ_FILES)/drivers/socs/$(CONFIG_SOCNAME)/$$i/doc ; then rm -f drv$$i; ln -s $(PROJ_FILES)/drivers/socs/$(CONFIG_SOCNAME)/$$i/doc drv$$i; /bin/echo "   drivers/$$i <drv$$i/index>" >> autogen.drvs.rst; fi; done
