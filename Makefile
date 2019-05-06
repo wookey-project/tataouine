@@ -534,7 +534,7 @@ sign_interactive_each_fn_$(1):
 		FIRMWARE_CHUNK_SIZE=16384; \
 	fi; \
 	echo "++++++++++ Interactive signing $$$$FIRMWARE_TYPE, magic=$$$$FIRMWARE_MAGIC, version=$(3), chunk size=$$$$FIRMWARE_CHUNK_SIZE +++++++++++++++"; \
-	$(SIGNFIRMWARE) $(KEYS_DIR) $(BUILD_DIR)/$(1)_fw.bin $$$$FIRMWARE_MAGIC $$$$FIRMWARE_TYPE $(3) $$$$FIRMWARE_CHUNK_SIZE
+	$(SIGNFIRMWARE) $(KEYS_DIR) $(BUILD_DIR)/$(1)_fw.bin $$$$FIRMWARE_MAGIC $$$$FIRMWARE_TYPE $(3) $$$$FIRMWARE_CHUNK_SIZE "$(CONFIG_USB_DEV_VENDORID)" "$(CONFIG_USB_DEV_PRODUCTID)"
 endef
 
 define sign_interactive_fn =
@@ -621,7 +621,7 @@ endif
 		FIRMWARE_CHUNK_SIZE=16384; \
 	fi; \
 	echo "++++++++++ Automatic signing $$$$FIRMWARE_TYPE, magic=$$$$FIRMWARE_MAGIC, version=$(3), chunk size=$$$$FIRMWARE_CHUNK_SIZE +++++++++++++++"; \
-	$(SIGNFIRMWARE) $(KEYS_DIR) $(BUILD_DIR)/$(1)_fw.bin $$$$FIRMWARE_MAGIC $$$$FIRMWARE_TYPE $(3) $$$$FIRMWARE_CHUNK_SIZE < tmp_firmware_sig_file
+	$(SIGNFIRMWARE) $(KEYS_DIR) $(BUILD_DIR)/$(1)_fw.bin $$$$FIRMWARE_MAGIC $$$$FIRMWARE_TYPE $(3) $$$$FIRMWARE_CHUNK_SIZE "$(CONFIG_USB_DEV_VENDORID)" "$(CONFIG_USB_DEV_PRODUCTID)" < tmp_firmware_sig_file
 	@rm -f tmp_firmware_sig_file tmp_firmware_sig_log
 endef
 
