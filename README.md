@@ -18,6 +18,10 @@ The demo project are described here:
   * doc/sphinx/source/demo/blinky.rst
   * doc/sphinx/source/demo/blinkyipc.rst
 
+You can also compile the doc and read it here:
+
+  * build/armv7-m/wookey/doc/sphinx/html/index.html
+
 The full documentation is also readable here:
 
   * https://wookey-project.github.io/
