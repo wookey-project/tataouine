@@ -18,3 +18,7 @@ The demo project are described here:
   * doc/sphinx/source/demo/blinky.rst
   * doc/sphinx/source/demo/blinkyipc.rst
 
+The full documentation is also readable here:
+
+  * https://wookey-project.github.io/
+
