@@ -94,12 +94,14 @@ echo "========================================================="
 echo "=== Tataouine environment configuration"
 echo "========================================================="
 echo
-echo "  ADA_RUNTIME   = $ADA_RUNTIME"
+echo "  *: required to fully build the project"
+echo
+echo " *ADA_RUNTIME   = $ADA_RUNTIME"
 echo "  ST_FLASH      = $ST_FLASH"
 echo "  ST_UTIL       = $ST_UTIL"
-echo "  CROSS_COMPILE = $CROSS_COMPILE"
+echo " *CROSS_COMPILE = $CROSS_COMPILE"
 echo "  USE_LLVM      = $USE_LLVM"
 echo "  CLANG_PATH    = $CLANG_PATH"
-echo "  JAVA_SC_SDK   = $JAVA_SC_SDK"
+echo " *JAVA_SC_SDK   = $JAVA_SC_SDK"
 echo
 echo "========================================================="
