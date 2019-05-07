@@ -232,6 +232,11 @@ config DBGFLAGS_GCC
   default "-ggdb -O1" if DEBUG && OPTIM_PERF1
   default "-ggdb -O2" if DEBUG && OPTIM_PERF2
   default "-ggdb -O3" if DEBUG && OPTIM_PERF3
+  default "-Os" if !DEBUG && OPTIM_SIZE
+  default "-O1" if !DEBUG && OPTIM_PERF1
+  default "-O2" if !DEBUG && OPTIM_PERF2
+  default "-O3" if !DEBUG && OPTIM_PERF3
+
 
 config DBGFLAGS_LLVM
   string
@@ -240,6 +245,10 @@ config DBGFLAGS_LLVM
   default "-ggdb -O1" if DEBUG && OPTIM_PERF1
   default "-ggdb -O2" if DEBUG && OPTIM_PERF2
   default "-ggdb -O3" if DEBUG && OPTIM_PERF3
+  default "-Os" if !DEBUG && OPTIM_SIZE
+  default "-O1" if !DEBUG && OPTIM_PERF1
+  default "-O2" if !DEBUG && OPTIM_PERF2
+  default "-O3" if !DEBUG && OPTIM_PERF3
 
 
 config STACK_PROT_FLAG
