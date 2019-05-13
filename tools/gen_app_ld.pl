@@ -103,7 +103,6 @@ SECTIONS
 	{
 		_s_text = .;	            /* create a global symbol at data start */
 		*startup*(.text.do_starttask)
-		*(.text._main)
 		*(.text*)
 		*(.rodata)         	/* .rodata sections (constants, strings, etc.) */
 		*(.rodata*)         	/* .rodata sections (constants, strings, etc.) */
