@@ -212,18 +212,7 @@ quiet_cmd_mklatex       = LATEX      $@
 
 
 quiet_cmd_techdoc       = TECHDOC
-cmd_techdoc       = rm -f $(PROJ_FILES)/doc/sphinx/source/publi.rst.gen; for i in $(PROJ_FILES)/drivers/socs/$(SOC)/* $(PROJ_FILES)/libs/* kernel; do if test -d $$i; then  make -C $$i doc; fi; done; builddir=$(BUILD_DIR); for i in `find $$builddir/drivers -type f -iname '*.pdf'` `find $$builddir/libs -type f -iname '*.pdf'` $(BUILD_DIR)/kernel/doc/latex/ewok.pdf; do prefix=`basename $${i%%.pdf}`; cp $$i $(PROJ_FILES)/doc/sphinx/source/_downloads/; echo "   * $$prefix :download:\`technical manual <_downloads/$$prefix.pdf>\`" >> $(PROJ_FILES)/doc/sphinx/source/publi.rst.gen; done;
-
-quiet_cmd_doxygen       = DOXY       $@
-      cmd_doxygen       = cat $< | sed -e 's:BUILDDIR:$(BUILD_DIR):g' | doxygen -; \
-			  if [ -d $@/latex ]; then make -C $@/latex >/dev/null 2>&1 && cp $@/latex/refman.pdf $@/`basename $@`.pdf; fi; \
-			  if [ -d $@/../sphinx/html ]; then cp $@/`basename $@`.pdf $@/../sphinx/html/_downloads; fi
-
-quiet_cmd_doxy_custom   = DOXY+      $@
-      cmd_doxy_custom   = if [ -d $@/latex ]; then ../tools/gen_devmap.pl $(BUILD_DIR) $@/latex/devmap.tex ../kernel/src/arch/socs/stm32f439/soc-devmap.h; \
-			  TMP=`sed -e 's:.*End generated contents.*:\\input{devmap}:g' $@/latex/refman.tex;`; printf "$${TMP}" > $@/latex/refman.tex; unset TMP \
-      			  make -C $@/latex >/dev/null 2>&1 && cp $@/latex/refman.pdf $@/`basename $@`.pdf; fi; \
-			  if [ -d $@/../sphinx/html/docs ]; then cp $@/`basename $@`.pdf $@/../sphinx/html/_downloads; fi
+      cmd_techdoc       = rm -f $(PROJ_FILES)/doc/sphinx/source/publi.rst.gen; for i in $(PROJ_FILES)/drivers/socs/$(SOC)/* $(PROJ_FILES)/libs/* kernel; do if test -d $$i; then $(MAKE) -C $$i doc; fi; done; builddir=$(BUILD_DIR); for i in `find $$builddir/drivers -type f -iname '*.pdf'` `find $$builddir/libs -type f -iname '*.pdf'` $(BUILD_DIR)/kernel/doc/latex/ewok.pdf; do prefix=`basename $${i%%.pdf}`; cp $$i $(PROJ_FILES)/doc/sphinx/source/_downloads/; echo "   * $$prefix :download:\`technical manual <_downloads/$$prefix.pdf>\`" >> $(PROJ_FILES)/doc/sphinx/source/publi.rst.gen; done
 
 # as apps are hosted by other repositories, applist is dynamic for Kconfig, and generated here
 quiet_cmd_kconf_app_gen = KCONF
