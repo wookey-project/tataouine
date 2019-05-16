@@ -1,5 +1,11 @@
 # Readme first
 
+To compile the overall documentation (sphinx, imagemagick and latex requested) :
+
+  * make doc
+
+You can also read the documentation directly using the ReST files:
+
 To compile the examples and to load them on a board, please, read quickstart
 guide:
 
