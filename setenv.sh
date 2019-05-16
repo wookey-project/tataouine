@@ -48,7 +48,7 @@ export ST_UTIL="/usr/local/bin/st-flash"
 # to avoid unexpected link and run problems due to incompatible compilers versions.
 # The AdaCore Ada toolchain is using the arm-eabi- prefix for its toolchain
 
-export CROSS_COMPILE="arm-eabi-"
+export CROSS_COMPILE="arm-none-eabi-"
 
 # 6) By default, the SDK is using GCC for cross-compiling. It is possible to
 # use LLVM to get a better static analysis through clang and build-check.
