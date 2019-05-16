@@ -153,7 +153,7 @@ quiet_cmd_ranlib        = RANLIB   $@
       cmd_ranlib        = $(CROSS_RANLIB) $@
 
 quiet_cmd_mkapplet      = APPLET   $@
-      cmd_mkapplet      = mkdir -p $(BUILD_DIR)/javacard/applet; touch $(BUILD_DIR)/javacard/applet/.applet.cmd.ant; cp $(PRIVATE_DIR)/Keys.java $(PROJ_FILES)/javacard/applet/src/goodusb/; cd $(PROJ_FILES)/javacard/applet && ant -Dbuilddir=../$(BUILD_DIR)/javacard/applet -logfile ../$(BUILD_DIR)/javacard/applet/.applet.cmd.ant
+      cmd_mkapplet      = mkdir -p $(BUILD_DIR)/javacard/applet; touch $(BUILD_DIR)/javacard/applet/.applet.cmd.ant; cd $(PROJ_FILES)/javacard/applet && ant -Dbuilddir=../$(BUILD_DIR)/javacard/applet -logfile ../$(BUILD_DIR)/javacard/applet/.applet.cmd.ant
 
 # make build directory
 quiet_cmd_mkdir         = MKDIR      $@
