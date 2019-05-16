@@ -284,3 +284,6 @@ quiet_cmd_load_drvs_docs    = LOAD_DRVS_DOCS
 quiet_cmd_load_kern_docs    = LOAD_KERN_DOCS
       cmd_load_kern_docs    = if test -d $(PROJ_FILES)/kernel/doc; then rm -f ewok; ln -s $(PROJ_FILES)/kernel/doc ewok; fi
 
+quiet_cmd_load_jvc_docs     = LOAD_JVC_DOCS
+      cmd_load_jvc_docs     = if test -d $(PROJ_FILES)/javacard/applet/doc; then rm -f javacard; ln -s $(PROJ_FILES)/javacard/applet/doc javacard; fi
+
