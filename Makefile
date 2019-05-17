@@ -787,6 +787,9 @@ ifeq ("$(USE_SIG_TOKEN)","USE_SIG_TOKEN")
 	@cd javacard && make applet_sig
 endif
 
+javacard_clean:
+	@cd javacard && make clean_applets
+
 javacard_push_auth:
 	@cd javacard && make push_auth
 
