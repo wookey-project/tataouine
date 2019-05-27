@@ -66,7 +66,7 @@ quiet_cmd_gnat_o_ali    = GNATBIND $@
 # of syms when generating the firmware. as they are resolved at link time,
 # they can be prefixed after without arm
 quiet_cmd_link_o_target = LD       $@
-      cmd_link_o_target = $(CROSS_CC) $(AFLAGS) $(LDFLAGS) $(ARCH_OBJ) $(ROBJ) $(SOBJ) $(OBJ) $(DRVOBJ) $(CORE_OBJ) $(SOC_OBJ) $(BOARD_OBJ) $(LD_LIBS) -o $@
+      cmd_link_o_target = $(CROSS_CC) $(CFLAGS) $(LDFLAGS) $(ARCH_OBJ) $(SOBJ) $(OBJ) $(DRVOBJ) $(CORE_OBJ) $(SOC_OBJ) $(BOARD_OBJ) $(SOCASM_OBJ) $(LD_LIBS) -o $@
 
 # ADA linking
 quiet_cmd_adalink_o_target = ADALD    $@
