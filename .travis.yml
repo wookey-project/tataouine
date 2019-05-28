@@ -21,6 +21,8 @@ addons:
             - maven
             - ant
             - curl
+            - zip
+            - unzip
 
 # testing with jdk8, on xenial
 before_install: true
@@ -32,7 +34,11 @@ install:
     - curl -o /tmp/gnat-community-2018-20180524-arm-elf-linux64-bin http://mirrors.cdn.adacore.com/art/5b0c1227a3f5d7097625478d
     - chmod +x /tmp/gnat-community-2018-20180524-arm-elf-linux64-bin
     - git clone https://github.com/AdaCore/gnat_community_install_script.git /tmp/gnat_install
-    - /tmp/gnat_install/install_package.sh /tmp/gnat-community-2018-20180524-arm-elf-linux64-bin /opt/adacore-arm-eabi
+    - /tmp/gnat_install/install_package.sh /tmp/gnat-community-2018-20180524-arm-elf-linux64-bin /opt/adacore-arm-eabii
+    - curl -s "https://get.sdkman.io" -o /tmp/sdk
+    - chmod +x /tmp/sdk
+    - source "$HOME/.sdkman/bin/sdkman-init.sh"
+    - sudo sdk install maven 3.6.1
 
 # setting build dir and correct path for installed tools
 before_script:
@@ -41,12 +47,20 @@ before_script:
     - export PATH=/opt/adacore-arm-eabi/bin:/usr/local/bin:$PATH
     - git config --global color.ui true
 
-# let's sync and build
+# let's sync and build for both disco407 and wookey profiles
 script:
     - repo init -u https://github.com/wookey-project/manifest.git -m soft/disco407_nightly.xml && repo sync
     - echo 'CROSS_COMPILE=arm-eabi-' > setenv.local.sh
     - if [ "$TRAVIS_EVENT_TYPE" = "pull_request" ]; then git fetch github refs/pull/${TRAVIS_PULL_REQUEST}/head && git checkout FETCH_HEAD; fi
     - source setenv.sh
     - make boards/32f407disco/configs/disco_blinky_ada_defconfig
+    - make
+    - rm -rf *
+    - rm -rf .config* .git* .repo* .layout* .travis*
+    - repo init -u https://github.com/wookey-project/manifest.git -m soft/wookey_nightly.xml && repo sync
+    - echo 'CROSS_COMPILE=arm-eabi-' > setenv.local.sh
+    - if [ "$TRAVIS_EVENT_TYPE" = "pull_request" ]; then git fetch github refs/pull/${TRAVIS_PULL_REQUEST}/head && git checkout FETCH_HEAD; fi
+    - source setenv.sh
+    - make boards/wookey/configs/wookey2_graphic_ada_hs_defconfig
     - make
 
