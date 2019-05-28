@@ -35,7 +35,7 @@ install:
     - curl -o /tmp/gnat-community-2018-20180524-arm-elf-linux64-bin http://mirrors.cdn.adacore.com/art/5b0c1227a3f5d7097625478d
     - chmod +x /tmp/gnat-community-2018-20180524-arm-elf-linux64-bin
     - git clone https://github.com/AdaCore/gnat_community_install_script.git /tmp/gnat_install
-    - /tmp/gnat_install/install_package.sh /tmp/gnat-community-2018-20180524-arm-elf-linux64-bin /opt/adacore-arm-eabii
+    - /tmp/gnat_install/install_package.sh /tmp/gnat-community-2018-20180524-arm-elf-linux64-bin /opt/adacore-arm-eabi
     - curl -s "https://get.sdkman.io" -o /tmp/sdk
     - chmod +x /tmp/sdk
     - /tmp/sdk
