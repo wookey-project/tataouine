@@ -37,6 +37,7 @@ install:
     - /tmp/gnat_install/install_package.sh /tmp/gnat-community-2018-20180524-arm-elf-linux64-bin /opt/adacore-arm-eabii
     - curl -s "https://get.sdkman.io" -o /tmp/sdk
     - chmod +x /tmp/sdk
+    - /tmp/sdk
     - source "$HOME/.sdkman/bin/sdkman-init.sh"
     - sudo sdk install maven 3.6.1
 
