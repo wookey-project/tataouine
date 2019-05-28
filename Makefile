@@ -237,11 +237,8 @@ endif
 $(BUILD_DIR)/apps/.apps_done: $(APPS)
 
 
-loader:  libbsp
-	$(Q)$(MAKE) -C $@ EXTRA_CFLAGS="-DLOADER"
-
-libbsp:
-	ADAKERNEL= make LOADER=y -C kernel/src/arch
+loader:
+	$(Q)$(MAKE) -C $@
 
 $(APPS):
 	$(Q)$(MAKE) -C $@
