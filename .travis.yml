@@ -38,8 +38,7 @@ install:
     - curl -s "https://get.sdkman.io" -o /tmp/sdk
     - chmod +x /tmp/sdk
     - /tmp/sdk
-    - source "$HOME/.sdkman/bin/sdkman-init.sh"
-    - sudo sdk install maven 3.6.1
+    - sudo sh -c "source $HOME/.sdkman/bin/sdkman-init.sh && sudo sdk install maven 3.6.1"
 
 # setting build dir and correct path for installed tools
 before_script:
