@@ -263,7 +263,9 @@ quiet_cmd_mkobjlist_drvs   = MAKEOBJS_DRVS
 
 quiet_cmd_devmap           = DEVMAP
       cmd_devmap           = $(PROJ_FILES)/kernel/tools/devmap.py C $(PROJ_FILES)/layouts/arch/socs/$(SOC)/soc-devmap-$(BOARDNAME)$(BOARDRELEASE).json > $(PROJ_FILES)/kernel/src/C/generated/devmap.h; \
-						  $(PROJ_FILES)/layouts/arch/socs/$(SOC)/tools/devheader.py $(PROJ_FILES)/layouts/arch/socs/$(SOC)/generated $(PROJ_FILES)/layouts/arch/socs/$(SOC)/soc-devmap-$(BOARDNAME)$(BOARDRELEASE).json
+                             $(PROJ_FILES)/kernel/tools/devmap.py ADA $(PROJ_FILES)/layouts/arch/socs/$(SOC)/soc-devmap-$(BOARDNAME)$(BOARDRELEASE).json > $(PROJ_FILES)/kernel/src/arch/socs/$(SOC)/Ada/generated/soc-devmap.ads; \
+                             $(PROJ_FILES)/kernel/tools/devperm.py $(PROJ_FILES)/layouts/arch/socs/$(SOC)/soc-devmap-$(BOARDNAME)$(BOARDRELEASE).json > $(PROJ_FILES)/kernel/src/Ada/generated/ewok-devices-perms.ads; \
+			     $(PROJ_FILES)/layouts/arch/socs/$(SOC)/tools/devheader.py $(PROJ_FILES)/layouts/arch/socs/$(SOC)/generated $(PROJ_FILES)/layouts/arch/socs/$(SOC)/soc-devmap-$(BOARDNAME)$(BOARDRELEASE).json
 
 quiet_cmd_format_fw        = FORMAT
       cmd_format_fw        = $(PROJ_FILES)/tools/format_firmware.py $(PROJ_FILES)/layouts/arch/socs/$(SOC)/soc-devmap-$(BOARDNAME)$(BOARDRELEASE).json $(BUILD_DIR)/$(CONFIG_PROJ_NAME).hex
