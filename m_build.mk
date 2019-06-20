@@ -179,7 +179,7 @@ quiet_cmd_mkincludedir  = MKINCLUDEDIR
       cmd_mkincludedir  = mkdir -p $(PWD)/include && mkdir -p $(PWD)/include/config $(PWD)/include/generated
 
 quiet_cmd_pepareada     = PREPAREADA
-      cmd_prepareada    = if [ "y" = "$(ADAKERNEL)" ]; then for i in $(shell cat kernel/src/Ada/libgnat/gnat/link_list.txt); do ln -fs $(ADA_RUNTIME)/arm-eabi/lib/gnat/zfp-stm32f4/gnat/$$i $(PWD)/kernel/src/Ada/libgnat/gnat/$$i; done; fi
+      cmd_prepareada    = if [ "y" = "$(ADAKERNEL)" ]; then for i in $(shell cat kernel/src/libgnat/gnat/link_list.txt); do ln -fs $(ADA_RUNTIME)/arm-eabi/lib/gnat/zfp-stm32f4/gnat/$$i $(PWD)/kernel/src/libgnat/gnat/$$i; done; fi
 
 quiet_cmd_pepareada_l   = PREPAREADA_LDR
       cmd_prepareada_l  = if [ "y" = "$(ADAKERNEL)" ]; then for i in $(shell cat loader/libgnat/gnat/link_list.txt); do ln -fs $(ADA_RUNTIME)/arm-eabi/lib/gnat/zfp-stm32f4/gnat/$$i $(PWD)/loader/libgnat/gnat/$$i; done; fi
@@ -262,8 +262,8 @@ quiet_cmd_mkobjlist_drvs   = MAKEOBJS_DRVS
       cmd_mkobjlist_drvs   = /bin/echo "DRVSRC_DIR = \$$(PROJ_FILES)/drivers/socs/$(CONFIG_SOCNAME)" > drivers/socs/$(CONFIG_SOCNAME)/Makefile.objs; /bin/echo "drv-y :=" >> drivers/socs/$(CONFIG_SOCNAME)/Makefile.objs; rm -f drivers/socs/$(CONFIG_SOCNAME)/Makefile.objs.gen; for i in $(shell find drivers/socs/$(CONFIG_SOCNAME) -mindepth 1 -maxdepth 1 -type d -exec basename {} \;); do upper=`/bin/echo "$$i" |tr '[:lower:]' '[:upper:]'`; /bin/echo "drv-\$$(CONFIG_USR_DRV_$${upper}) += $$i" >> drivers/socs/$(CONFIG_SOCNAME)/Makefile.objs.gen; done; if [ -d $(PROJ_FILES)/drivers/boards/$(CONFIG_BOARDNAME) ]; then /bin/echo "BOARD_DRVSRC_DIR = \$$(PROJ_FILES)/drivers/boards/$(CONFIG_BOARDNAME)" > drivers/boards/$(CONFIG_BOARDNAME)/Makefile.objs; /bin/echo "board-drv-y :=" >> drivers/boards/$(CONFIG_BOARDNAME)/Makefile.objs; rm -f drivers/boards/$(CONFIG_BOARDNAME)/Makefile.objs.gen; for i in $(shell find drivers/boards/$(CONFIG_BOARDNAME) -mindepth 1 -maxdepth 1 -type d -exec basename {} \;); do upper=`/bin/echo "$$i" |tr '[:lower:]' '[:upper:]'`; /bin/echo "board-drv-\$$(CONFIG_USR_DRV_$${upper}) += $$i" >> drivers/boards/$(CONFIG_BOARDNAME)/Makefile.objs.gen; done; fi
 
 quiet_cmd_devmap           = DEVMAP
-      cmd_devmap           = $(PROJ_FILES)/kernel/tools/devmap.py ADA $(PROJ_FILES)/layouts/arch/socs/$(SOC)/soc-devmap-$(BOARDNAME)$(BOARDRELEASE).json > $(PROJ_FILES)/kernel/src/arch/socs/$(SOC)/Ada/generated/soc-devmap.ads; \
-                             $(PROJ_FILES)/kernel/tools/devperm.py $(PROJ_FILES)/layouts/arch/socs/$(SOC)/soc-devmap-$(BOARDNAME)$(BOARDRELEASE).json > $(PROJ_FILES)/kernel/src/Ada/generated/ewok-devices-perms.ads; \
+      cmd_devmap           = $(PROJ_FILES)/kernel/tools/devmap.py ADA $(PROJ_FILES)/layouts/arch/socs/$(SOC)/soc-devmap-$(BOARDNAME)$(BOARDRELEASE).json > $(PROJ_FILES)/kernel/src/arch/socs/$(SOC)/generated/soc-devmap.ads; \
+                             $(PROJ_FILES)/kernel/tools/devperm.py $(PROJ_FILES)/layouts/arch/socs/$(SOC)/soc-devmap-$(BOARDNAME)$(BOARDRELEASE).json > $(PROJ_FILES)/kernel/src/generated/ewok-devices-perms.ads; \
 			     $(PROJ_FILES)/layouts/arch/socs/$(SOC)/tools/devheader.py $(PROJ_FILES)/layouts/arch/socs/$(SOC)/generated $(PROJ_FILES)/layouts/arch/socs/$(SOC)/soc-devmap-$(BOARDNAME)$(BOARDRELEASE).json
 
 quiet_cmd_format_fw        = FORMAT
