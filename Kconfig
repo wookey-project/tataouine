@@ -168,7 +168,6 @@ choice
        no RDP2 check at boot time.
    config FIRMWARE_BUILD_MODE_PROD
      bool "Build the firmware in prod mode"
-     select KERNEL_NOSERIAL
      select ADAKERNEL
      select KERNEL_PANIC_REBOOT
      select LOADER_FLASH_LOCK
