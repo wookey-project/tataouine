@@ -55,7 +55,7 @@ quiet_cmd_ldscript      = LDSCRIPT $@
 
 # linking
 quiet_cmd_k_ldscript    = LDSCRIPT $@
-      cmd_k_ldscript    = sed -e 's:BUILDDIR:$(BUILD_DIR):g' $< | sed -e 's:APP_NAME:$(APP_NAME):g' > $(APP_BUILD_DIR)/$(APP_NAME).ld
+      cmd_k_ldscript    = sed -e 's:BUILDDIR:$(BUILD_DIR):g' $< | sed -e 's:APP_NAME:$(APP_NAME):g' |  perl -pe 's/^INCLUDE (.*)/`cat $$1`/e' > $(APP_BUILD_DIR)/$(APP_NAME).ld
 
 # classical Ada Compiling (adb => o)
 quiet_cmd_gnat_o_ali    = GNATBIND $@
