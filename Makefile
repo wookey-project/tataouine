@@ -244,7 +244,7 @@ $(APPS):
 	$(Q)$(MAKE) -C $@
 
 prove:
-	$(Q)$(MAKE) -C kernel/$@ all && cat kernel/$@/gnatprove/gnatprove.out |head -15 > doc/sphinx/source/ewok/ada_proof.rst
+	$(Q)$(MAKE) -C kernel $@
 
 ################# final integration
 #
