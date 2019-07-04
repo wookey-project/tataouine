@@ -23,6 +23,9 @@
 quiet_cmd_cc_o_c        = CC       $@
       cmd_cc_o_c        = test -d $(dir $@) || mkdir -p $(dir $@); $(CROSS_CC) $< -c $(CFLAGS) -o $@
 
+quiet_cmd_cc_o_asm      = ASM      $@
+      cmd_cc_o_asm      = test -d $(dir $@) || mkdir -p $(dir $@); $(CROSS_CC) $< -c $(AFLAGS) -fno-builtin -nostdlib -o $@
+
 quiet_cmd_ada_lib       = ADA      $@
       cmd_ada_lib       = ADA_ARCH=$(CONFIG_ADA_ARCH) ADA_RUNTIME=$(ADA_RUNTIME) ADA_PROFILE=$(CONFIG_ADA_PROFILE) BUILD_DIR=$(APP_BUILD_DIR) ARCH=$(CONFIG_ARCH) SOCNAME=$(CONFIG_SOCNAME) KERNEL_ADA_BUILDSIZE=$(CONFIG_KERNEL_ADA_BUILDSIZE) MODE=$(CONFIG_KERNEL_MODE) gprbuild -P$<
 
@@ -179,11 +182,7 @@ quiet_cmd_mkincludedir  = MKINCLUDEDIR
       cmd_mkincludedir  = mkdir -p $(PWD)/include && mkdir -p $(PWD)/include/config $(PWD)/include/generated
 
 quiet_cmd_pepareada     = PREPAREADA
-      cmd_prepareada    = if [ "y" = "$(ADAKERNEL)" ]; then for i in $(shell cat kernel/src/libgnat/gnat/link_list.txt); do ln -fs $(ADA_RUNTIME)/arm-eabi/lib/gnat/zfp-stm32f4/gnat/$$i $(PWD)/kernel/src/libgnat/gnat/$$i; done; fi
-
-quiet_cmd_pepareada_l   = PREPAREADA_LDR
-      cmd_prepareada_l  = if [ "y" = "$(ADAKERNEL)" ]; then for i in $(shell cat loader/libgnat/gnat/link_list.txt); do ln -fs $(ADA_RUNTIME)/arm-eabi/lib/gnat/zfp-stm32f4/gnat/$$i $(PWD)/loader/libgnat/gnat/$$i; done; fi
-      # as file read is supported only since gmake 1.2, shell read is required here :-/
+      cmd_prepareada    = if [ "y" = "$(ADAKERNEL)" ]; then for i in $(shell cat kernel/libgnat/gnat/link_list.txt); do ln -fs $(ADA_RUNTIME)/arm-eabi/lib/gnat/zfp-stm32f4/gnat/$$i $(PWD)/kernel/libgnat/gnat/$$i; done; fi
 
 quiet_cmd_prepare       = PREPARE
       cmd_prepare       = $(CONF) $(CONF_ARGS) Kconfig; ./kernel/tools/gen_autoconf_ada.pl .config; \
