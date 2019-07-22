@@ -22,11 +22,14 @@ CONFIG_MK = $(PROJ_FILES)/m_config.mk
 
 app-y := $(sort $(app-fw-y) $(app-dfu-y))
 
-all: $(app-y)
-	@touch $(BUILD_DIR)/apps/.apps_done
+all: prepare $(app-y)
+
+prepare:
+	$(call if_changed,ldscript)
 
 $(app-y): outdir
-	$(call if_changed,ldscript)
+	$(call if_changed,builddummyapp)
+	$(call if_changed,app_layout)
 	$(call if_changed,buildapp)
 
 
