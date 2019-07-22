@@ -43,6 +43,19 @@ quiet_cmd_gnat_o_ada    = GNAT     $@
       cmd_gnat_o_ada    = arm-eabi-gnatmake -gnat2012 --RTS=$(RTS) -c -cargs -c $(CONFIG_AFLAGS) -i $< -o $@
 
 # managing fw and dfu build for apps
+quiet_cmd_builddummyapp = DUMMYAPP
+      cmd_builddummyapp = make -C $@ alldeps; \
+	                      cp $(BUILD_DIR)/libs/*/lib*.a $(BUILD_DIR)/apps/$@; \
+						  cp $(BUILD_DIR)/drivers/*/lib*.a $(BUILD_DIR)/apps/$@; \
+						  if [ -f $(BUILD_DIR)/apps/$@/$@.dummy.fw1.ld ]; then make -C $@ all EXTRA_LDFLAGS="-T$@.dummy.fw1.ld" APP_NAME=$@.dummy.fw1; fi; \
+						  if [ ! -z "$(CONFIG_FIRMWARE_DUALBANK)" ]; then if [ -f $(BUILD_DIR)/apps/$@/$@.dummy.fw2.ld ]; then make -C $@ all EXTRA_LDFLAGS="-T$@.dummy.fw2.ld" APP_NAME=$@.dummy.fw2; fi; fi; \
+						  if [ -f $(BUILD_DIR)/apps/$@/$@.dummy.dfu1.ld ]; then make -C $@ all EXTRA_LDFLAGS="-T$@.dummy.dfu1.ld -DMODE_DFU" APP_NAME=$@.dummy.dfu1; fi; \
+						  if [ ! -z "$(CONFIG_FIRMWARE_DUALBANK)" ]; then if [ -f $(BUILD_DIR)/apps/$@/$@.dummy.dfu2.ld ]; then make -C $@ all EXTRA_LDFLAGS="-T$@.dummy.dfu2.ld" APP_NAME=$@.dummy.dfu2; fi; fi
+
+
+quiet_cmd_app_layout   = APPLAYOUT $@
+      cmd_app_layout   = for i in FW1 FW2 DFU1 DFU2; do SOC=$(SOC) $(PROJ_FILES)/kernel/tools/devmap/gen_app_metainfos.pl $(BUILD_DIR) $$i action=genappcfg; done
+
 quiet_cmd_buildapp      = APP     $@
       cmd_buildapp      = make -C $@ alldeps; \
 	                      cp $(BUILD_DIR)/libs/*/lib*.a $(BUILD_DIR)/apps/$@; \
@@ -53,12 +66,12 @@ quiet_cmd_buildapp      = APP     $@
 						  if [ ! -z "$(CONFIG_FIRMWARE_DUALBANK)" ]; then if [ -f $(BUILD_DIR)/apps/$@/$@.dfu2.ld ]; then make -C $@ all EXTRA_LDFLAGS="-T$@.dfu2.ld" APP_NAME=$@.dfu2; fi; fi
 
 # linking
-quiet_cmd_ldscript      = LDSCRIPT $@
+quiet_cmd_ldscript      = LDSCRIPT
       cmd_ldscript      = $(PROJ_FILES)tools/gen_app_ld.pl $(BUILD_DIR) $(PROJ_FILES)/.config
 
 # linking
-quiet_cmd_k_ldscript    = LDSCRIPT $@
-      cmd_k_ldscript    = sed -e 's:BUILDDIR:$(BUILD_DIR):g' $< | sed -e 's:APP_NAME:$(APP_NAME):g' |  perl -pe 's/^INCLUDE (.*)/`cat $$1`/e' > $(APP_BUILD_DIR)/$(APP_NAME).ld
+quiet_cmd_k_ldscript    = KLDSCRIPT $@
+      cmd_k_ldscript    = $(PROJ_FILES)/kernel/tools/gen_kernel_ldscript.pl $(BUILD_DIR) $(APP_NAME) $< $@
 
 # classical Ada Compiling (adb => o)
 quiet_cmd_gnat_o_ali    = GNATBIND $@
@@ -86,25 +99,33 @@ quiet_cmd_prepare_kernel_header_for_fw1 = KERNHEADER_FW1
       cmd_prepare_kernel_header_for_fw1 = \
          ./kernel/tools/gen_ld.pl $(CONFIG_ARCH) $(CONFIG_BOARDNAME) $(BUILD_DIR)/apps_sections.fw1.ld fw1 $(PROJ_FILES)/.config; \
 		 ./kernel/tools/gen_symhdr.pl $(CONFIG_ARCH) $(CONFIG_BOARDNAME) fw1 .config; \
-	     ./kernel/tools/permissions.pl FW $(PROJ_FILES)/.config $(PROJ_FILES)/apps/ipc.config $(PROJ_FILES)/apps/dmashm.config
+	     ./kernel/tools/permissions.pl FW $(PROJ_FILES)/.config $(PROJ_FILES)/apps/ipc.config $(PROJ_FILES)/apps/dmashm.config; \
+	     SOC=$(SOC) ./kernel/tools/devmap/gen_app_metainfos.pl $(BUILD_DIR) FW1 action=generic; \
+	     SOC=$(SOC) ./kernel/tools/devmap/gen_app_metainfos.pl $(BUILD_DIR) FW1 action=membackend;
 
 quiet_cmd_prepare_kernel_header_for_fw2 = KERNHEADER_FW2
       cmd_prepare_kernel_header_for_fw2 = \
          ./kernel/tools/gen_ld.pl $(CONFIG_ARCH) $(CONFIG_BOARDNAME) $(BUILD_DIR)/apps_sections.fw2.ld fw2 $(PROJ_FILES)/.config; \
 		 ./kernel/tools/gen_symhdr.pl $(CONFIG_ARCH) $(CONFIG_BOARDNAME) fw2 .config; \
-	     ./kernel/tools/permissions.pl FW $(PROJ_FILES)/.config $(PROJ_FILES)/apps/ipc.config $(PROJ_FILES)/apps/dmashm.config
+	     ./kernel/tools/permissions.pl FW $(PROJ_FILES)/.config $(PROJ_FILES)/apps/ipc.config $(PROJ_FILES)/apps/dmashm.config; \
+	     SOC=$(SOC) ./kernel/tools/devmap/gen_app_metainfos.pl $(BUILD_DIR) FW2 action=generic; \
+	     SOC=$(SOC) ./kernel/tools/devmap/gen_app_metainfos.pl $(BUILD_DIR) FW2 action=membackend;
 
 quiet_cmd_prepare_kernel_header_for_dfu1 = KERNHEADER_DFU1
       cmd_prepare_kernel_header_for_dfu1 = \
          ./kernel/tools/gen_ld.pl $(CONFIG_ARCH) $(CONFIG_BOARDNAME) $(BUILD_DIR)/apps_sections.dfu1.ld dfu1 $(PROJ_FILES)/.config; \
 		 ./kernel/tools/gen_symhdr.pl $(CONFIG_ARCH) $(CONFIG_BOARDNAME) dfu1 .config; \
-	     ./kernel/tools/permissions.pl DFU $(PROJ_FILES)/.config $(PROJ_FILES)/apps/ipc.config $(PROJ_FILES)/apps/dmashm.config
+	     ./kernel/tools/permissions.pl DFU $(PROJ_FILES)/.config $(PROJ_FILES)/apps/ipc.config $(PROJ_FILES)/apps/dmashm.config; \
+	     SOC=$(SOC) ./kernel/tools/devmap/gen_app_metainfos.pl $(BUILD_DIR) DFU1 action=generic; \
+	     SOC=$(SOC) ./kernel/tools/devmap/gen_app_metainfos.pl $(BUILD_DIR) DFU1 action=membackend;
 
 quiet_cmd_prepare_kernel_header_for_dfu2 = KERNHEADER_DFU2
       cmd_prepare_kernel_header_for_dfu2 = \
          ./kernel/tools/gen_ld.pl $(CONFIG_ARCH) $(CONFIG_BOARDNAME) $(BUILD_DIR)/apps_sections.dfu2.ld dfu2 $(PROJ_FILES)/.config; \
 		 ./kernel/tools/gen_symhdr.pl $(CONFIG_ARCH) $(CONFIG_BOARDNAME) dfu2 .config; \
-	     ./kernel/tools/permissions.pl DFU $(PROJ_FILES)/.config $(PROJ_FILES)/apps/ipc.config $(PROJ_FILES)/apps/dmashm.config
+	     ./kernel/tools/permissions.pl DFU $(PROJ_FILES)/.config $(PROJ_FILES)/apps/ipc.config $(PROJ_FILES)/apps/dmashm.config; \
+	     SOC=$(SOC) ./kernel/tools/devmap/gen_app_metainfos.pl $(BUILD_DIR) DFU2 action=generic; \
+	     SOC=$(SOC) ./kernel/tools/devmap/gen_app_metainfos.pl $(BUILD_DIR) DFU2 action=membackend;
 
 
 
@@ -189,7 +210,8 @@ quiet_cmd_pepareada     = PREPAREADA
 
 quiet_cmd_prepare       = PREPARE
       cmd_prepare       = $(CONF) $(CONF_ARGS) Kconfig; ./kernel/tools/gen_autoconf_ada.pl .config; \
-						  $(CONFGEN) $(CONFGEN_ARGS) Kconfig
+						  $(CONFGEN) $(CONFGEN_ARGS) Kconfig; \
+						  for mode in FW1 FW2 DFU1 DFU2; do $(PROJ_FILES)/kernel/tools/devmap/gen_app_dummy_ld.pl $(BUILD_DIR) $(PROJ_FILES)/kernel/tools/devmap/dummy.app.ld.in $$mode $(PROJ_FILES)/.config; done
 
 # tiny defconfig support, please don't call any other target depending on config here,
 # m_config.mk should be relaoded
