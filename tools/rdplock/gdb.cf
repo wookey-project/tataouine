@@ -1,6 +1,54 @@
-set architecture arm
-target extended-remote localhost:3333
-source tools/rdplock/svd_dump.py
-svd_load_file tools/rdplock/STM32F429.svd
-svd_show/x FLASH OPTKEYR
-svd_show/x FLASH OPTCR
+define go_rdp0
+	set architecture arm
+	target extended-remote localhost:3333
+	monitor reset halt
+	source svd_dump.py
+	svd_load STMicro STM32F439x.svd
+	# Set OPTKEY1 = 0x08192A3B
+	svd_set FLASH OPTKEYR OPTKEY 0x08192A3B
+	# Set OPTKEY2 = 0x4C5D6E7F
+	svd_set FLASH OPTKEYR OPTKEY 0x4C5D6E7F
+	# Clear OPTCR LOCK
+	svd_set FLASH OPTCR OPTLOCK 0
+	# The flash is now unlocked, set OPTCR to RDP0
+	svd_set FLASH OPTCR RDP 0xaa
+	# Set the option START bit
+	svd_set FLASH OPTCR OPTSTRT 1
+end
+
+define go_rdp1
+	set architecture arm
+	target extended-remote localhost:3333
+	monitor reset halt
+	source svd_dump.py
+	svd_load STMicro STM32F439x.svd
+	# Set OPTKEY1 = 0x08192A3B
+	svd_set FLASH OPTKEYR OPTKEY 0x08192A3B
+	# Set OPTKEY2 = 0x4C5D6E7F
+	svd_set FLASH OPTKEYR OPTKEY 0x4C5D6E7F
+	# Clear OPTCR LOCK
+	svd_set FLASH OPTCR OPTLOCK 0
+	# The flash is now unlocked, set OPTCR to RDP1
+	svd_set FLASH OPTCR RDP 0xbb
+	# Set the option START bit
+	svd_set FLASH OPTCR OPTSTRT 1
+end
+
+define go_rdp2
+	print "WARNING: your asked for RDP2, this is IRREVERSIBLE! Press enter to continue ..."
+	set architecture arm
+	target extended-remote localhost:3333
+	monitor reset halt
+	source svd_dump.py
+	svd_load STMicro STM32F439x.svd
+	# Set OPTKEY1 = 0x08192A3B
+	svd_set FLASH OPTKEYR OPTKEY 0x08192A3B
+	# Set OPTKEY2 = 0x4C5D6E7F
+	svd_set FLASH OPTKEYR OPTKEY 0x4C5D6E7F
+	# Clear OPTCR LOCK
+	svd_set FLASH OPTCR OPTLOCK 0
+	# The flash is now unlocked, set OPTCR to RDP2
+	#svd_set FLASH OPTCR RDP 0xdd
+	# Set the option START bit
+	svd_set FLASH OPTCR OPTSTRT 1
+end

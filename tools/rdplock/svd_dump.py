@@ -104,6 +104,7 @@ class SVDSelector(gdb.Command):
                 try:
                     parser = SVDParser.for_packaged_svd(vendor_name, filename)
                     _svd_printer.set_device(parser.get_device())
+                    _svd_setter.set_device(parser.get_device())
                 except IOError:
                     raise gdb.GdbError("Failed to load SVD file")
                 else:
@@ -127,6 +128,7 @@ class SVDLoader(gdb.Command):
         try:
             parser = SVDParser.for_xml_file(path)
             _svd_printer.set_device(parser.get_device())
+            _svd_setter.set_device(parser.get_device())
         except IOError:
             raise gdb.GdbError("Failed to load SVD file")
         else:
@@ -257,7 +259,7 @@ class SVDPrinter(gdb.Command):
         except KeyboardInterrupt:
             pass
 
-# PTH content below
+# PTH content below
 class SVDSet(gdb.Command):
     colorize = False
     def __init__ (self, device=None):
@@ -312,44 +314,21 @@ class SVDSet(gdb.Command):
     def set_register(self, peripheral, register, selected_field, newvalue, name_width=0, options=""):
         if not name_width:
             name_width = len(register.name)
-        val = struct.unpack("<L", gdb.inferiors()[0].read_memory(peripheral.base_address + register.address_offset, 4))[0];
-        reg_fmt = "{name:<{width}s}"
-        if "f" in options:
-            reg_fmt += " 0x{offset:04x}"
-        if "i" in options:
-            reg_fmt += " {value:032b}"
-        elif "h" in options:
-            reg_fmt += " {value:08x}"
-        print(reg_fmt.format(name=register.name,
-                             offset=register.address_offset,
-                             value=val,
-                             width=name_width)),
-        if "x" in options:
-            field_fmt = "{name}={value:0{hex_width}x}"
-            active_field_fmt = "\033[32m{name}={value:0{hex_width}x}\033[0m"
-        elif "b" in options:
-            field_fmt = "{name}={value:0{bit_width}b}"
-            active_field_fmt = "\033[32m{name}={value:0{bit_width}b}\033[0m"
-        else:
-            field_fmt = "{name}={value:d}"
-            active_field_fmt = "\033[32m{name}={value:d}\033[0m"
+        val = struct.unpack("<L", gdb.inferiors()[0].read_memory(peripheral.base_address + register.address_offset, 4))[0]
         for field in register.fields:
             fieldval = (val >> field.bit_offset) & ((1 << field.bit_width) - 1)
             hex_width = (field.bit_width + 3) // 4
-            if self.colorize and fieldval > 0:
-                fmt = active_field_fmt
-            else:
-                fmt = field_fmt
             # does the current field match the field to set ?
-            if field.name == selected_field.name:
-                # create the field mask
-                msk = ((1 << field.bit_width) - 1)
+            if field.name == selected_field:
+                # create the field mask
+                msk = (0x1 << (field.bit_width)) - 1
+                msk = msk << field.bit_offset
                 # zeroify the field
-                tmp = val & ~msk;
+                tmp = val & ~msk
                 # add the new value
-                val = (tmp | (hex(newvalue) << field.bit_offset))
+                val = (tmp | (int(newvalue, 0) << field.bit_offset))
         # now pack the struct to set the register with the new field value
-        gdb.inferiors()[0].write_memory(peripheral.base_address + register.address_offset, val)
+        gdb.inferiors()[0].write_memory(peripheral.base_address + register.address_offset, bytearray(struct.pack('<I', val)))
     def invoke (self, arg, from_tty):
         try:
             if not self.device:
@@ -376,8 +355,8 @@ class SVDSet(gdb.Command):
                 else:
                     raise gdb.GdbError("Invalid register name")
                 for field in selected_register.fields:
-                    if field.name = args[2]:
-                        selected_field == args[2]
+                    if field.name == args[2]:
+                        selected_field = args[2]
                         break
                 else:
                     raise gdb.GdbError("Invalid field name")
@@ -392,3 +371,4 @@ class SVDSet(gdb.Command):
 SVDSelector()
 SVDLoader()
 _svd_printer = SVDPrinter()
+_svd_setter = SVDSet()
