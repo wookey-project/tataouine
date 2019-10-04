@@ -1,9 +1,13 @@
-define go_rdp0
+define load_svd
 	source svd_dump.py
 	set architecture arm
 	target extended-remote localhost:3333
 	monitor reset halt
 	svd_load STMicro STM32F439x.svd
+end
+
+define go_rdp0
+	load_svd
 	# Set OPTKEY1 = 0x08192A3B
 	svd_set FLASH OPTKEYR OPTKEY 0x08192A3B
 	# Set OPTKEY2 = 0x4C5D6E7F
@@ -17,11 +21,7 @@ define go_rdp0
 end
 
 define go_rdp1
-	source svd_dump.py
-	set architecture arm
-	target extended-remote localhost:3333
-	monitor reset halt
-	svd_load STMicro STM32F439x.svd
+	load_svd
 	# Set OPTKEY1 = 0x08192A3B
 	svd_set FLASH OPTKEYR OPTKEY 0x08192A3B
 	# Set OPTKEY2 = 0x4C5D6E7F
@@ -35,11 +35,8 @@ define go_rdp1
 end
 
 define go_rdp2
-	source svd_dump.py
+	load_svd
 	svd_confirm "go to RDP2, this is IRREVERSIBLE! Are you sure?"
-	set architecture arm
-	target extended-remote localhost:3333
-	monitor reset halt
 	svd_load STMicro STM32F439x.svd
 	# Set OPTKEY1 = 0x08192A3B
 	svd_set FLASH OPTKEYR OPTKEY 0x08192A3B
@@ -51,4 +48,10 @@ define go_rdp2
 	#svd_set FLASH OPTCR RDP 0xdd
 	# Set the option START bit
 	svd_set FLASH OPTCR OPTSTRT 1
+end
+
+define get_rdp
+	load_svd
+	svd_show/x FLASH OPTCR RDP
+	shell echo "NOTE: RDP=aa means RDP0, RDP=CC means RDP2, everything else means RDP1"
 end
