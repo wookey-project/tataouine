@@ -185,7 +185,7 @@ class SVDPrinter(gdb.Command):
             return register_names
         return gdb.COMPLETE_NONE
 
-    def dump_register(self, peripheral, register, name_width=0, options=""):
+    def dump_register(self, peripheral, register, name_width=0, options="", asked_field=""):
         if not name_width:
             name_width = len(register.name)
         val = struct.unpack("<L", gdb.inferiors()[0].read_memory(peripheral.base_address + register.address_offset, 4))[0];
@@ -209,6 +209,7 @@ class SVDPrinter(gdb.Command):
         else:
             field_fmt = "{name}={value:d}"
             active_field_fmt = "\033[32m{name}={value:d}\033[0m"
+        found_field = False
         for field in register.fields:
             fieldval = (val >> field.bit_offset) & ((1 << field.bit_width) - 1)
             hex_width = (field.bit_width + 3) // 4
@@ -216,12 +217,16 @@ class SVDPrinter(gdb.Command):
                 fmt = active_field_fmt
             else:
                 fmt = field_fmt
-            
-            print(fmt.format(name=field.name,
+            if asked_field == "" or field.name == asked_field:
+                found_field = True 
+                print(fmt.format(name=field.name,
                              value=fieldval,
                              bit_width=field.bit_width,
                              hex_width=hex_width)),
         print
+        if found_field == False:
+            raise gdb.GdbError("Invalid field name "+asked_field)
+
     def invoke (self, arg, from_tty):
         try:
             if not self.device:
@@ -251,6 +256,13 @@ class SVDPrinter(gdb.Command):
                     for register in peripheral.registers:
                         if register.name == args[1]:
                             self.dump_register(peripheral, register, 0, options)
+                            break
+                    else:
+                        raise gdb.GdbError("Invalid register name")
+                elif len(args) == 3:
+                    for register in peripheral.registers:
+                        if register.name == args[1]:
+                            self.dump_register(peripheral, register, 0, options, asked_field=args[2])
                             break
                     else:
                         raise gdb.GdbError("Invalid register name")
