@@ -1,8 +1,8 @@
 define go_rdp0
+	source svd_dump.py
 	set architecture arm
 	target extended-remote localhost:3333
 	monitor reset halt
-	source svd_dump.py
 	svd_load STMicro STM32F439x.svd
 	# Set OPTKEY1 = 0x08192A3B
 	svd_set FLASH OPTKEYR OPTKEY 0x08192A3B
@@ -17,10 +17,10 @@ define go_rdp0
 end
 
 define go_rdp1
+	source svd_dump.py
 	set architecture arm
 	target extended-remote localhost:3333
 	monitor reset halt
-	source svd_dump.py
 	svd_load STMicro STM32F439x.svd
 	# Set OPTKEY1 = 0x08192A3B
 	svd_set FLASH OPTKEYR OPTKEY 0x08192A3B
@@ -35,11 +35,11 @@ define go_rdp1
 end
 
 define go_rdp2
-	print "WARNING: your asked for RDP2, this is IRREVERSIBLE! Press enter to continue ..."
+	source svd_dump.py
+	svd_confirm "go to RDP2, this is IRREVERSIBLE! Are you sure?"
 	set architecture arm
 	target extended-remote localhost:3333
 	monitor reset halt
-	source svd_dump.py
 	svd_load STMicro STM32F439x.svd
 	# Set OPTKEY1 = 0x08192A3B
 	svd_set FLASH OPTKEYR OPTKEY 0x08192A3B

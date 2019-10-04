@@ -259,7 +259,7 @@ class SVDPrinter(gdb.Command):
         except KeyboardInterrupt:
             pass
 
-# PTH content below
+##### Adding a new command to set registers
 class SVDSet(gdb.Command):
     colorize = False
     def __init__ (self, device=None):
@@ -368,7 +368,55 @@ class SVDSet(gdb.Command):
             pass
 
 
+
+# Handle Python 2/3 issues
+def is_python_2():
+    if sys.version_info[0] < 3:
+        return True
+    else:
+        return False
+
+# Helper to ask the user for something
+def get_user_input(prompt):
+    # Handle the Python 2/3 issue
+    if is_python_2() == False:
+        return input(prompt)
+    else:
+        return raw_input(prompt)
+
+def ask_user_confirmation(asking):
+    asked = ""
+    prompt = "You asked to "+asking+". Enter y to confirm, n to cancel [y/n]. "
+    while asked != "y" and asked != "n":
+        print(prompt)
+        asked = get_user_input(prompt)
+    return asked
+
+##### Adding a new command to check user confirmation
+class SVDConfirm(gdb.Command):
+    colorize = False
+    def __init__ (self):
+        super (SVDConfirm, self).__init__ ("svd_confirm", gdb.COMMAND_USER)
+
+    def invoke (self, arg, from_tty):
+        try:
+            args = gdb.string_to_argv(arg)
+            answer = ask_user_confirmation(args[0])
+            if answer == "y":
+               print("User confirmed action ...")
+            elif answer == "n":
+               raise gdb.GdbError("User declined action ... Aborting")
+            else:
+                return
+        except KeyboardInterrupt:
+            pass
+
+
+
+
+
 SVDSelector()
 SVDLoader()
 _svd_printer = SVDPrinter()
 _svd_setter = SVDSet()
+_svd_confirm = SVDConfirm()
