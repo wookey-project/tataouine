@@ -418,6 +418,7 @@ defconfig_list:
 	$(call cmd,nokconfig)
 	$(call cmd,mkincludedir)
 	$(call cmd,defconfig)
+	$(call cmd,update_autoconf)
 	$(call cmd,mkobjlist_libs)
 	$(call cmd,mkobjlist_apps)
 	$(call cmd,mkobjlist_drvs)
