@@ -45,7 +45,7 @@ define go_rdp2
 	# Clear OPTCR LOCK
 	svd_set FLASH OPTCR OPTLOCK 0
 	# The flash is now unlocked, set OPTCR to RDP2
-	#svd_set FLASH OPTCR RDP 0xdd
+	svd_set FLASH OPTCR RDP 0xcc
 	# Set the option START bit
 	svd_set FLASH OPTCR OPTSTRT 1
 end

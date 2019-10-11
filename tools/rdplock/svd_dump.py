@@ -56,6 +56,7 @@ To turn on colorizing non-zero values, set colorize = True
 (doesn't work in TUI mode)
 """
 
+import sys
 import gdb
 import struct
 from cmsis_svd.parser import SVDParser
@@ -147,7 +148,7 @@ class SVDPrinter(gdb.Command):
     def set_device(self, device):
         self.device = device
         self.peripherals = dict((peripheral.name,peripheral) for peripheral in self.device.peripherals)
-        
+
     def complete(self, text, word):
         if not self.device:
             return gdb.COMPLETE_NONE
@@ -218,7 +219,7 @@ class SVDPrinter(gdb.Command):
             else:
                 fmt = field_fmt
             if asked_field == "" or field.name == asked_field:
-                found_field = True 
+                found_field = True
                 print(fmt.format(name=field.name,
                              value=fieldval,
                              bit_width=field.bit_width,
@@ -249,7 +250,7 @@ class SVDPrinter(gdb.Command):
                 if len(args) == 1:
                     print("%s @ 0x%08x" % (peripheral.name, peripheral.base_address))
                     if peripheral.registers:
-                        width = max(len(reg.name) for reg in peripheral.registers) 
+                        width = max(len(reg.name) for reg in peripheral.registers)
                         for register in peripheral.registers:
                             self.dump_register(peripheral, register, width, options)
                 elif len(args) == 2:
@@ -285,7 +286,7 @@ class SVDSet(gdb.Command):
     def set_device(self, device):
         self.device = device
         self.peripherals = dict((peripheral.name,peripheral) for peripheral in self.device.peripherals)
-        
+
     def complete(self, text, word):
         if not self.device:
             return gdb.COMPLETE_NONE
@@ -340,7 +341,12 @@ class SVDSet(gdb.Command):
                 # add the new value
                 val = (tmp | (int(newvalue, 0) << field.bit_offset))
         # now pack the struct to set the register with the new field value
-        gdb.inferiors()[0].write_memory(peripheral.base_address + register.address_offset, bytearray(struct.pack('<I', val)))
+        if sys.version_info[0] < 3:
+            # python 2 gdb API
+           gdb.inferiors()[0].write_memory(peripheral.base_address + register.address_offset, str(struct.pack('<I', val)))
+        else:
+            # python 3 gdb API
+           gdb.inferiors()[0].write_memory(peripheral.base_address + register.address_offset, bytearray(struct.pack('<I', val)))
     def invoke (self, arg, from_tty):
         try:
             if not self.device:
