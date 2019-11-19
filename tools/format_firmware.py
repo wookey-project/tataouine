@@ -216,9 +216,10 @@ if __name__ == '__main__':
             firmware_hex[flop_shr_base_addr+len(header)+i] = ord(crc[i])
     # Get base name
     base_path = os.path.dirname(hex_path)
+    bin_path = hex_path.replace(".hex", ".bin");
     # Dump the new hex and bin files
-    firmware_hex.tofile(base_path+"/wookey.hex", format='hex')
-    firmware_hex.tofile(base_path+"/wookey.bin", format='bin')
+    firmware_hex.tofile(hex_path, format='hex')
+    firmware_hex.tofile(bin_path, format='bin')
     # Dump FLIP to sign
     firmware_hex[flip_base_addr+flip_size-flip_firmware_size:flip_base_addr+flip_size].tofile(base_path+"/flip_fw.hex", format='hex')
     firmware_hex[flip_base_addr+flip_size-flip_firmware_size:flip_base_addr+flip_size].tofile(base_path+"/flip_fw.bin", format='bin')
