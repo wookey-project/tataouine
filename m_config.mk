@@ -211,7 +211,7 @@ APPS_CFLAGS    = $(USER_CFLAGS) $(LIB_INC_CFLAGS) $(DRV_INC_CFLAGS) $(CFLAGS_DRV
 # drivers have access to other drivers and to the libstd only
 DRIVERS_CFLAGS = $(USER_CFLAGS) $(DRV_INC_CFLAGS) $(CFLAGS_DRVLAYOUT) -I$(PROJ_FILES)/libs/std/api
 # libs have access to others libs and drivers
-LIBS_CFLAGS    = $(USER_CFLAGS) $(LIB_INC_CFLAGS) $(DRV_INC_CFLAGS)
+LIBS_CFLAGS    = $(USER_CFLAGS) $(LIB_INC_CFLAGS) $(CFLAGS_DRVLAYOUT) $(DRV_INC_CFLAGS)
 
 
 
