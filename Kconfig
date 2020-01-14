@@ -266,7 +266,7 @@ config WARNFLAGS_LLVM
 config STACKPROTFLAGS
     string
     default "-fstack-protector-strong"
-    depends on STACK_PROT_FLAGS
+    depends on STACK_PROT_FLAG
 
 
 config EMBEDCFLAGS
