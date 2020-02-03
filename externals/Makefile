@@ -60,7 +60,7 @@ gp:
 
 antjavacard:
 	if test ! -f $(PROJ_FILES)/javacard/applet/ant-javacard.jar; then \
-	cd $(PROJ_FILES)/externals/ant-javacard && mvn package && ant dist; \
+	cd $(PROJ_FILES)/externals/ant-javacard && mvn package -Dmaven.javadoc.skip=true && ant dist; \
 	cp $(PROJ_FILES)/../externals/ant-javacard/ant-javacard.jar $(PROJ_FILES)/../javacard/applet/ant-javacard.jar; \
 	fi
 
