@@ -65,6 +65,7 @@ for my $mode ("FW1", "FW2", "DFU1", "DFU2") {
     # Check if we have specific values for slot number and stack size
     # Or use default values
     my $num_slots = $hash{"${i}_NUMSLOTS"} // 1;
+    my $heapsize = $hash{"${i}_HEAPSIZE"} // 0;
     # [RB] FIXME: it should be more logical to stick to the current mode
     # slot size ...
     # DFU slots are 2*smallers than FW ones. if the task exists in both
@@ -95,7 +96,8 @@ __is_dfu  = $is_dfu;
 /* Define output sections */
 SECTIONS
 {
-	numslots = ${num_slots};
+	heapsize = ${heapsize};
+        numslots = ${num_slots}; 
 
 	/* The program code and other data goes into FLASH */
 	/* this is the kernel code part */

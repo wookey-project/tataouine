@@ -25,7 +25,7 @@ app-y := $(sort $(app-fw-y) $(app-dfu-y))
 all: prepare $(app-y)
 
 prepare:
-	$(call if_changed,ldscript)
+	#$(call if_changed,ldscript)
 
 $(app-y): outdir
 	$(call if_changed,builddummyapp)
