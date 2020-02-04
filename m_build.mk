@@ -54,7 +54,7 @@ quiet_cmd_builddummyapp = DUMMYAPP
 
 
 quiet_cmd_app_layout   = APPLAYOUT $@
-      cmd_app_layout   = for i in FW1 FW2 DFU1 DFU2; do SOC=$(SOC) $(PROJ_FILES)/kernel/tools/devmap/gen_app_metainfos.pl $(BUILD_DIR) $$i action=genappcfg; done
+      cmd_app_layout   = for i in FW1 FW2 DFU1 DFU2; do SOC=$(SOC) $(PROJ_FILES)/kernel/tools/devmap/gen_app_metainfos.pl $(BUILD_DIR) $$i action=genappcfg; done; for i in FW1 FW2 DFU1 DFU2; do SOC=$(SOC) $(PROJ_FILES)/kernel/tools/devmap/gen_app_final_ld.pl $(BUILD_DIR) $(PROJ_FILES)/kernel/tools/devmap/final.app.ld.in $$i $(PROJ_FILES)/.config; done
 
 quiet_cmd_buildapp      = APP     $@
       cmd_buildapp      = make -C $@ alldeps; \
