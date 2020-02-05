@@ -98,7 +98,6 @@ quiet_cmd_adalink_o_target = ADALD    $@
 
 quiet_cmd_prepare_kernel_header_for_fw1 = KERNHEADER_FW1
       cmd_prepare_kernel_header_for_fw1 = \
-         ./kernel/tools/gen_ld.pl $(CONFIG_ARCH) $(CONFIG_BOARDNAME) $(BUILD_DIR)/apps_sections.fw1.ld fw1 $(PROJ_FILES)/.config; \
 		 ./kernel/tools/gen_symhdr.pl $(CONFIG_ARCH) $(CONFIG_BOARDNAME) fw1 .config; \
 	     ./kernel/tools/permissions.pl FW $(PROJ_FILES)/.config $(PROJ_FILES)/apps/ipc.config $(PROJ_FILES)/apps/dmashm.config; \
 	     SOC=$(SOC) ./kernel/tools/devmap/gen_app_metainfos.pl $(BUILD_DIR) FW1 action=generic; \
@@ -106,7 +105,6 @@ quiet_cmd_prepare_kernel_header_for_fw1 = KERNHEADER_FW1
 
 quiet_cmd_prepare_kernel_header_for_fw2 = KERNHEADER_FW2
       cmd_prepare_kernel_header_for_fw2 = \
-         ./kernel/tools/gen_ld.pl $(CONFIG_ARCH) $(CONFIG_BOARDNAME) $(BUILD_DIR)/apps_sections.fw2.ld fw2 $(PROJ_FILES)/.config; \
 		 ./kernel/tools/gen_symhdr.pl $(CONFIG_ARCH) $(CONFIG_BOARDNAME) fw2 .config; \
 	     ./kernel/tools/permissions.pl FW $(PROJ_FILES)/.config $(PROJ_FILES)/apps/ipc.config $(PROJ_FILES)/apps/dmashm.config; \
 	     SOC=$(SOC) ./kernel/tools/devmap/gen_app_metainfos.pl $(BUILD_DIR) FW2 action=generic; \
@@ -114,7 +112,6 @@ quiet_cmd_prepare_kernel_header_for_fw2 = KERNHEADER_FW2
 
 quiet_cmd_prepare_kernel_header_for_dfu1 = KERNHEADER_DFU1
       cmd_prepare_kernel_header_for_dfu1 = \
-         ./kernel/tools/gen_ld.pl $(CONFIG_ARCH) $(CONFIG_BOARDNAME) $(BUILD_DIR)/apps_sections.dfu1.ld dfu1 $(PROJ_FILES)/.config; \
 		 ./kernel/tools/gen_symhdr.pl $(CONFIG_ARCH) $(CONFIG_BOARDNAME) dfu1 .config; \
 	     ./kernel/tools/permissions.pl DFU $(PROJ_FILES)/.config $(PROJ_FILES)/apps/ipc.config $(PROJ_FILES)/apps/dmashm.config; \
 	     SOC=$(SOC) ./kernel/tools/devmap/gen_app_metainfos.pl $(BUILD_DIR) DFU1 action=generic; \
@@ -122,7 +119,6 @@ quiet_cmd_prepare_kernel_header_for_dfu1 = KERNHEADER_DFU1
 
 quiet_cmd_prepare_kernel_header_for_dfu2 = KERNHEADER_DFU2
       cmd_prepare_kernel_header_for_dfu2 = \
-         ./kernel/tools/gen_ld.pl $(CONFIG_ARCH) $(CONFIG_BOARDNAME) $(BUILD_DIR)/apps_sections.dfu2.ld dfu2 $(PROJ_FILES)/.config; \
 		 ./kernel/tools/gen_symhdr.pl $(CONFIG_ARCH) $(CONFIG_BOARDNAME) dfu2 .config; \
 	     ./kernel/tools/permissions.pl DFU $(PROJ_FILES)/.config $(PROJ_FILES)/apps/ipc.config $(PROJ_FILES)/apps/dmashm.config; \
 	     SOC=$(SOC) ./kernel/tools/devmap/gen_app_metainfos.pl $(BUILD_DIR) DFU2 action=generic; \
