@@ -22,14 +22,18 @@ CONFIG_MK = $(PROJ_FILES)/m_config.mk
 
 app-y := $(sort $(app-fw-y) $(app-dfu-y))
 
-all: prepare $(app-y)
+all: prepare dummy layout final
 
 prepare:
 	#$(call if_changed,ldscript)
 
-$(app-y): outdir
+dummy: outdir
 	$(call if_changed,builddummyapp)
+
+layout:
 	$(call if_changed,app_layout)
+
+final:
 	$(call if_changed,buildapp)
 
 
