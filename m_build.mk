@@ -61,7 +61,6 @@ quiet_cmd_app_layout   = APPLAYOUT
 
 quiet_cmd_buildapp      = APP
       cmd_buildapp      = for app in $(app-y); do \
-						  make -C $$app alldeps; \
 						  if [ -f $(BUILD_DIR)/apps/$$app/$$app.final.fw1.ld ]; then make -C $$app all EXTRA_LDFLAGS="-T$$app.final.fw1.ld" APP_NAME=$$app.fw1; fi; \
 						  if [ ! -z "$(CONFIG_FIRMWARE_DUALBANK)" ]; then if [ -f $(BUILD_DIR)/apps/$$app/$$app.final.fw2.ld ]; then make -C $$app all EXTRA_LDFLAGS="-T$$app.final.fw2.ld" APP_NAME=$$app.fw2; fi; fi; \
 						  if [ -f $(BUILD_DIR)/apps/$$app/$$app.final.dfu1.ld ]; then make -C $$app all EXTRA_LDFLAGS="-T$$app.final.dfu1.ld -DMODE_DFU" APP_NAME=$$app.dfu1; fi; \
