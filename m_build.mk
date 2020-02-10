@@ -72,7 +72,7 @@ quiet_cmd_ldscript      = LDSCRIPT
 
 # linking
 quiet_cmd_k_ldscript    = KLDSCRIPT $@
-      cmd_k_ldscript    = $(PROJ_FILES)/kernel/tools/gen_kernel_ldscript.pl $(BUILD_DIR) $(APP_NAME) $< $@
+      cmd_k_ldscript    = SOC=$(SOC) $(PROJ_FILES)/kernel/tools/devmap/gen_kernel_ld.pl $(BUILD_DIR) $(MODE) $(PROJ_FILES)/kernel/tools/devmap/kernel.ld.in
 
 # classical Ada Compiling (adb => o)
 quiet_cmd_gnat_o_ali    = GNATBIND $@
