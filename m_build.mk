@@ -48,16 +48,31 @@ quiet_cmd_builddummyapp = DUMMYAPP
 						  make -C $$app alldeps; \
 	                      cp $(BUILD_DIR)/libs/*/lib*.a $(BUILD_DIR)/apps/$$app; \
 						  cp $(BUILD_DIR)/drivers/*/lib*.a $(BUILD_DIR)/apps/$$app; \
-					      for mode in FW1 FW2 DFU1 DFU2; do $(PROJ_FILES)/kernel/tools/devmap/gen_app_dummy_ld.pl $(BUILD_DIR) $(PROJ_FILES)/kernel/tools/devmap/dummy.app.ld.in $$mode $(PROJ_FILES)/.config; done; \
-						  if [ -f $(BUILD_DIR)/apps/$$app/$$app.dummy.fw1.ld ]; then make -C $$app all EXTRA_LDFLAGS="-T$$app.dummy.fw1.ld" APP_NAME=$$app.dummy.fw1; fi; \
+					      $(PROJ_FILES)/kernel/tools/devmap/gen_app_dummy_ld.pl $(BUILD_DIR) $(PROJ_FILES)/kernel/tools/devmap/dummy.app.ld.in FW1 $(PROJ_FILES)/.config; \
+						  if test ! -z "$(CONFIG_FIRMWARE_MODE_MONO_BANK_DFU)"; then $(PROJ_FILES)/kernel/tools/devmap/gen_app_dummy_ld.pl $(BUILD_DIR) $(PROJ_FILES)/kernel/tools/devmap/dummy.app.ld.in DFU1 $(PROJ_FILES)/.config; fi; \
+						  if test ! -z "$(CONFIG_FIRMWARE_DUALBANK)"; then $(PROJ_FILES)/kernel/tools/devmap/gen_app_dummy_ld.pl $(BUILD_DIR) $(PROJ_FILES)/kernel/tools/devmap/dummy.app.ld.in FW2 $(PROJ_FILES)/.config; fi; \
+						  if test ! -z "$(CONFIG_FIRMWARE_MODE_DUAL_BANK_DFU)"; then $(PROJ_FILES)/kernel/tools/devmap/gen_app_dummy_ld.pl $(BUILD_DIR) $(PROJ_FILES)/kernel/tools/devmap/dummy.app.ld.in DFU1 $(PROJ_FILES)/.config; fi; \
+						  if test ! -z "$(CONFIG_FIRMWARE_MODE_DUAL_BANK_DFU)"; then $(PROJ_FILES)/kernel/tools/devmap/gen_app_dummy_ld.pl $(BUILD_DIR) $(PROJ_FILES)/kernel/tools/devmap/dummy.app.ld.in DFU2 $(PROJ_FILES)/.config; fi; \
+						  if test -f $(BUILD_DIR)/apps/$$app/$$app.dummy.fw1.ld; then make -C $$app all EXTRA_LDFLAGS="-T$$app.dummy.fw1.ld" APP_NAME=$$app.dummy.fw1; fi; \
 						  if [ ! -z "$(CONFIG_FIRMWARE_DUALBANK)" ]; then if [ -f $(BUILD_DIR)/apps/$$app/$$app.dummy.fw2.ld ]; then make -C $$app all EXTRA_LDFLAGS="-T$$app.dummy.fw2.ld" APP_NAME=$$app.dummy.fw2; fi; fi; \
 						  if [ -f $(BUILD_DIR)/apps/$$app/$$app.dummy.dfu1.ld ]; then make -C $$app all EXTRA_LDFLAGS="-T$$app.dummy.dfu1.ld -DMODE_DFU" APP_NAME=$$app.dummy.dfu1; fi; \
 						  if [ ! -z "$(CONFIG_FIRMWARE_DUALBANK)" ]; then if [ -f $(BUILD_DIR)/apps/$$app/$$app.dummy.dfu2.ld ]; then make -C $$app all EXTRA_LDFLAGS="-T$$app.dummy.dfu2.ld" APP_NAME=$$app.dummy.dfu2; fi; fi; done
 
 
 quiet_cmd_app_layout   = APPLAYOUT
-      cmd_app_layout   = for mode in FW1 FW2 DFU1 DFU2; do SOC=$(SOC) $(PROJ_FILES)/kernel/tools/devmap/gen_app_metainfos.pl $(BUILD_DIR) $$mode action=genappcfg; done; \
-						 for mode in FW1 FW2 DFU1 DFU2; do SOC=$(SOC) $(PROJ_FILES)/kernel/tools/devmap/gen_app_final_ld.pl $(BUILD_DIR) $(PROJ_FILES)/kernel/tools/devmap/final.app.ld.in $$mode $(PROJ_FILES)/.config; done
+      cmd_app_layout   = SOC=$(SOC) $(PROJ_FILES)/kernel/tools/devmap/gen_app_metainfos.pl $(BUILD_DIR) FW1 action=genappcfg; \
+					     SOC=$(SOC) $(PROJ_FILES)/kernel/tools/devmap/gen_app_final_ld.pl $(BUILD_DIR) $(PROJ_FILES)/kernel/tools/devmap/final.app.ld.in FW1 $(PROJ_FILES)/.config; \
+					     if test ! -z "$(CONFIG_FIRMWARE_MODE_MONO_BANK_DFU)"; then \
+					         SOC=$(SOC) $(PROJ_FILES)/kernel/tools/devmap/gen_app_metainfos.pl $(BUILD_DIR) DFU1 action=genappcfg; \
+					         SOC=$(SOC) $(PROJ_FILES)/kernel/tools/devmap/gen_app_final_ld.pl $(BUILD_DIR) $(PROJ_FILES)/kernel/tools/devmap/final.app.ld.in DFU1 $(PROJ_FILES)/.config; fi; \
+					     if test ! -z "$(CONFIG_FIRMWARE_DUALBANK)"; then \
+					     	 SOC=$(SOC) $(PROJ_FILES)/kernel/tools/devmap/gen_app_metainfos.pl $(BUILD_DIR) FW2 action=genappcfg; \
+					         SOC=$(SOC) $(PROJ_FILES)/kernel/tools/devmap/gen_app_final_ld.pl $(BUILD_DIR) $(PROJ_FILES)/kernel/tools/devmap/final.app.ld.in FW2 $(PROJ_FILES)/.config; fi; \
+					     if test ! -z "$(CONFIG_FIRMWARE_MODE_DUAL_BANK_DFU)"; then \
+					     	 SOC=$(SOC) $(PROJ_FILES)/kernel/tools/devmap/gen_app_metainfos.pl $(BUILD_DIR) DFU1 action=genappcfg; \
+					         SOC=$(SOC) $(PROJ_FILES)/kernel/tools/devmap/gen_app_final_ld.pl $(BUILD_DIR) $(PROJ_FILES)/kernel/tools/devmap/final.app.ld.in DFU1 $(PROJ_FILES)/.config; \
+		    				 SOC=$(SOC) $(PROJ_FILES)/kernel/tools/devmap/gen_app_metainfos.pl $(BUILD_DIR) DFU2 action=genappcfg; \
+                             SOC=$(SOC) $(PROJ_FILES)/kernel/tools/devmap/gen_app_final_ld.pl $(BUILD_DIR) $(PROJ_FILES)/kernel/tools/devmap/final.app.ld.in DFU2 $(PROJ_FILES)/.config; fi
 
 quiet_cmd_buildapp      = APP
       cmd_buildapp      = for app in $(app-y); do \
