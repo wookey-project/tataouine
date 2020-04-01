@@ -74,7 +74,12 @@ def encrypt_platform_data(argv):
     outfile_bin = open(outfile_base+'.bin', 'w')
 
     # The encryption and HMAC keys are from the local pet key file
-    dk = local_pet_key_data 
+    # We only take first 64 bytes (last bytes are the IV)
+    dk = local_pet_key_data[:64] 
+    # The key we use is the SHA-256 of the two 32 bytes in two halves (for one-wayness)
+    (dk1, _, _) = local_sha256(dk[:32])
+    (dk2, _, _) = local_sha256(dk[32:])
+    dk = dk1 + dk2
     # Encrypt all our data with AES-128-CTR using the first 128 bits
     encrypt_platform_data.iv = gen_rand_string(16)
     initial_iv = encrypt_platform_data.iv
@@ -96,14 +101,19 @@ def encrypt_platform_data(argv):
         encrypted_local_pet_key_data = enc_local_pet_key(shared_petpin_data, salt_data, pbkdf2_iterations, local_pet_key_data)
 
     # Use HMAC-SHA256 with to compute the integrity tag
-    hmac_key = dk[32:]
+    # [RB] NOTE: we use the platform data hash (SHA-256) as the HMAC Key because of possible SCA attacks
+    # on HMAC (see https://www.cryptoexperts.com/sbelaid/articleHMAC.pdf). Although this
+    # usage seems a bit counter-intuitive, this prevents extracting the encrypted data
+    # through side-channels (consumption, EM, etc.).
+    platform_data_to_hash = initial_iv+salt_data+token_pub_key_data+platform_priv_key_data+platform_pub_key_data
+    if (applet_type == "dfu") or (applet_type == "sig"):
+        platform_data_to_hash += firmware_sig_pub_key_data
+    if (applet_type == "sig") and (len(argv) == 14):
+        platform_data_to_hash += firmware_sig_priv_key_data+firmware_sig_sym_key_data
+    (hmac_key, _, _) = local_sha256(platform_data_to_hash)
     # The integrity tag covers the salt, the iv and the encrypted data
     hm = local_hmac.new(hmac_key, digestmod=hashlib.sha256)
-    hm.update(initial_iv+salt_data+token_pub_key_data+platform_priv_key_data+platform_pub_key_data)
-    if (applet_type == "dfu") or (applet_type == "sig"):
-        hm.update(firmware_sig_pub_key_data)
-    if (applet_type == "sig") and (len(argv) == 14):
-        hm.update(firmware_sig_priv_key_data+firmware_sig_sym_key_data)
+    hm.update(dk[32:])
     hmac_tag = hm.digest()
  
     # Curve name

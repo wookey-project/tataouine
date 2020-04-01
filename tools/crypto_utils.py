@@ -72,6 +72,10 @@ def local_sha256(arg_in):
     (a, b, c) = sha256(arg_in)
     return (a, b, c)
 
+def local_sha512(arg_in):
+    (a, b, c) = sha512(arg_in)
+    return (a, b, c)
+
 # Python 2/3 abstraction layer for HMAC
 class local_hmac:
     hm = None
@@ -245,12 +249,13 @@ def enc_local_pet_key(pet_pin, salt, pbkdf2_iterations, master_symmetric_local_p
     # The encrypted key is the encryption with AES-ECB 128 of the generated keys.
     # We have 64 bytes to encrypt and the PBKDF2 results in 64 bytes, hence
     # we can encrypt each chunk with AES-ECB and an associated key
-    cipher1 = local_AES.new(dk[:16],   AES.MODE_ECB)
-    cipher2 = local_AES.new(dk[16:32], AES.MODE_ECB)
-    cipher3 = local_AES.new(dk[32:48], AES.MODE_ECB)
-    cipher4 = local_AES.new(dk[48:],   AES.MODE_ECB)
-    enc_master_symmetric_local_pet_key = cipher1.encrypt(master_symmetric_local_pet_key[:16]) + cipher2.encrypt(master_symmetric_local_pet_key[16:32]) + cipher3.encrypt(master_symmetric_local_pet_key[32:48]) + cipher4.encrypt(master_symmetric_local_pet_key[48:])
-    return enc_master_symmetric_local_pet_key
+    cipher1 = local_AES.new(dk[:16],   AES.MODE_CBC, iv=master_symmetric_local_pet_key[64:])
+    cipher2 = local_AES.new(dk[16:32], AES.MODE_CBC, iv=master_symmetric_local_pet_key[64:])
+    cipher3 = local_AES.new(dk[32:48], AES.MODE_CBC, iv=master_symmetric_local_pet_key[64:])
+    cipher4 = local_AES.new(dk[48:],   AES.MODE_CBC, iv=master_symmetric_local_pet_key[64:])
+    enc_master_symmetric_local_pet_key = cipher1.encrypt(master_symmetric_local_pet_key[:16]) + cipher2.encrypt(master_symmetric_local_pet_key[16:32]) + cipher3.encrypt(master_symmetric_local_pet_key[32:48]) + cipher4.encrypt(master_symmetric_local_pet_key[48:64])
+    # Return the result of the hash plus the IV
+    return enc_master_symmetric_local_pet_key+master_symmetric_local_pet_key[64:]
 
 # Decrypt the local pet key using PBKDF2
 def dec_local_pet_key(pet_pin, salt, pbkdf2_iterations, enc_master_symmetric_local_pet_key):
@@ -262,11 +267,15 @@ def dec_local_pet_key(pet_pin, salt, pbkdf2_iterations, enc_master_symmetric_loc
     # The decrypted key is the decryption with AES-ECB 128 of the generated keys.
     # We have 64 bytes to encrypt and the PBKDF2 results in 64 bytes, hence
     # we can encrypt each chunk with AES-ECB and an associated key
-    cipher1 = local_AES.new(dk[:16],   AES.MODE_ECB)
-    cipher2 = local_AES.new(dk[16:32], AES.MODE_ECB)
-    cipher3 = local_AES.new(dk[32:48], AES.MODE_ECB)
-    cipher4 = local_AES.new(dk[48:],   AES.MODE_ECB)
-    master_symmetric_local_pet_key = cipher1.decrypt(enc_master_symmetric_local_pet_key[:16]) + cipher2.decrypt(enc_master_symmetric_local_pet_key[16:32]) + cipher3.decrypt(enc_master_symmetric_local_pet_key[32:48]) + cipher4.decrypt(enc_master_symmetric_local_pet_key[48:])
+    cipher1 = local_AES.new(dk[:16],   AES.MODE_CBC, iv=enc_master_symmetric_local_pet_key[64:])
+    cipher2 = local_AES.new(dk[16:32], AES.MODE_CBC, iv=enc_master_symmetric_local_pet_key[64:])
+    cipher3 = local_AES.new(dk[32:48], AES.MODE_CBC, iv=enc_master_symmetric_local_pet_key[64:])
+    cipher4 = local_AES.new(dk[48:],   AES.MODE_CBC, iv=enc_master_symmetric_local_pet_key[64:])
+    master_symmetric_local_pet_key = cipher1.decrypt(enc_master_symmetric_local_pet_key[:16]) + cipher2.decrypt(enc_master_symmetric_local_pet_key[16:32]) + cipher3.decrypt(enc_master_symmetric_local_pet_key[32:48]) + cipher4.decrypt(enc_master_symmetric_local_pet_key[48:64])
+    # Hash the elements with SHA-256 for one-wayness
+    (master_symmetric_local_pet_key1, _, _) = local_sha256(master_symmetric_local_pet_key[:32])
+    (master_symmetric_local_pet_key2, _, _) = local_sha256(master_symmetric_local_pet_key[32:])
+    master_symmetric_local_pet_key = master_symmetric_local_pet_key1 + master_symmetric_local_pet_key2
     return master_symmetric_local_pet_key
 
 # Decrypt our local private data
@@ -301,8 +310,8 @@ def decrypt_platform_data(encrypted_platform_bin_file, pin, data_type, override_
         index += 35
         firmware_sig_sym_key_data = data[index:index+64]
         index += 64
-        encrypted_local_pet_key_data = data[index:index+64]
-        index += 64
+        encrypted_local_pet_key_data = data[index:index+64+16]
+        index += (64+16)
     # Derive the decryption key
     pbkdf2_iterations = 4096
     if card == None:
@@ -310,16 +319,21 @@ def decrypt_platform_data(encrypted_platform_bin_file, pin, data_type, override_
     else:
         dk = override_local_pet_key_handler(pin, salt, pbkdf2_iterations, encrypted_local_pet_key_data, card, data_type)
     # Now compute and check the HMAC, and decrypt local data
-    hmac_key = dk[32:]
+    # [RB] NOTE: we use the platform data hash (SHA-256) as the HMAC Key because of possible SCA attacks
+    # on HMAC (see https://www.cryptoexperts.com/sbelaid/articleHMAC.pdf). Although this
+    # usage seems a bit counter-intuitive, this prevents extracting the encrypted data
+    # through side-channels (consumption, EM, etc.).
+    platform_data_to_hash = decrypt_platform_data.iv + salt + token_pub_key_data + platform_priv_key_data + platform_pub_key_data
+    if firmware_sig_pub_key_data != None:
+        platform_data_to_hash += firmware_sig_pub_key_data
+    if firmware_sig_priv_key_data != None:
+        platform_data_to_hash += firmware_sig_priv_key_data
+    if firmware_sig_sym_key_data != None:
+        platform_data_to_hash += firmware_sig_sym_key_data
+    (hmac_key, _, _) = local_sha256(platform_data_to_hash)
     # Check the mac tag
     hm = local_hmac.new(hmac_key, digestmod=hashlib.sha256)
-    hm.update(decrypt_platform_data.iv + salt + token_pub_key_data + platform_priv_key_data + platform_pub_key_data)
-    if firmware_sig_pub_key_data != None:
-        hm.update(firmware_sig_pub_key_data)
-    if firmware_sig_priv_key_data != None:
-        hm.update(firmware_sig_priv_key_data)
-    if firmware_sig_sym_key_data != None:
-        hm.update(firmware_sig_sym_key_data)
+    hm.update(dk[32:])
     hmac_tag_ref = hm.digest()
     if hmac_tag != hmac_tag_ref:
         print("Error when decrypting local data with the PET pin: hmac not OK!")

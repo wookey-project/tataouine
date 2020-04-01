@@ -225,9 +225,10 @@ if __name__ == '__main__':
     salt_sig = gen_rand_string(16)
     save_in_file(salt_sig, SIG_TOKEN_PATH+"/salt_sig.bin")
     # Generate random keys (for encryption and HMAC)
-    master_symmetric_auth_local_pet_key = gen_rand_string(64)
-    master_symmetric_dfu_local_pet_key  = gen_rand_string(64)
-    master_symmetric_sig_local_pet_key  = gen_rand_string(64)
+    # NOTE: we generate 64 bytes of key + 16 bytes of secret IV
+    master_symmetric_auth_local_pet_key = gen_rand_string(64+16)
+    master_symmetric_dfu_local_pet_key  = gen_rand_string(64+16)
+    master_symmetric_sig_local_pet_key  = gen_rand_string(64+16)
     save_in_file(master_symmetric_auth_local_pet_key, AUTH_TOKEN_PATH+"/master_symmetric_auth_local_pet_key.bin")
     save_in_file(master_symmetric_dfu_local_pet_key, DFU_TOKEN_PATH+"/master_symmetric_dfu_local_pet_key.bin")
     save_in_file(master_symmetric_sig_local_pet_key, SIG_TOKEN_PATH+"/master_symmetric_sig_local_pet_key.bin")
@@ -273,8 +274,8 @@ if __name__ == '__main__':
 
     #=================
     # Generate the headers
-    # Data to be encrypted on the platform flash. The data is encrypted using a PBKDF2 of
-    # the PET PIN.
+    # Data to be encrypted on the platform flash. The data is encrypted using a secret key (encrypted with PBKDF2 of
+    # the PET PIN).
     # => Private and public platform keypair, public token key
     # AUTH + cleanup
     sys_cmd(ENCRYPT_PLATFORM_DATA_HEADER+" "+AUTH_TOKEN_PATH+"/shared_auth_petpin.bin "+AUTH_TOKEN_PATH+"/platform_auth_public_key.bin "+AUTH_TOKEN_PATH+"/platform_auth_private_key.bin "+AUTH_TOKEN_PATH+"/token_auth_public_key.bin "+AUTH_TOKEN_PATH+"/master_symmetric_auth_local_pet_key.bin "+AUTH_TOKEN_PATH+"/salt_auth.bin "+AUTH_TOKEN_PATH+"/encrypted_platform_auth_keys "+CURVE_NAME+" "+str(pbkdf2_iterations)+" "+" auth")
