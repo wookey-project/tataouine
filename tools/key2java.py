@@ -110,7 +110,11 @@ def Key2Java(argv):
         text += "(byte)0x%02x, " % ord(byte)
     # Add the encrypted local pet key
     text += " };\n\n\tstatic byte[] EncLocalPetSecretKey  = { "
-    for byte in enc_local_pet_key_data:
+    for byte in enc_local_pet_key_data[:64]:
+        text += "(byte)0x%02x, " % ord(byte)  
+    # Add the encrypted local pet key
+    text += " };\n\n\tstatic byte[] EncLocalPetSecretKeyIV  = { "
+    for byte in enc_local_pet_key_data[64:]:
         text += "(byte)0x%02x, " % ord(byte)  
     if applet_type == "sig":
         # Add the signature public key

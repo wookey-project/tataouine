@@ -110,7 +110,10 @@ class APDU:
     le   = None
     apdu_buf = None
     def send(self, cardservice, verbose=True):
-        if (len(self.data) > 255) or (self.le > 256):
+        data_len = 0
+        if self.data != None:
+            data_len = len(self.data)
+        if (data_len > 255) or (self.le > 256):
             print("APDU Error: data or Le too large")
             sys.exit(-1)
         if self.le == 256:
@@ -156,9 +159,10 @@ def token_common_instructions(applet_id):
                              'TOKEN_INS_GET_PET_NAME'        : APDU(0x00, 0x08, 0x00, 0x00, None, 0x00),
                              'TOKEN_INS_GET_RANDOM'          : APDU(0x00, 0x09, 0x00, 0x00, None, 0x00),
                              'TOKEN_INS_DERIVE_LOCAL_PET_KEY': APDU(0x00, 0x0a, 0x00, 0x00, None, 0x00),
+                             'TOKEN_INS_GET_CHALLENGE'       : APDU(0x00, 0x0b, 0x00, 0x00, None, 0x00),
                              # FIXME: to be removed, for debug purposes only!
-                             'TOKEN_INS_ECHO_TEST'           : APDU(0x00, 0x0b, 0x00, 0x00, None, 0x00),
-                             'TOKEN_INS_SECURE_CHANNEL_ECHO' : APDU(0x00, 0x0c, 0x00, 0x00, None, 0x00),
+                             'TOKEN_INS_ECHO_TEST'           : APDU(0x00, 0x0c, 0x00, 0x00, None, 0x00),
+                             'TOKEN_INS_SECURE_CHANNEL_ECHO' : APDU(0x00, 0x0d, 0x00, 0x00, None, 0x00),
            }
 
 # The AUTH token instructions
@@ -191,6 +195,11 @@ def token_ins(token_type, instruction, data=None, lc=None):
         token_instructions.update(dfu_token_instructions)
     elif token_type == "sig":
         token_instructions = token_common_instructions("45757477747536417072").copy()
+        token_instructions.update(sig_token_instructions)
+    elif token_type == "common":
+        # NOTE: this is a "fake" container for APDUs common to all tokens
+        # without any specific 'select' command
+        token_instructions = token_common_instructions("").copy()
         token_instructions.update(sig_token_instructions)
     else:
         print("Error: unknown token type "+token_type)
@@ -348,27 +357,42 @@ class SCP:
         c = Curve(a, b, prime, order, cofactor, gx, gy, cofactor * order, ret_alg, None)
         # Generate a key pair for our ECDH
         ecdh_keypair = genKeyPair(c)
-        # Sign the public part with our ECDSA private key
+        # Mount the secure channel with the token
+        # Note: the applet should have been already selected by our decrypt_platform_data procedure
+        # since we have already exchanged data with the card
+        # 
+        # First step is to get a challenge from the token
+        apdu = token_ins("common", "TOKEN_INS_GET_CHALLENGE")
+        challenge, sw1, sw2 = apdu.send(self.cardservice)
+        if (sw1 != 0x90) or (sw2 != 0x00):
+            # This is an error
+            print("SCP Error: bad response from the token with TOKEN_INS_GET_CHALLENGE")
+            sys.exit(-1)
+        # The challenge length should be 16 bytes
+        if len(challenge) != 16:
+            # This is not the response length we expect ...
+            print("SCP Error: bad response length from the token with TOKEN_INS_GET_CHALLENGE")
+            sys.exit(-1)        
+        # Then, we initialize our secure channel
+        # Sign the public part *concatenated with the challenge* with our ECDSA private key
         ecdsa_pubkey = PubKey(c, Point(c, stringtoint(dec_platform_pub_key_data[3:3+32]), stringtoint(dec_platform_pub_key_data[3+32:3+64])))
         ecdsa_privkey = PrivKey(c, stringtoint(dec_platform_priv_key_data[3:]))
         ecdsa_keypair = KeyPair(ecdsa_pubkey, ecdsa_privkey)
         to_send = expand(inttostring(ecdh_keypair.pubkey.Y.x), 256, "LEFT")
         to_send += expand(inttostring(ecdh_keypair.pubkey.Y.y), 256, "LEFT")
         to_send += "\x00"*31+"\x01"
-        (sig, k) = ecdsa_sign(sha256, ecdsa_keypair, to_send)
+        # Sign the element to send *concatenated with the challenge*
+        (sig, k) = ecdsa_sign(sha256, ecdsa_keypair, (to_send+challenge))
         to_send += sig
-        # Mount the secure channel with the token
-        # Note: the applet should have been already selected by our decrypt_platform_data procedure
-        # since we have already exchanged data with the card
-        apdu = token_ins("sig", "TOKEN_INS_SECURE_CHANNEL_INIT", data=to_send)
+        apdu = token_ins("common", "TOKEN_INS_SECURE_CHANNEL_INIT", data=to_send)
         resp, sw1, sw2 = apdu.send(self.cardservice)
         if (sw1 != 0x90) or (sw2 != 0x00):
             # This is an error
-            print("SCP Error: bad response from the token")
+            print("SCP Error: bad response from the token with TOKEN_INS_SECURE_CHANNEL_INIT")
             sys.exit(-1)
         if len(resp) != ((3*32) + 64):
             # This is not the response length we expect ...
-            print("SCP Error: bad response from the token")
+            print("SCP Error: bad response length from the token with TOKEN_INS_SECURE_CHANNEL_INIT")
             sys.exit(-1)
         # Extract the ECDSA signature
         ecdsa_token_pubkey = PubKey(c, Point(c, stringtoint(dec_token_pub_key_data[3:3+32]), stringtoint(dec_token_pub_key_data[3+32:3+64])))
@@ -501,7 +525,10 @@ def token_full_unlock(card, token_type, local_keys_path, pet_pin = None, user_pi
     scp = SCP(card, local_keys_path, pet_pin, token_type)
     resp, sw1, sw2 = scp.token_unlock_pet_pin(pet_pin)
     if (sw1 != 0x90) or (sw2 != 0x00):
-        print("\033[1;41m Error: PET pin seems wrong! Beware that only %d tries are allowed ...\033[1;m" % ord(resp[0]))
+        if resp != None:
+            print("\033[1;41m Error: PET pin seems wrong! Beware that only %d tries are allowed ...\033[1;m" % ord(resp[0]))
+        else:
+            print("\033[1;41m Error: PET pin seems wrong! The card is being LOCKED!\033[1;m")
         sys.exit(-1)
     resp, sw1, sw2 = scp.token_get_pet_name()
     if (sw1 != 0x90) or (sw2 != 0x00):
@@ -517,7 +544,10 @@ def token_full_unlock(card, token_type, local_keys_path, pet_pin = None, user_pi
         print("\033[1;44m PET NAME CHECK!  \033[1;m\n\nThe PET name for the "+token_type.upper()+" token is '"+resp+"' ...")
     resp, sw1, sw2 = scp.token_unlock_user_pin(user_pin)
     if (sw1 != 0x90) or (sw2 != 0x00):
-        print("\033[1;41m Error: USER pin seems wrong! Beware that only %d tries are allowed ...\033[1;m" % ord(resp[0]))
+        if resp != None:
+            print("\033[1;41m Error: USER pin seems wrong! Beware that only %d tries are allowed ...\033[1;m" % ord(resp[0]))
+        else:
+            print("\033[1;41m Error: USER pin seems wrong! The card is being LOCKED!\033[1;m")
         sys.exit(-1)
 
     return scp
