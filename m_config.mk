@@ -234,6 +234,8 @@ LDFLAGS          += -L$(APP_BUILD_DIR)
 endif
 # linking to libraries
 LDFLAGS          += $(patsubst %, -L%, $(wildcard $(BUILD_DIR)/libs/lib*))
+# requested for libs that are dfu/fw feature set (no added by upper line)
+LDFLAGS          += -L$(APP_BUILD_DIR)/..
 # linking to drivers
 LDFLAGS          += $(patsubst %, -L%, $(wildcard $(BUILD_DIR)/drivers/lib*))
 # linking to externals
