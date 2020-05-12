@@ -63,10 +63,10 @@ RTS             = zfp-stp32f4
 # instead of a local submodule
 #
 ifeq ("$(CONFIG_BUILD_DIR)","")
-BUILD_DIR      = $(PROJ_FILES)/build/unconfigured
+	BUILD_DIR      := $(PROJ_FILES)/build/unconfigured
 else
-BUILD_DIR      = $(PROJ_FILES)$(CONFIG_BUILD_DIR:"%"=%)/$(ARCH)/$(BOARD)
-PRIVATE_DIR    = $(PROJ_FILES)/$(CONFIG_PRIVATE_DIR:"%"=%)
+	BUILD_DIR      := $(PROJ_FILES)$(CONFIG_BUILD_DIR:"%"=%)/$(ARCH)/$(BOARD)
+	PRIVATE_DIR    := $(PROJ_FILES)/$(CONFIG_PRIVATE_DIR:"%"=%)
 endif
 
 
@@ -233,11 +233,11 @@ ifneq ($(APP_BUILD_DIR),)
 LDFLAGS          += -L$(APP_BUILD_DIR)
 endif
 # linking to libraries
-LDFLAGS          += $(patsubst %, -L%, $(wildcard $(BUILD_DIR)/libs/lib*))
+#LDFLAGS          += $(patsubst %, -L%, $(wildcard $(BUILD_DIR)/libs/lib*))
 # requested for libs that are dfu/fw feature set (no added by upper line)
-LDFLAGS          += -L$(APP_BUILD_DIR)/..
+LDFLAGS          += -L$(APP_BUILD_DIR)
 # linking to drivers
-LDFLAGS          += $(patsubst %, -L%, $(wildcard $(BUILD_DIR)/drivers/lib*))
+#LDFLAGS          += $(patsubst %, -L%, $(wildcard $(BUILD_DIR)/drivers/lib*))
 # linking to externals
 LDFLAGS          += -L$(BUILD_DIR)/externals
 # optimizing size
