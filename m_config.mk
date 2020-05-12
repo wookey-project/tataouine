@@ -263,7 +263,7 @@ EC_UTILS          = $(BUILD_DIR)/tools/ec_utils
 
 ##### Handle the libsign CFLAGS
 # We use SHA-256 and SHA-512 in various places in our embedded platform
-LIBSIGN_CFLAGS = -MMD -MP -DWITH_LIBECC_CONFIG_OVERRIDE -DUSE_SIG_BLINDING -DWITH_HASH_SHA256 -DWITH_HASH_SHA512
+LIBSIGN_CFLAGS = -MMD -MP -DWITH_LIBECC_CONFIG_OVERRIDE -DNO_KNOWN_VECTORS -DUSE_SIG_BLINDING -DWITH_HASH_SHA256 -DWITH_HASH_SHA512
 # We are bound to use ECDSA as a signature algorithm because tokens lack support of other
 # algorithms ...
 LIBSIGN_CFLAGS += -DWITH_SIG_ECDSA
