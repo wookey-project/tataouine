@@ -83,10 +83,6 @@ quiet_cmd_buildapp      = APP
 						  if [ ! -z "$(CONFIG_FIRMWARE_DUALBANK)" ]; then if [ -f $(BUILD_DIR)/apps/$$app/dfu/$$app.final.dfu2.ld ]; then make -C $$app all APP_BUILD_DIR=../$(BUILD_DIR)/apps/$$app/dfu MODE=DFU EXTRA_CFLAGS="-DMODE_DFU" EXTRA_LDFLAGS="-T$$app.final.dfu2.ld" APP_NAME=$$app.dfu2; fi; fi; done
 
 # linking
-#quiet_cmd_ldscript      = LDSCRIPT
-#      cmd_ldscript      = $(PROJ_FILES)tools/gen_app_ld.pl $(BUILD_DIR) $(PROJ_FILES)/.config
-
-# linking
 quiet_cmd_k_ldscript    = KLDSCRIPT $@
       cmd_k_ldscript    = SOC=$(SOC) $(PROJ_FILES)/kernel/tools/devmap/gen_kernel_ld.pl $(BUILD_DIR) $(MODE) $(PROJ_FILES)/kernel/tools/devmap/kernel.ld.in
 
