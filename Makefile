@@ -37,11 +37,11 @@ include m_generic.mk
 # transform ldr/ in ldr/ldr/ then we get the perfix $(BUILD_DIR)
 # to all app to finish we substitute the last '/' by .hex
 # this require that the app name should finish with a '/'
-APPS_FW1_HEXFILES = $(patsubst %,%.fw1.hex,$(addprefix $(BUILD_DIR)/apps/,$(foreach path, $(app-fw-y), $(addsuffix $(path),$(path)/))))
-APPS_FW2_HEXFILES = $(patsubst %,%.fw2.hex,$(addprefix $(BUILD_DIR)/apps/,$(foreach path, $(app-fw-y), $(addsuffix $(path),$(path)/))))
+APPS_FW1_HEXFILES = $(patsubst %,%.fw1.hex,$(addprefix $(BUILD_DIR)/apps/,$(foreach path, $(app-fw-y), $(addsuffix $(path),$(path)/fw/))))
+APPS_FW2_HEXFILES = $(patsubst %,%.fw2.hex,$(addprefix $(BUILD_DIR)/apps/,$(foreach path, $(app-fw-y), $(addsuffix $(path),$(path)/fw/))))
 
-APPS_DFU1_HEXFILES = $(patsubst %,%.dfu1.hex,$(addprefix $(BUILD_DIR)/apps/,$(foreach path, $(app-dfu-y), $(addsuffix $(path),$(path)/))))
-APPS_DFU2_HEXFILES = $(patsubst %,%.dfu2.hex,$(addprefix $(BUILD_DIR)/apps/,$(foreach path, $(app-dfu-y), $(addsuffix $(path),$(path)/))))
+APPS_DFU1_HEXFILES = $(patsubst %,%.dfu1.hex,$(addprefix $(BUILD_DIR)/apps/,$(foreach path, $(app-dfu-y), $(addsuffix $(path),$(path)/dfu/))))
+APPS_DFU2_HEXFILES = $(patsubst %,%.dfu2.hex,$(addprefix $(BUILD_DIR)/apps/,$(foreach path, $(app-dfu-y), $(addsuffix $(path),$(path)/dfu/))))
 
 APPS_HEXFILES = $(APPS_FW1_HEXFILES)
 ifeq ($(CONFIG_FIRMWARE_DUALBANK),y)

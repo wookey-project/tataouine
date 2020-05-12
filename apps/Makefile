@@ -38,9 +38,9 @@ final:
 
 
 outdir:
-	for dir in $(app-fw-y); do mkdir -p $(BUILD_DIR)/apps/$$dir; done
+	for dir in $(app-fw-y); do mkdir -p $(BUILD_DIR)/apps/$$dir/fw; done
 ifeq ($(CONFIG_FIRMWARE_DFU),y)
-	for dir in $(app-dfu-y); do mkdir -p $(BUILD_DIR)/apps/$$dir; done
+	for dir in $(app-dfu-y); do mkdir -p $(BUILD_DIR)/apps/$$dir/dfu; done
 endif
 
 __clean:

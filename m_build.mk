@@ -46,17 +46,19 @@ quiet_cmd_gnat_o_ada    = GNAT     $@
 quiet_cmd_builddummyapp = DUMMYAPP
       cmd_builddummyapp = for app in $(app-y); do \
 						  make -C $$app alldeps; \
-	                      cp $(BUILD_DIR)/libs/*/lib*.a $(BUILD_DIR)/apps/$$app; \
-						  cp $(BUILD_DIR)/drivers/*/lib*.a $(BUILD_DIR)/apps/$$app; \
 					      $(PROJ_FILES)/kernel/tools/devmap/gen_app_dummy_ld.pl $(BUILD_DIR) $(PROJ_FILES)/kernel/tools/devmap/dummy.app.ld.in FW1 $(PROJ_FILES)/.config; \
 						  if test ! -z "$(CONFIG_FIRMWARE_MODE_MONO_BANK_DFU)"; then $(PROJ_FILES)/kernel/tools/devmap/gen_app_dummy_ld.pl $(BUILD_DIR) $(PROJ_FILES)/kernel/tools/devmap/dummy.app.ld.in DFU1 $(PROJ_FILES)/.config; fi; \
 						  if test ! -z "$(CONFIG_FIRMWARE_DUALBANK)"; then $(PROJ_FILES)/kernel/tools/devmap/gen_app_dummy_ld.pl $(BUILD_DIR) $(PROJ_FILES)/kernel/tools/devmap/dummy.app.ld.in FW2 $(PROJ_FILES)/.config; fi; \
 						  if test ! -z "$(CONFIG_FIRMWARE_MODE_DUAL_BANK_DFU)"; then $(PROJ_FILES)/kernel/tools/devmap/gen_app_dummy_ld.pl $(BUILD_DIR) $(PROJ_FILES)/kernel/tools/devmap/dummy.app.ld.in DFU1 $(PROJ_FILES)/.config; fi; \
 						  if test ! -z "$(CONFIG_FIRMWARE_MODE_DUAL_BANK_DFU)"; then $(PROJ_FILES)/kernel/tools/devmap/gen_app_dummy_ld.pl $(BUILD_DIR) $(PROJ_FILES)/kernel/tools/devmap/dummy.app.ld.in DFU2 $(PROJ_FILES)/.config; fi; \
-						  if test -f $(BUILD_DIR)/apps/$$app/$$app.dummy.fw1.ld; then make -C $$app all EXTRA_LDFLAGS="-T$$app.dummy.fw1.ld" APP_NAME=$$app.dummy.fw1; fi; \
-						  if [ ! -z "$(CONFIG_FIRMWARE_DUALBANK)" ]; then if [ -f $(BUILD_DIR)/apps/$$app/$$app.dummy.fw2.ld ]; then make -C $$app all EXTRA_LDFLAGS="-T$$app.dummy.fw2.ld" APP_NAME=$$app.dummy.fw2; fi; fi; \
-						  if [ -f $(BUILD_DIR)/apps/$$app/$$app.dummy.dfu1.ld ]; then make -C $$app all EXTRA_LDFLAGS="-T$$app.dummy.dfu1.ld -DMODE_DFU" APP_NAME=$$app.dummy.dfu1; fi; \
-						  if [ ! -z "$(CONFIG_FIRMWARE_DUALBANK)" ]; then if [ -f $(BUILD_DIR)/apps/$$app/$$app.dummy.dfu2.ld ]; then make -C $$app all EXTRA_LDFLAGS="-T$$app.dummy.dfu2.ld" APP_NAME=$$app.dummy.dfu2; fi; fi; done
+						  cp $(BUILD_DIR)/drivers/*/lib*.a $(BUILD_DIR)/apps/$$app; \
+						  cp $(BUILD_DIR)/libs/*/lib*.a $(BUILD_DIR)/apps/$$app; \
+						  set -x; for lib in $(shell /usr/bin/find $(BUILD_DIR)/libs/ -mindepth 1 -maxdepth 1 -type d); do if test -d $$lib/fw; then cp $$lib/fw/*.a  $(BUILD_DIR)/apps/$$app/; fi; done; set +x; \
+						  if test -f $(BUILD_DIR)/apps/$$app/fw/$$app.dummy.fw1.ld; then make -C $$app all APP_BUILD_DIR=../$(BUILD_DIR)/apps/$$app/fw MODE=FW EXTRA_LDFLAGS="-T$$app.dummy.fw1.ld" APP_NAME=$$app.dummy.fw1; fi; \
+						  if [ ! -z "$(CONFIG_FIRMWARE_DUALBANK)" ]; then if [ -f $(BUILD_DIR)/apps/$$app/fw/$$app.dummy.fw2.ld ]; then make -C $$app all APP_BUILD_DIR=../$(BUILD_DIR)/apps/$$app/fw MODE=FW EXTRA_LDFLAGS="-T$$app.dummy.fw2.ld" APP_NAME=$$app.dummy.fw2; fi; fi; \
+						  for lib in $(shell /usr/bin/find $(BUILD_DIR)/libs/ -mindepth 1 -maxdepth 1 -type d); do if test -d $$lib/dfu; then cp $$lib/dfu/*.a  $(BUILD_DIR)/apps/$$app/; fi; done; \
+						  if [ -f $(BUILD_DIR)/apps/$$app/dfu/$$app.dummy.dfu1.ld ]; then make -C $$app all APP_BUILD_DIR=../$(BUILD_DIR)/apps/$$app/dfu MODE=DFU EXTRA_CFLAGS="-DMODE_DFU" EXTRA_LDFLAGS="-T$$app.dummy.dfu1.ld" APP_NAME=$$app.dummy.dfu1; fi; \
+						  if [ ! -z "$(CONFIG_FIRMWARE_DUALBANK)" ]; then if [ -f $(BUILD_DIR)/apps/$$app/dfu/$$app.dummy.dfu2.ld ]; then make -C $$app all APP_BUILD_DIR=../$(BUILD_DIR)/apps/$$app/dfu MODE=DFU EXTRA_CFLAGS="-DMODE_DFU" EXTRA_LDFLAGS="-T$$app.dummy.dfu2.ld" APP_NAME=$$app.dummy.dfu2; fi; fi; done
 
 
 quiet_cmd_app_layout   = APPLAYOUT
@@ -76,10 +78,12 @@ quiet_cmd_app_layout   = APPLAYOUT
 
 quiet_cmd_buildapp      = APP
       cmd_buildapp      = for app in $(app-y); do \
-						  if [ -f $(BUILD_DIR)/apps/$$app/$$app.final.fw1.ld ]; then make -C $$app all EXTRA_LDFLAGS="-T$$app.final.fw1.ld" APP_NAME=$$app.fw1; fi; \
-						  if [ ! -z "$(CONFIG_FIRMWARE_DUALBANK)" ]; then if [ -f $(BUILD_DIR)/apps/$$app/$$app.final.fw2.ld ]; then make -C $$app all EXTRA_LDFLAGS="-T$$app.final.fw2.ld" APP_NAME=$$app.fw2; fi; fi; \
-						  if [ -f $(BUILD_DIR)/apps/$$app/$$app.final.dfu1.ld ]; then make -C $$app all EXTRA_LDFLAGS="-T$$app.final.dfu1.ld -DMODE_DFU" APP_NAME=$$app.dfu1; fi; \
-						  if [ ! -z "$(CONFIG_FIRMWARE_DUALBANK)" ]; then if [ -f $(BUILD_DIR)/apps/$$app/$$app.final.dfu2.ld ]; then make -C $$app all EXTRA_LDFLAGS="-T$$app.final.dfu2.ld" APP_NAME=$$app.dfu2; fi; fi; done
+						  for lib in $(shell /usr/bin/find $(BUILD_DIR)/libs/* -mindepth 1 -maxdepth 1 -type d); do if test -d $$lib/fw; then cp $$lib/fw/*.a  $(BUILD_DIR)/apps/$$app/; fi; done; \
+						  if [ -f $(BUILD_DIR)/apps/$$app/fw/$$app.final.fw1.ld ]; then make -C $$app all APP_BUILD_DIR=../$(BUILD_DIR)/apps/$$app/fw MODE=FW EXTRA_LDFLAGS="-T$$app.final.fw1.ld" APP_NAME=$$app.fw1; fi; \
+						  if [ ! -z "$(CONFIG_FIRMWARE_DUALBANK)" ]; then if [ -f $(BUILD_DIR)/apps/$$app/fw/$$app.final.fw2.ld ]; then make -C $$app all APP_BUILD_DIR=../$(BUILD_DIR)/apps/$$app/fw MODE=FW EXTRA_LDFLAGS="-T$$app.final.fw2.ld" APP_NAME=$$app.fw2; fi; fi; \
+						  for lib in $(shell /usr/bin/find $(BUILD_DIR)/libs/* -mindepth 1 -maxdepth 1 -type d); do if test -d $$lib/dfu; then cp $$lib/dfu/*.a  $(BUILD_DIR)/apps/$$app/; fi; done; \
+						  if [ -f $(BUILD_DIR)/apps/$$app/dfu/$$app.final.dfu1.ld ]; then make -C $$app all APP_BUILD_DIR=../$(BUILD_DIR)/apps/$$app/dfu MODE=DFU EXTRA_CFLAGS="-DMODE_DFU" EXTRA_LDFLAGS="-T$$app.final.dfu1.ld -DMODE_DFU" APP_NAME=$$app.dfu1; fi; \
+						  if [ ! -z "$(CONFIG_FIRMWARE_DUALBANK)" ]; then if [ -f $(BUILD_DIR)/apps/$$app/dfu/$$app.final.dfu2.ld ]; then make -C $$app all APP_BUILD_DIR=../$(BUILD_DIR)/apps/$$app/dfu MODE=DFU EXTRA_CFLAGS="-DMODE_DFU" EXTRA_LDFLAGS="-T$$app.final.dfu2.ld" APP_NAME=$$app.dfu2; fi; fi; done
 
 # linking
 quiet_cmd_ldscript      = LDSCRIPT
