@@ -148,11 +148,6 @@ quiet_cmd_objcopy_ihex  = OBJ/HEX  $@
 quiet_cmd_objcopy_bin   = OBJ/BIN  $@
       cmd_objcopy_bin   = $(CROSS_OBJCOPY) -O binary $< $@
 
-# layout build
-quiet_cmd_layout        = LAYOUT   $@
-      cmd_layout        = $(CROSS_CC) $(AFLAGS) $(WARN_CFLAGS) $(EMBED_CFLAGS) -E -x c $(MEM_LAYOUT_DEF) -I. -Iinclude/generated -Ikernel/src/arch/socs/$(SOC)/C -Ikernel/src/arch/cores/$(CONFIG_ARCH)/C -Ikernel/src/arch/boards/$(CONFIG_BOARDNAME) $(LDS) $(LDS_GEN) | grep -v '^\#' > $(MEM_LAYOUT); \
-                          $(CROSS_CC) $(AFLAGS) $(WARN_CFLAGS) $(EMBED_CFLAGS) -E -x c $(MEM_APP_LAYOUT_DEF) -I. -Iinclude/generated -Ikernel/src/arch/socs/$(SOC)/C -Ikernel/src/arch/cores/$(CONFIG_ARCH)/C -Ikernel/src/arch/boards/$(CONFIG_BOARDNAME) $(LDS) $(LDS_GEN) | grep -v '^\#' > $(MEM_APP_LAYOUT)
-
 # final layout build
 quiet_cmd_final_layout  = END/LAY  $@
       cmd_final_layout  = sed -e 's:BUILDDIR:$(BUILD_DIR):g' $< | sed -e 's:APP_NAME:$(APP_NAME):g' > $@
@@ -290,12 +285,12 @@ quiet_cmd_mkobjlist_drvs   = MAKEOBJS_DRVS
       cmd_mkobjlist_drvs   = /bin/echo "DRVSRC_DIR = \$$(PROJ_FILES)/drivers/socs/$(CONFIG_SOCNAME)" > drivers/socs/$(CONFIG_SOCNAME)/Makefile.objs; /bin/echo "drv-y :=" >> drivers/socs/$(CONFIG_SOCNAME)/Makefile.objs; rm -f drivers/socs/$(CONFIG_SOCNAME)/Makefile.objs.gen; for i in $(shell find drivers/socs/$(CONFIG_SOCNAME) -mindepth 1 -maxdepth 1 -type d -exec basename {} \;); do upper=`/bin/echo "$$i" |tr '[:lower:]' '[:upper:]'`; /bin/echo "drv-\$$(CONFIG_USR_DRV_$${upper}) += $$i" >> drivers/socs/$(CONFIG_SOCNAME)/Makefile.objs.gen; done; if [ -d $(PROJ_FILES)/drivers/boards/$(CONFIG_BOARDNAME) ]; then /bin/echo "BOARD_DRVSRC_DIR = \$$(PROJ_FILES)/drivers/boards/$(CONFIG_BOARDNAME)" > drivers/boards/$(CONFIG_BOARDNAME)/Makefile.objs; /bin/echo "board-drv-y :=" >> drivers/boards/$(CONFIG_BOARDNAME)/Makefile.objs; rm -f drivers/boards/$(CONFIG_BOARDNAME)/Makefile.objs.gen; for i in $(shell find drivers/boards/$(CONFIG_BOARDNAME) -mindepth 1 -maxdepth 1 -type d -exec basename {} \;); do upper=`/bin/echo "$$i" |tr '[:lower:]' '[:upper:]'`; /bin/echo "board-drv-\$$(CONFIG_USR_DRV_$${upper}) += $$i" >> drivers/boards/$(CONFIG_BOARDNAME)/Makefile.objs.gen; done; fi
 
 quiet_cmd_devmap           = DEVMAP
-      cmd_devmap           = $(PROJ_FILES)/kernel/tools/devmap.py ADA $(PROJ_FILES)/layouts/arch/socs/$(SOC)/soc-devmap-$(BOARDNAME)$(BOARDRELEASE).json > $(PROJ_FILES)/kernel/src/arch/socs/$(SOC)/generated/soc-devmap.ads; \
-                             $(PROJ_FILES)/kernel/tools/devperm.py $(PROJ_FILES)/layouts/arch/socs/$(SOC)/soc-devmap-$(BOARDNAME)$(BOARDRELEASE).json > $(PROJ_FILES)/kernel/src/generated/ewok-devices-perms.ads; \
-			     $(PROJ_FILES)/layouts/arch/socs/$(SOC)/tools/devheader.py $(PROJ_FILES)/layouts/arch/socs/$(SOC)/generated $(PROJ_FILES)/layouts/arch/socs/$(SOC)/soc-devmap-$(BOARDNAME)$(BOARDRELEASE).json
+      cmd_devmap           = $(PROJ_FILES)/kernel/tools/devmap.py ADA $(PROJ_FILES)/layouts/boards/$(BOARDNAME)/soc-devmap-$(BOARDNAME)$(BOARDRELEASE).json > $(PROJ_FILES)/kernel/src/arch/socs/$(SOC)/generated/soc-devmap.ads; \
+                             $(PROJ_FILES)/kernel/tools/devperm.py $(PROJ_FILES)/layouts/boards/$(BOARDNAME)/soc-devmap-$(BOARDNAME)$(BOARDRELEASE).json > $(PROJ_FILES)/kernel/src/generated/ewok-devices-perms.ads; \
+			     $(PROJ_FILES)/layouts/tools/devheader.py $(PROJ_FILES)/layouts/boards/$(BOARDNAME)/generated $(PROJ_FILES)/layouts/boards/$(BOARDNAME)/soc-devmap-$(BOARDNAME)$(BOARDRELEASE).json
 
 quiet_cmd_format_fw        = FORMAT
-      cmd_format_fw        = $(PROJ_FILES)/tools/format_firmware.py $(PROJ_FILES)/layouts/arch/socs/$(SOC)/soc-devmap-$(BOARDNAME)$(BOARDRELEASE).json $(BUILD_DIR)/$(CONFIG_PROJ_NAME).hex
+      cmd_format_fw        = $(PROJ_FILES)/tools/format_firmware.py $(PROJ_FILES)/layouts/boards/$(BOARDNAME)/soc-devmap-$(BOARDNAME)$(BOARDRELEASE).json $(BUILD_DIR)/$(CONFIG_PROJ_NAME).hex
 
 quiet_cmd_sign_flip        = SIGN_FLIP
       cmd_sign_flip        = $(PROJ_FILES)/tools/encrypt_sign_firmware.py $(CONFIG_PRIVATE_DIR) $< 1337 FLIP 1 16384 dead cafe
