@@ -78,12 +78,6 @@ showapps:
 	@echo $(APPS_FW1_HEXFILES)
 	@echo $(APPS_FW2_HEXFILES)
 
-# Memory layout
-MEM_LAYOUT       = $(BUILD_DIR)/layout.ld
-MEM_APP_LAYOUT   = $(BUILD_DIR)/layout.apps.ld
-MEM_LAYOUT_DEF   = $(PROJ_FILES)/layouts/arch/socs/$(SOC)/layout.def
-MEM_APP_LAYOUT_DEF   = $(PROJ_FILES)/layouts/arch/socs/$(SOC)/layout.apps.def
-
 # project target binaries name, based on .config
 BIN_NAME         = $(CONFIG_PROJ_NAME).bin
 HEX_NAME         = $(CONFIG_PROJ_NAME).hex
@@ -93,9 +87,6 @@ DOCU             = doxygen
 
 BUILDDFU         = $(PROJ_FILES)/tools/gen_firmware.py
 BUILD_LIBECC_DIR = $(PROJ_FILES)build/$(ARCH)/$(BOARD)
-
-# Flags (deprecated, replaced by .config)
-LDFLAGS         += -T$(MEM_LAYOUT) $(AFLAGS) -fno-builtin -nostdlib
 
 # The apps dir(s)
 APPS             = apps
@@ -184,14 +175,10 @@ __prepare:
 	$(call cmd,mkobjlist_drvs)
 	$(call cmd,prepare)
 
-prepare: $(BUILD_DIR) __prepare layout devmap $(CONFIG_PRIVATE_DIR)
+prepare: $(BUILD_DIR) __prepare devmap $(CONFIG_PRIVATE_DIR)
 
 devmap:
 	$(call cmd,devmap)
-
-# generate the memory layout for the target
-layout: $(MEM_LAYOUT_DEF)
-	$(call if_changed,layout)
 
 # generate the permissions header for EwoK
 # from now-on, and downto the endif, these rules
@@ -272,9 +259,9 @@ prove:
 # from all elf, finalize into one single binary file
 $(BUILD_DIR)/loader/loader.hex: libs loader
 
-$(APPS_FW1_HEXFILES): layout externals_libs libs drivers $(APPS)
+$(APPS_FW1_HEXFILES): externals_libs libs drivers $(APPS)
 
-$(APPS_FW2_HEXFILES): layout externals_libs libs drivers $(APPS)
+$(APPS_FW2_HEXFILES): externals_libs libs drivers $(APPS)
 
 libs:
 	$(Q)$(MAKE) -C libs all
