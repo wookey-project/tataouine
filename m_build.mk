@@ -220,10 +220,10 @@ quiet_cmd_prepare       = PREPARE
 # tiny defconfig support, please don't call any other target depending on config here,
 # m_config.mk should be relaoded
 quiet_cmd_defconfig     = DEFCONFIG  $@
-      cmd_defconfig     = cp configs/$@ .config && $(CONF) $(CONF_ARGS) Kconfig
+cmd_defconfig     = if [ "" = "$(CONFIG_BOARDNAME)" ]; then cp configs/boards/$@ .config; else cp configs/boards/$(CONFIG_BOARDNAME)/proj_$(CONFIG_PROJ_NAME)/$@ .config && $(CONF) $(CONF_ARGS) Kconfig; fi
 
 quiet_cmd_listdefconfig = LISTDEFS   $@
-cmd_listdefconfig = find  configs/ -type f -iname '*_defconfig' | sed -e 's:^configs/::g' |sort
+cmd_listdefconfig = if [ "" = "$(CONFIG_BOARDNAME)" ]; then find  configs/boards/*/proj_*/ -type f -iname '*_defconfig' | sed -e "s:^configs/boards/::g" |sort; else find  configs/boards/$(CONFIG_BOARDNAME)/proj_$(CONFIG_PROJ_NAME)/ -type f -iname '*_defconfig' | sed -e "s:^configs/boards/$(CONFIG_BOARDNAME)/proj_$(CONFIG_PROJ_NAME)/::g" |sort; fi
 
 # documentation part
 quiet_cmd_mkman2        = MAN        $@

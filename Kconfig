@@ -4,10 +4,12 @@ mainmenu "Wookey configuration"
 menu "General Setup"
 
 config PROJ_NAME
-    string "Wookey project name"
+    string "Tataouine SDK based project name"
     default "wookey"
     help
-      set the projet name.
+      set the projet name. This project define which software profile is deployed in the
+      current working directory. This also permit to list only the preseed files for the
+      current project in the defconfig_list target
 
 config PROJ_FILES
     string "Wookey project files dir"
