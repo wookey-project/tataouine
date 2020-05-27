@@ -142,11 +142,11 @@ quiet_cmd_rc_o_rs       = RC       $@
 
 # hex file generation
 quiet_cmd_objcopy_ihex  = OBJ/HEX  $@
-      cmd_objcopy_ihex  = $(CROSS_OBJCOPY) -O ihex $< $@
+      cmd_objcopy_ihex  = $(CROSS_OBJCOPY) $(CROSS_OBJCOPY_ARGS) -O ihex $< $@
 
 # bin file generation
 quiet_cmd_objcopy_bin   = OBJ/BIN  $@
-      cmd_objcopy_bin   = $(CROSS_OBJCOPY) -O binary $< $@
+      cmd_objcopy_bin   = $(CROSS_OBJCOPY) $(CROSS_OBJCOPY_ARGS) -O binary $< $@
 
 # final layout build
 quiet_cmd_final_layout  = END/LAY  $@
