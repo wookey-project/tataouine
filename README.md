@@ -1,7 +1,7 @@
 # Readme first
 
 [![Release](https://img.shields.io/github/release/wookey-project/tataouine.svg)](https://github.com/wookey-project/tataouine/releases/latest)
-[![Travis CI Build Status](https://api.travis-ci.com/wookey-project/tataouine.svg?branch=master)](https://travis-ci.com/wookey-project/tataouine)
+[![Build Status](https://dev.azure.com/phil0093/phil/_apis/build/status/wookey-project.manifest?branchName=master)](https://dev.azure.com/phil0093/phil/_build/latest?definitionId=1&branchName=master)
 
 To compile the overall documentation (sphinx, imagemagick and latex requested) :
 
