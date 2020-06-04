@@ -36,8 +36,8 @@ if __name__ == '__main__':
     ONLY_INFO = False
     if len(sys.argv) == 4:
         ONLY_INFO = True
-    # Parse the header
-    # Header = magic on 4 bytes || partition type on 4 bytes || version on 4 bytes || len of data after the header on 4 bytes || siglen on 4 bytes
+    # Parse the header
+    # Header = magic on 4 bytes || partition type on 4 bytes || version on 4 bytes || len of data after the header on 4 bytes || siglen on 4 bytes
     header = firmware_to_decrypt[:firmware_header_layout['CHUNKSIZE_OFFSET']]
     magic =  header[firmware_header_layout['MAGIC_OFFSET'] : firmware_header_layout['MAGIC_OFFSET'] + firmware_header_layout['MAGIC_SIZE']]
     partition_type =  header[firmware_header_layout['TYPE_OFFSET'] : firmware_header_layout['TYPE_OFFSET'] + firmware_header_layout['TYPE_SIZE']]
@@ -62,9 +62,9 @@ if __name__ == '__main__':
     # Extract the chunk size, the IV and the HMAC
     iv = firmware_to_decrypt[firmware_header_layout['IV_OFFSET'] : firmware_header_layout['IV_OFFSET'] + firmware_header_layout['IV_SIZE']:]
     hmac = firmware_to_decrypt[firmware_header_layout['HMAC_OFFSET'] : firmware_header_layout['HMAC_OFFSET'] + firmware_header_layout['HMAC_SIZE']]
-    # Extract the signature
+    # Extract the signature
     signature = firmware_to_decrypt[firmware_header_layout['SIG_OFFSET'] : firmware_header_layout['SIG_OFFSET'] + siglen]
-    # Extract the remaining data. The header should be padded to the crypto chunk size
+    # Extract the remaining data. The header should be padded to the crypto chunk size
     padded_encrypted_content = firmware_to_decrypt[firmware_header_layout['SIG_OFFSET'] + siglen:]
     if len(firmware_to_decrypt) < firmware_chunk_size:
         print("Error: encrypted firmware length %d is not consistent (should be greater than chunk size %d)" % (len(firmware_to_decrypt), firmware_chunk_size))
@@ -100,7 +100,7 @@ if __name__ == '__main__':
     if ONLY_INFO == True:
         sys.exit(0)
 
-    # Ask the DFU token to begin a session
+    # Ask the DFU token to begin a session
     card = connect_to_token("DFU")
     scp_dfu = token_full_unlock(card, "dfu", keys_path+"/DFU/encrypted_platform_dfu_keys.bin") # pet_pin="1234", user_pin="1234", force_pet_name_accept = True)
     resp, sw1, sw2 = scp_dfu.token_dfu_begin_decrypt_session(header + firmware_chunk_size_str + iv + hmac + signature)
