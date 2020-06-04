@@ -1,6 +1,3 @@
-#! /usr/bin/env python
-# -*- coding: utf-8 -*-
-
 # Generate all the keys for the platform and for the
 # Javacard tokens.
 
@@ -21,9 +18,11 @@ if __name__ == '__main__':
     # Current script path
     SCRIPT_PATH = os.path.abspath(os.path.dirname(sys.argv[0])) + "/"
     
+    # Get the current interpreter
+    INTERPRETER  = sys.executable
     # The tools paths
-    KEY2JAVA = SCRIPT_PATH+"/key2java.py"
-    ENCRYPT_PLATFORM_DATA_HEADER = SCRIPT_PATH+"/encrypt_platform_data.py"
+    KEY2JAVA = INTERPRETER + " " + SCRIPT_PATH+"/key2java.py"
+    ENCRYPT_PLATFORM_DATA_HEADER = INTERPRETER + " " + SCRIPT_PATH+"/encrypt_platform_data.py"
     PROJECT_PATH = SCRIPT_PATH+"../"
        
     # Get the curve name, signature algorithm and hash algorithm
@@ -44,12 +43,11 @@ if __name__ == '__main__':
         print("Error: asked curve "+sys.argv[3]+" is not allowed.")
         print("\tPossible values: FRP256V1, BRAINPOOLP256R1 or SECP256R1")
         sys.exit(-1)
-
-    # Check if we want to use an external token for the signature or not
+    
+    # Check if we want to use an external token for the signature or not
     USE_SIG_TOKEN = None
     if sys.argv[4] == "USE_SIG_TOKEN":
         USE_SIG_TOKEN = True
-        from token_utils import * 
     elif sys.argv[4] == "NO_SIG_TOKEN":
         USE_SIG_TOKEN = False
     else:
@@ -82,13 +80,13 @@ if __name__ == '__main__':
     
     #=================
     # Asymmetric keys
-    ## AUTH token
+    ## AUTH token
     sys_cmd(cmd_gen_keys_base+AUTH_TOKEN_PATH+"/platform_auth")
     sys_cmd(cmd_gen_keys_base+AUTH_TOKEN_PATH+"/token_auth")
-    ## DFU token
+    ## DFU token
     sys_cmd(cmd_gen_keys_base+DFU_TOKEN_PATH+"/platform_dfu")
     sys_cmd(cmd_gen_keys_base+DFU_TOKEN_PATH+"/token_dfu")
-    ## SIG token
+    ## SIG token
     # NOTE: We generate these keys even when we do not use a signature
     # token but local signature. These files won't be used in this last
     # case!
@@ -146,6 +144,12 @@ if __name__ == '__main__':
     if auth_pet_name == "":
         auth_pet_name = DEFAULT_AUTH_PET_NAME
     # TODO: check pin and secret name entropy ...
+    if check_string_security_policy(auth_pet_pin, strtype='PIN') == False:
+        print("Error: bad entropy for AUTH Pet PIN")
+        sys.exit(-1)
+    if check_string_security_policy(auth_pet_name, strtype='NAME') == False:
+        print("Error: bad entropy for AUTH Pet Name")
+        sys.exit(-1)
     save_in_file(auth_pet_pin, AUTH_TOKEN_PATH+"/shared_auth_petpin.bin")
     save_in_file(auth_pet_name, AUTH_TOKEN_PATH+"/shared_auth_petname.bin")
     ## DFU
@@ -158,6 +162,12 @@ if __name__ == '__main__':
     if dfu_pet_name == "":
         dfu_pet_name = DEFAULT_DFU_PET_NAME
     # TODO: check pin and secret name entropy ...
+    if check_string_security_policy(dfu_pet_pin, strtype='PIN') == False:
+        print("Error: bad entropy for DFU Pet PIN")
+        sys.exit(-1)
+    if check_string_security_policy(dfu_pet_name, strtype='NAME') == False:
+        print("Error: bad entropy for DFU Pet Name")
+        sys.exit(-1)
     save_in_file(dfu_pet_pin, DFU_TOKEN_PATH+"/shared_dfu_petpin.bin")
     save_in_file(dfu_pet_name, DFU_TOKEN_PATH+"/shared_dfu_petname.bin")
     ## SIG
@@ -171,6 +181,12 @@ if __name__ == '__main__':
         if sig_pet_name == "":
             sig_pet_name = DEFAULT_SIG_PET_NAME
         # TODO: check pin and secret name entropy ...
+        if check_string_security_policy(sig_pet_pin, strtype='PIN') == False:
+            print("Error: bad entropy for SIG Pet PIN")
+            sys.exit(-1)
+        if check_string_security_policy(sig_pet_name, strtype='NAME') == False:
+            print("Error: bad entropy for SIG Pet Name")
+            sys.exit(-1)
         save_in_file(sig_pet_pin, SIG_TOKEN_PATH+"/shared_sig_petpin.bin")
         save_in_file(sig_pet_name, SIG_TOKEN_PATH+"/shared_sig_petname.bin")
     else:
@@ -182,6 +198,9 @@ if __name__ == '__main__':
             local_storage_password = DEFAULT_LOCAL_STORAGE_PASSWORD
         # TODO: check local storage password entropy. This is critical since
         # this password handles very sensitive private keys
+        if check_string_security_policy(local_storage_password, strtype='PASSWORD') == False:
+            print("Error: bad entropy for AUTH Pet PIN")
+            sys.exit(-1)
         save_in_file(local_storage_password, SIG_TOKEN_PATH+"/local_storage_password.bin")
 
     #=================
@@ -192,6 +211,9 @@ if __name__ == '__main__':
     if auth_user_pin == "":
         auth_user_pin = DEFAULT_AUTH_USER_PIN
     # TODO: check pin entropy ...
+    if check_string_security_policy(auth_user_pin, strtype='PIN') == False:
+        print("Error: bad entropy for AUTH User PIN")
+        sys.exit(-1)
     save_in_file(auth_user_pin, AUTH_TOKEN_PATH+"/shared_auth_userpin.bin")
     ## DFU
     DEFAULT_DFU_USER_PIN = "1234"
@@ -199,6 +221,9 @@ if __name__ == '__main__':
     if dfu_user_pin == "":
         dfu_user_pin = DEFAULT_DFU_USER_PIN
     # TODO: check pin entropy ...
+    if check_string_security_policy(dfu_user_pin, strtype='PIN') == False:
+        print("Error: bad entropy for DFU User PIN")
+        sys.exit(-1)
     save_in_file(dfu_user_pin, DFU_TOKEN_PATH+"/shared_dfu_userpin.bin")
     ## SIG
     if USE_SIG_TOKEN == True:
@@ -207,6 +232,9 @@ if __name__ == '__main__':
         if sig_user_pin == "":
             sig_user_pin = DEFAULT_SIG_USER_PIN
         # TODO: check pin entropy ...
+        if check_string_security_policy(sig_user_pin, strtype='PIN') == False:
+            print("Error: bad entropy for SIG User PIN")
+            sys.exit(-1)
         save_in_file(sig_user_pin, SIG_TOKEN_PATH+"/shared_sig_userpin.bin")
     
     #=================
@@ -247,7 +275,7 @@ if __name__ == '__main__':
     
     #=================
     # Formatting the keys for Javacard
-    ## AUTH
+    ## AUTH
     sys_cmd(KEY2JAVA+" "+AUTH_TOKEN_PATH+"/token_auth_private_key.bin "+AUTH_TOKEN_PATH+"/token_auth_public_key.bin "+AUTH_TOKEN_PATH+"/platform_auth_public_key.bin "+AUTH_TOKEN_PATH+"/shared_auth_petpin.bin "+AUTH_TOKEN_PATH+"/shared_auth_petname.bin "+AUTH_TOKEN_PATH+"/shared_auth_userpin.bin "+AUTH_TOKEN_PATH+"/master_symmetric_auth_key.bin "+AUTH_TOKEN_PATH+"/enc_master_symmetric_auth_local_pet_key.bin "+" "+str(auth_max_pin_tries)+" "+" "+str(auth_max_sc_tries)+" "+AUTH_TOKEN_PATH+"/AUTHKeys.java auth")
     # Cleanup
     sys_rm_file(AUTH_TOKEN_PATH+"/master_symmetric_auth_key.bin")

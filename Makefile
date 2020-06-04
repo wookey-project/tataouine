@@ -85,7 +85,7 @@ ELF_NAME         = $(CONFIG_PROJ_NAME).elf
 
 DOCU             = doxygen
 
-BUILDDFU         = $(PROJ_FILES)/tools/gen_firmware.py
+BUILDDFU         = $(GENERATEFIRMWARE)
 BUILD_LIBECC_DIR = $(PROJ_FILES)build/$(ARCH)/$(BOARD)
 
 # The apps dir(s)
@@ -668,7 +668,7 @@ verify_info: $(call all_verify_info_rules_fn, $(toverify))
 # Verify the firmwares with user interactions
 define verify_interactive_each_fn =
 verify_interactive_each_fn_$(1):
-	@echo "++++++++++ Automatic verification $(1) +++++++++++++++"
+	@echo "++++++++++ Interactive verification $(1) +++++++++++++++"
 	@$(VERIFYFIRMWARE) $(KEYS_DIR) $(BUILD_DIR)/$(APP_NAME)/$(1)_fw.bin.signed
 endef
 
@@ -700,7 +700,7 @@ verify_interactive: verify_interactive_check $(call all_verify_interactive_rules
 # Verify the firmwares without user interactions
 define verify_each_fn =
 verify_each_fn_$(1):
-	@echo "++++++++++ Interactive verification $(1) +++++++++++++++"
+	@echo "++++++++++ Automatic verification $(1) +++++++++++++++"
 	@# Clean stuff
 	@rm -f tmp_firmware_verif_file tmp_firmware_verif_log;
 	@# First we check the PET name

@@ -1,11 +1,15 @@
-#!/usr/bin/env python
-
-from intelhex import *
-import json, collections
-
 # Import our local utils
 from crypto_utils import *
 from firmware_utils import *
+
+# Dynamic check for necessary IntelHex Python package
+try:
+    from intelhex import *
+except:
+    print("Error: it seems that the Python IntelHex package is not installed or detected ... Please install it!")
+    sys.exit(-1)
+
+import json, collections
 
 def PrintUsage():
     executable = os.path.basename(__file__)

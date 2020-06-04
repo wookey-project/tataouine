@@ -1,12 +1,17 @@
 # Crypto related utils
 
 import math
-from Crypto.Cipher import AES
-from Crypto.Cipher import DES
-from Crypto.Cipher import DES3
-import hashlib, hmac
-
 from common_utils import *
+
+# Dynamic check for necessary Crypto Python package
+try:
+    from Crypto.Cipher import AES
+    from Crypto.Cipher import DES
+    from Crypto.Cipher import DES3
+    import hashlib, hmac
+except:
+    print("Error: it seems that the Python Crypto package is not installed or detected ... Please install it!")
+    sys.exit(-1)
 
 # Import our ECC python primitives
 sys.path.append(os.path.abspath(os.path.dirname(sys.argv[0])) + "/" + "../externals/libecc/scripts/")
