@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 ## gen_firmware.py ##
 
 from sys import argv

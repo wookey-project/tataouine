@@ -1,6 +1,3 @@
-#! /usr/bin/env python
-# -*- coding: utf-8 -*-
-
 # Decrypt a firmware and check its signature using
 # the DFU token
 

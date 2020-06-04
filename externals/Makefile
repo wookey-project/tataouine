@@ -16,8 +16,6 @@ include $(PROJ_FILES)/m_generic.mk
 
 .PHONY: $(EC_UTILS) std gnat hmac aes $(libs-y)
 
-KEY2HEADER       = $(PROJ_FILES)/tools/key2header.py
-
 ##########################################
 ##### Libecc cryptographic library
 

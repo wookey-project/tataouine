@@ -49,6 +49,7 @@ ADAKERNEL     ?= $(CONFIG_ADAKERNEL)
 ADA_RUNTIME   ?= $(ADA_RUNTIME:"%"=%)
 CROSS_COMPILE ?= $(CROSS_COMPILE:"%"=%)
 ARCH          ?= $(CONFIG_ARCH:"%"=%)
+PYTHON_CMD    ?= $(PYTHON_CMD:"%"=%)
 # defining target related options based on configuration
 BOARD          = $(CONFIG_BOARDNAME:"%"=%)
 SOC            = $(CONFIG_SOCNAME:"%"=%)
@@ -329,12 +330,12 @@ TOKEN_KEYS_PATH=$(KEYS_DIR)/
 
 # Token specific tools (signing, building, etc.)
 
-KEY2HEADER = $(PROJ_FILES)/tools/key2header.py
-KEY2JAVA = $(PROJ_FILES)/tools/key2java.py
-GENKEYS = $(PROJ_FILES)/tools/gen_keys.py
-SIGNFIRMWARE = $(PROJ_FILES)/tools/encrypt_sign_firmware.py
-VERIFYFIRMWARE = $(PROJ_FILES)/tools/decrypt_verify_firmware.py
-
+KEY2JAVA = $(PYTHON_CMD) $(PROJ_FILES)/tools/key2java.py
+GENKEYS = $(PYTHON_CMD) $(PROJ_FILES)/tools/gen_keys.py
+SIGNFIRMWARE = $(PYTHON_CMD) $(PROJ_FILES)/tools/encrypt_sign_firmware.py
+VERIFYFIRMWARE = $(PYTHON_CMD) $(PROJ_FILES)/tools/decrypt_verify_firmware.py
+GENERATEFIRMWARE = $(PYTHON_CMD) $(PROJ_FILES)/tools/gen_firmware.py
+FORMATFIRMWARE = $(PYTHON_CMD) $(PROJ_FILES)/tools/format_firmware.py
 
 ################################################################
 # About Kconfig tooling

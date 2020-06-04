@@ -1,6 +1,3 @@
-#! /usr/bin/env python
-# -*- coding: utf-8 -*-
-
 # Encrypt or decrypt in CBC-ESSIV a flat file
 
 from common_utils import *

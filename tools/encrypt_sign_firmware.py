@@ -1,8 +1,5 @@
-#! /usr/bin/env python
-# -*- coding: utf-8 -*-
-
 # Encrypt a firmware and sign it using interactions with
-# the SIG token
+# the SIG token
 
 # Import our local utils
 from common_utils import *
@@ -107,7 +104,7 @@ if __name__ == '__main__':
     dec_firmware_sig_priv_key_data = None
     dec_firmware_sig_sym_key_data = None
 
-    # Check if we want to use an external token for the signature or not
+    # Check if we want to use an external token for the signature or not
     USE_SIG_TOKEN = is_sig_token_used(keys_path+"/SIG/encrypted_platform_sig_keys.bin")
 
     if USE_SIG_TOKEN == True:
@@ -125,7 +122,7 @@ if __name__ == '__main__':
     # The signature covers Header + MAX_CHUNK_SIZE + firmware
 
     # ======================
-    # We forge the basic header = magic on 4 bytes || partition type on 4 bytes || version on 4 bytes || len of data after the header on 4 bytes || siglen on 4 bytes
+    # We forge the basic header = magic on 4 bytes || partition type on 4 bytes || version on 4 bytes || len of data after the header on 4 bytes || siglen on 4 bytes
     sigtype = None
     if USE_SIG_TOKEN == True:
         sigtype, sw1, sw2 = scp_sig.token_sig_get_sig_type()
@@ -146,7 +143,7 @@ if __name__ == '__main__':
     header = firmware_magic + expand(inttostring(firmware_partition_type), 32, "LEFT") + firmware_version + data_len_encapsulated + siglen
 
     # ======================
-    # The signature on the header + chunk_size + the CLEAR text firmware
+    # The signature on the header + chunk_size + the CLEAR text firmware
     # NOTE1: since we want to check the firmware once it is written on flash, we
     # have to sign its clear text form (and not the encrypted one).
     # NOTE2: because of ECDSA limitations of the current javacard API, we cannot

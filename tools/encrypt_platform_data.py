@@ -1,6 +1,3 @@
-#! /usr/bin/env python
-# -*- coding: utf-8 -*-
-
 from common_utils import *
 from crypto_utils import *
 
@@ -70,11 +67,8 @@ def encrypt_platform_data(argv):
         firmware_sig_priv_key_data = read_in_file(firmware_sig_priv_key)
         firmware_sig_sym_key_data = read_in_file(firmware_sig_sym_key)
  
-    outfile = open(outfile_base+'.h', 'w')
-    outfile_bin = open(outfile_base+'.bin', 'w')
-
     # The encryption and HMAC keys are from the local pet key file
-    # We only take first 64 bytes (last bytes are the IV)
+    # We only take first 64 bytes (last bytes are the IV)
     dk = local_pet_key_data[:64] 
     # The key we use is the SHA-256 of the two 32 bytes in two halves (for one-wayness)
     (dk1, _, _) = local_sha256(dk[:32])
@@ -207,18 +201,16 @@ def encrypt_platform_data(argv):
         name = "encrypted_local_pet_key_data_"+applet_type
         text += "    { .data = "+name+", .size = sizeof("+name+") },\n"
     text += "};\n"
+    # Save in header file
+    save_in_file(text, outfile_base+'.h')
 
-    outfile.write(text)
-    outfile.close()
-
-    outfile_bin.write(initial_iv+salt_data+hmac_tag+token_pub_key_data+platform_priv_key_data+platform_pub_key_data)
+    # Save in bin file 
+    encrypted_data_bin = initial_iv + salt_data + hmac_tag+token_pub_key_data + platform_priv_key_data + platform_pub_key_data     
     if (applet_type == "dfu") or (applet_type == "sig"):
-        outfile_bin.write(firmware_sig_pub_key_data)
+        encrypted_data_bin += firmware_sig_pub_key_data
     if (applet_type == "sig") and (len(argv) == 14):
-        outfile_bin.write(firmware_sig_priv_key_data)
-        outfile_bin.write(firmware_sig_sym_key_data)
-        outfile_bin.write(encrypted_local_pet_key_data)
-    outfile_bin.close()
+        encrypted_data_bin += (firmware_sig_priv_key_data + firmware_sig_sym_key_data + encrypted_local_pet_key_data)
+    save_in_file(encrypted_data_bin, outfile_base+'.bin')
     return 0
 
 

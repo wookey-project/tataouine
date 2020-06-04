@@ -1,8 +1,5 @@
 # Various utils and helpers related to the WooKey tokens
 
-from smartcard.CardType import AnyCardType
-from smartcard.CardRequest import CardRequest
-from smartcard.util import toHexString, toBytes
 import datetime
 
 from copy import deepcopy
@@ -10,6 +7,15 @@ from copy import deepcopy
 from common_utils import *
 from crypto_utils import *
 
+# Dynamic check for necessary Pyscard Python package
+try:
+    from smartcard.CardType import AnyCardType
+    from smartcard.CardRequest import CardRequest
+    from smartcard.util import toHexString, toBytes
+except:
+    print("Error: it seems that the Pyscard Python package is not installed or detected ... Please install it!")
+    sys.exit(-1)
+ 
 
 # Helper to communicate with the smartcard
 def _connect_to_token(verbose=True):
@@ -40,10 +46,6 @@ def connect_to_token(token_type=None):
                 time.sleep(1)
                 card = None
     return card
-
-# Helper to check the entropy of a string
-def check_pin_security_policy(instr):
-    return True
 
 # Send an APDU using the smartcard library
 def send_apdu(cardservice, apdu, verbose=True):

@@ -8,6 +8,7 @@ import math
 
 # Import our ECC python primitives
 sys.path.append(os.path.abspath(os.path.dirname(sys.argv[0])) + "/" + "../externals/libecc/scripts/")
+
 from expand_libecc import *
 
 ### Ctrl-C handler
@@ -27,7 +28,7 @@ def sys_cmd(cmd):
     p.wait()
     if p.returncode != 0:
         print("Error when executing command: "+cmd)
-        print("Exec Trace:\n"+out)
+        print("Exec Trace:\n"+str_decode(out))
         sys.exit(-1)
     return out
 
@@ -88,3 +89,13 @@ def str_encode(b):
         return b.encode('latin-1')
     else:
         return b
+
+## High level helpers
+# Helper to check the entropy of a string. Second argument
+# tells if this is a common string, a PIN, or a password
+def check_string_security_policy(instr, strtype='PASSWORD'):
+    if (strtype != 'PASSWORD') and (strtype != 'PIN') and (strtype != 'NAME'):
+        return False
+    # TODO: complete the checks!
+    return True
+

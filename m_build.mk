@@ -290,7 +290,7 @@ quiet_cmd_devmap           = DEVMAP
 			     $(PROJ_FILES)/layouts/tools/devheader.py $(PROJ_FILES)/layouts/boards/$(BOARDNAME)/generated $(PROJ_FILES)/layouts/boards/$(BOARDNAME)/soc-devmap-$(BOARDNAME)$(BOARDRELEASE).json
 
 quiet_cmd_format_fw        = FORMAT
-      cmd_format_fw        = $(PROJ_FILES)/tools/format_firmware.py $(PROJ_FILES)/layouts/boards/$(BOARDNAME)/soc-devmap-$(BOARDNAME)$(BOARDRELEASE).json $(BUILD_DIR)/$(CONFIG_PROJ_NAME).hex
+      cmd_format_fw        = $(FORMATFIRMWARE) $(PROJ_FILES)/layouts/boards/$(BOARDNAME)/soc-devmap-$(BOARDNAME)$(BOARDRELEASE).json $(BUILD_DIR)/$(CONFIG_PROJ_NAME).hex
 
 quiet_cmd_sign_flip        = SIGN_FLIP
       cmd_sign_flip        = $(PROJ_FILES)/tools/encrypt_sign_firmware.py $(CONFIG_PRIVATE_DIR) $< 1337 FLIP 1 16384 dead cafe
