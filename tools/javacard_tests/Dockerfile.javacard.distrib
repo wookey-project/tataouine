@@ -1,0 +1,37 @@
+# Override with --build-arg dist=ubuntu --build-arg flavor=bionic
+ARG dist=debian
+ARG flavor=buster
+
+FROM ${dist}:${flavor} as builder
+LABEL stage=javacardbuilder
+
+
+RUN apt-get update
+RUN apt-get install -y --no-install-recommends procps autoconf automake libtool m4 pkg-config help2man make gcc gcc-arm-none-eabi kconfig-frontends ant \
+                     automake autotools-dev sudo wget gnupg software-properties-common \
+                     maven git \
+                     python3-pyscard python3-crypto python3-intelhex \
+                     pcscd libpcsclite-dev opensc
+
+WORKDIR /build
+
+# Fetch the javacard SDKs
+# =======================
+RUN git clone https://github.com/martinpaljak/oracle_javacard_sdks
+
+# Build jcardsim
+# ===============
+# 1) Get OpenJDK 8 since it is jcardsim reference SDK
+RUN wget -qO - https://adoptopenjdk.jfrog.io/adoptopenjdk/api/gpg/key/public | sudo apt-key add -
+RUN sudo add-apt-repository --yes https://adoptopenjdk.jfrog.io/adoptopenjdk/deb/
+RUN sudo apt-get update && sudo apt-get install adoptopenjdk-8-hotspot
+RUN update-java-alternatives -s adoptopenjdk-8-hotspot-amd64
+# 2) Clone jcardsim repository
+RUN git clone https://github.com/licel/jcardsim
+# 3) Export the reference Javacard SDK and compile
+RUN cd jcardsim && export export JC_CLASSIC_HOME=/build/oracle_javacard_sdks/jc305u1_kit/ && mvn initialize && mvn clean install
+
+# Build vsmartcard
+# ================
+RUN git clone https://github.com/frankmorgner/vsmartcard.git
+RUN cd vsmartcard/virtualsmartcard && autoreconf --verbose --install && ./configure --sysconfdir=/etc && make && make install

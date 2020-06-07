@@ -1,0 +1,9 @@
+FROM javacard as builder
+LABEL stage=javacardbuilder
+
+WORKDIR /build
+
+COPY ./ /build
+
+# Run our tests
+RUN sh tools/javacard_tests/javacart_tests.sh
