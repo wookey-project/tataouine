@@ -1,13 +1,15 @@
 # Various utils and helpers common to all our scripts
 
-import sys, os, array, time
+import sys, os, array, time, inspect
 import binascii
 from subprocess import Popen, PIPE, STDOUT
 from threading import Timer
 import math
 
+FILENAME = inspect.getframeinfo(inspect.currentframe()).filename
+SCRIPT_PATH = os.path.dirname(os.path.abspath(FILENAME)) + "/"
 # Import our ECC python primitives
-sys.path.append(os.path.abspath(os.path.dirname(sys.argv[0])) + "/" + "../externals/libecc/scripts/")
+sys.path.append(SCRIPT_PATH + "/" + "../externals/libecc/scripts/")
 
 from expand_libecc import *
 

@@ -13,10 +13,6 @@ except:
     print("Error: it seems that the Python Crypto package is not installed or detected ... Please install it!")
     sys.exit(-1)
 
-# Import our ECC python primitives
-sys.path.append(os.path.abspath(os.path.dirname(sys.argv[0])) + "/" + "../externals/libecc/scripts/")
-from expand_libecc import *
-
 # Get the curve and signature algorithm from a structured key
 # [RB] FIXME: the algorithm and curve 'enum' values are hardcoded
 # and supposed fixed in libecc. This is a bit tedious and error prone:
