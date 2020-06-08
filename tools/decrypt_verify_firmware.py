@@ -83,7 +83,8 @@ if __name__ == '__main__':
         print("Error: encrypted firmware length %d does not match the one in the header %d!" % (len(encrypted_content), data_len))
         sys.exit(-1)
     # Now extract the signature information from the public key
-    SCRIPT_PATH = os.path.abspath(os.path.dirname(sys.argv[0])) + "/"
+    FILENAME = inspect.getframeinfo(inspect.currentframe()).filename
+    SCRIPT_PATH = os.path.dirname(os.path.abspath(FILENAME)) + "/"
     firmware_sig_pub_key_data = read_in_file(keys_path+"/SIG/token_sig_firmware_public_key.bin") 
     ret_alg, ret_curve, prime, a, b, gx, gy, order, cofactor = get_curve_from_key(firmware_sig_pub_key_data)
     # Sanity check: the algorithm should be ECDSA 

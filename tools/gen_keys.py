@@ -16,7 +16,8 @@ if __name__ == '__main__':
     # Register Ctrl+C handler
     signal.signal(signal.SIGINT, handler)
     # Current script path
-    SCRIPT_PATH = os.path.abspath(os.path.dirname(sys.argv[0])) + "/"
+    FILENAME = inspect.getframeinfo(inspect.currentframe()).filename
+    SCRIPT_PATH = os.path.dirname(os.path.abspath(FILENAME)) + "/"
     
     # Get the current interpreter
     INTERPRETER  = sys.executable
