@@ -1,4 +1,4 @@
-FROM javacard as builder
+FROM h2lab/javacardbuilder as builder
 LABEL stage=javacardbuilder
 
 WORKDIR /build
