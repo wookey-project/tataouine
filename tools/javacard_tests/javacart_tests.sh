@@ -1,7 +1,7 @@
 #!/bin/sh
 
 cp -r /build/oracle_javacard_sdks/* /build/javacard/applet/sdks/
-/bin/bash -c "export CROSS_COMPILE=arm-none-eabi && cd /build && rm -rf /build/build && rm -rf /build/private/ && source setenv.sh && make wookey-v2/graphic_hs_defconfig && make genkeys && make javacard_compile"
+/bin/bash -c "export CROSS_COMPILE=arm-none-eabi- && cd /build && rm -rf /build/build && rm -rf /build/private/ && rm -rf /build/javacard/applet/build_auth && rm -rf /build/javacard/applet/build_dfu && rm -rf /build/javacard/applet/build_sig && source setenv.sh && make wookey-v2/graphic_hs_defconfig && make genkeys && make javacard_compile"
 
 # We launch pcscd
 pcscd -f &>/tmp/log_pcsc &
@@ -27,5 +27,5 @@ python3 tools/javacard_tests/basic_token_test.py SIG /build/private 1234 1234
 mkdir -p ./build/armv7-m/wookey/
 dd if=/dev/urandom of=./build/armv7-m/wookey/flip_fw.bin bs=1024 count=1024
 dd if=/dev/urandom of=./build/armv7-m/wookey/flop_fw.bin bs=1024 count=1024
-/bin/bash -c "export CROSS_COMPILE=arm-none-eabi && source setenv.sh && make sign tosign=flop chunksize=4096 version=1.0.0.1 && make sign tosign=flip chunksize=4096 version=1.0.0.2"
-/bin/bash -c "export CROSS_COMPILE=arm-none-eabi && source setenv.sh && make verify toverify=flip:flop"
+/bin/bash -c "export CROSS_COMPILE=arm-none-eabi- && source setenv.sh && make sign tosign=flop chunksize=4096 version=1.0.0.1 && make sign tosign=flip chunksize=4096 version=1.0.0.2"
+/bin/bash -c "export CROSS_COMPILE=arm-none-eabi- && source setenv.sh && make verify toverify=flip:flop"
