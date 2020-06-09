@@ -1,7 +1,7 @@
 #!/bin/sh
 
 cp -r /build/oracle_javacard_sdks/* /build/javacard/applet/sdks/
-/bin/bash -c "rm -r /build/setenv.local.sh && export CROSS_COMPILE=arm-none-eabi- && cd /build && rm -rf /build/build && rm -rf /build/private/ && rm -rf /build/javacard/applet/ant-javacard.jar && rm -rf /build/javacard/applet/gp.jar && rm -rf /build/javacard/applet/build_auth && rm -rf /build/javacard/applet/build_dfu && rm -rf /build/javacard/applet/build_sig && source setenv.sh && make wookey-v2/graphic_hs_defconfig && make prepare && make genkeys && make javacard_compile"
+/bin/bash -c "rm -f /build/setenv.local.sh && rm -f /build/.config && export CROSS_COMPILE=arm-none-eabi- && cd /build && rm -rf /build/build && rm -rf /build/private/ && rm -rf /build/javacard/applet/ant-javacard.jar && rm -rf /build/javacard/applet/gp.jar && rm -rf /build/javacard/applet/build_auth && rm -rf /build/javacard/applet/build_dfu && rm -rf /build/javacard/applet/build_sig && source setenv.sh && make wookey/proj_wookey/wookey-v2/graphic_hs_defconfig && make prepare && make genkeys && make javacard_compile"
 
 # We launch pcscd
 pcscd -f &>/tmp/log_pcsc &
