@@ -105,26 +105,32 @@ fi
 # By default, it is the distribution python.
 if [ -z "$PYTHON_CMD" ]
 then
+    echo "Looking for suitable python and deps"
     # Try to guess which python we want to use depending on the installed
     # packages. We need Pyscard, Crypto, and IntelHex
-    if python -c 'import smartcard, Crypto, intelhex' &>/dev/null;
-    then
-        export PYTHON_CMD="python"
-    else
-        if python3 -c 'import smartcard, Crypto, intelhex' &>/dev/null;
-        then
-            export PYTHON_CMD="python3"
+    for i in python python3 python2; do
+      if [ -x "`which $i`" ]; then 
+        PYTHON_CMD=$i
+        MISSING=""
+        for j in smartcard Crypto intelhex; do
+          eval "$i -c 'import $j' 2>/dev/null" || MISSING="$MISSING $j"
+        done
+        if [ -z "$MISSING" ];then 
+          echo "\tFound $PYTHON_CMD and the required deps"
+          break
         else
-            if python2 -c 'import smartcard, Crypto, intelhex' &>/dev/null;
-            then
-                export PYTHON_CMD="python2"
-            else
-                echo "Failed to find a suitable Python with Pyscard, Crypto, and IntelHex packages! Please install them or provide custom \$PYTHON_CMD variable!"
-            fi
+          echo "\tFound $PYTHON_CMD but $MISSING is not available" >&2
+          PYTHON_CMD=""
         fi
-    fi
-else
-    export PYTHON_CMD=$PYTHON_CMD 
+      else
+          echo "\tFailed to find $i" 
+      fi
+    done  
+    if [ -z "$PYTHON_CMD" ]; then
+      echo "Failed to find working python cmd!" >&2
+    else
+      export PYTHON_CMD
+   fi
 fi
 
 # All the above variables are "standard values". Now you can override any of
@@ -170,54 +176,40 @@ fi
 # Sanity check on the chosen Java JDK version
 # returns the JDK version.
 # 8 for 1.8.0_nn, 9 for 9-ea etc, and "no_java" for undetected
-jdk_version() {
-  local result
-  local java_cmd
-  if [[ -n $(type -p java) ]]
-  then
+jdk_version() (
+  if which java >/dev/null; then
     java_cmd=java
-  elif [[ (-n "$JAVA_HOME") && (-x "$JAVA_HOME/bin/java") ]]
-  then
+  elif [ (-n "$JAVA_HOME") -a (-x "$JAVA_HOME/bin/java") ]; then
     java_cmd="$JAVA_HOME/bin/java"
   fi
-  local IFS=$'\n'
-  # remove \r for Cygwin
-  local lines=$("$java_cmd" -Xms32M -Xmx32M -version 2>&1 | tr '\r' '\n')
-  if [[ -z $java_cmd ]]
-  then
-    result=no_java
-  else
-    for line in $lines; do
-      if [[ (-z $result) && ($line = *"version \""*) ]]
-      then
-        local ver=$(echo $line | sed -e 's/.*version "\(.*\)"\(.*\)/\1/; 1q')
-        # on macOS, sed doesn't support '?'
-        if [[ $ver = "1."* ]]
-        then
-          result=$(echo $ver | sed -e 's/1\.\([0-9]*\)\(.*\)/\1/; 1q')
-        else
-          result=$(echo $ver | sed -e 's/\([0-9]*\)\(.*\)/\1/; 1q')
-        fi
-      fi
-    done
-  fi
-  echo "$result"
-} 
+  result=$("$java_cmd" -Xms32M -Xmx32M -version 2>&1 | perl -ne '/version\s+"(1\.)?(\d+)/ and print "$2"')
+  echo "${result:-no_java}"
+) 
+
 JAVA_VERSION="$(jdk_version)"
-if [ "$JAVA_VERSION" == "no_java" ]; then
-        echo -e "\e[31mWARNING: JDK version cannot be detected ...\e[0m"
-        echo -e "\e[31m  Do you have java JDK (8 to 11) installed?\e[0m"
-        echo -e "\e[31m  Compilation might fail!\e[0m"
+TERMRED=`tput setaf 1`
+TERMNORM=`tput sgr0`
+
+if [ "$JAVA_VERSION" = "no_java" ]; then
+cat <<EOF
+$TERMRED WARNING: JDK version cannot be detected ...
+  Do you have java JDK (8 to 11) installed?
+  Compilation might fail!$TERNORM
+EOF
 else
     if [ "$JAVA_VERSION" -le 7 ]; then
-        echo -e "\e[31mWARNING: JDK version $JAVA_VERSION is < 8\e[0m"
-        echo -e "\e[31m  This JDK version is not compatible with\e[0m"
-        echo -e "\e[31m  the Javacard SDK, compilation might fail!\e[0m"
+cat <<EOF        
+$TERMRED WARNING: JDK version $JAVA_VERSION is < 8
+  This JDK version is not compatible with
+  the Javacard SDK, compilation might fail!$TERMNORM
+EOF
     else
         if [ "$JAVA_VERSION" -ge 12 ]; then
-            echo -e "\e[31mWARNING: JDK version $JAVA_VERSION is > 11\e[0m"
-            echo -e "\e[31m  This JDK version is not compatible with\e[0m"
-            echo -e "\e[31m  the Javacard SDK, compilation might fail!\e[0m"
+cat <<EOF         
+$TERMRED WARNING: JDK version $JAVA_VERSION is > 11
+  This JDK version is not compatible with
+  the Javacard SDK, compilation might fail!$TERMNORM
+EOF
         else
             echo "Java JDK $JAVA_VERSION OK"
         fi
@@ -243,6 +235,6 @@ echo " *PYTHON_CMD    = $PYTHON_CMD"
 echo
 echo "========================================================="
 
-if test -z "$ADA_RUNTIME"; then
+if  [ -z "$ADA_RUNTIME" ]; then
     echo "Invalid ADA_RUNTIME! Please check that your Ada toolchain binaries are in your PATH"
 fi
