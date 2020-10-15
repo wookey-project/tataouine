@@ -91,7 +91,8 @@ if __name__ == '__main__':
     firmware_to_sign = read_in_file(firmware_to_sign_file)
 
     # Current script path
-    SCRIPT_PATH = os.path.abspath(os.path.dirname(sys.argv[0])) + "/"
+    FILENAME = inspect.getframeinfo(inspect.currentframe()).filename
+    SCRIPT_PATH = os.path.dirname(os.path.abspath(FILENAME)) + "/"
     # Variable used when the SIG token is used
     card = None
     scp_sig = None
