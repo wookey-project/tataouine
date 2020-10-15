@@ -179,7 +179,7 @@ fi
 jdk_version() (
   if which java >/dev/null; then
     java_cmd=java
-  elif [ (-n "$JAVA_HOME") -a (-x "$JAVA_HOME/bin/java") ]; then
+  elif [ -n "$JAVA_HOME" -a -x "$JAVA_HOME/bin/java" ]; then
     java_cmd="$JAVA_HOME/bin/java"
   fi
   result=$("$java_cmd" -Xms32M -Xmx32M -version 2>&1 | perl -ne '/version\s+"(1\.)?(\d+)/ and print "$2"')
