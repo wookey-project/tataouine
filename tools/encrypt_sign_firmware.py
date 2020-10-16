@@ -53,9 +53,17 @@ if __name__ == '__main__':
     # Default values for the DFU suffix
     usb_vid = usb_pid = 0xffff
     if len(sys.argv) > 7:
-        usb_vid = int(sys.argv[7], 16)
+        try:
+            usb_vid = int(sys.argv[7], 16)
+        except:
+            print("Sorry, '%s' is not a valid USB Vendor ID!!" % sys.argv[7])
+            sys.exit(-1);
     if len(sys.argv) > 8:
-        usb_pid = int(sys.argv[8], 16)
+        try:
+            usb_pid = int(sys.argv[8], 16)
+        except:
+            print("Sorry, '%s' is not a valid USB Product ID!!" % sys.argv[8])
+            sys.exit(-1);
 
     if usb_vid > 0xffff:
         print("Error: provided USB Vendor ID %d is invalid (> 0xffff)" % (usb_vid))
