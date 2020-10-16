@@ -293,10 +293,10 @@ quiet_cmd_format_fw        = FORMAT
       cmd_format_fw        = $(FORMATFIRMWARE) $(PROJ_FILES)/layouts/boards/$(BOARDNAME)/soc-devmap-$(BOARDNAME)$(BOARDRELEASE).json $(BUILD_DIR)/$(CONFIG_PROJ_NAME).hex
 
 quiet_cmd_sign_flip        = SIGN_FLIP
-      cmd_sign_flip        = $(PROJ_FILES)/tools/encrypt_sign_firmware.py $(CONFIG_PRIVATE_DIR) $< 123456789 FLIP 1 16384 $(CONFIG_USR_LIB_USBCTRL_DEV_VENDORID) $(CONFIG_USR_LIB_USBCTRL_DFU_DEV_PRODUCTID)
+      cmd_sign_flip        = $(PROJ_FILES)/tools/encrypt_sign_firmware.py $(CONFIG_PRIVATE_DIR) $< 123456789 FLIP 1 16384 "$(CONFIG_USR_LIB_USBCTRL_DEV_VENDORID) "$(CONFIG_USR_LIB_USBCTRL_DFU_DEV_PRODUCTID)"
 
 quiet_cmd_sign_flop        = SIGN_FLOP
-      cmd_sign_flop        = $(PROJ_FILES)/tools/encrypt_sign_firmware.py $(CONFIG_PRIVATE_DIR) $< 123456789 FLOP 1 16384 $(CONFIG_USR_LIB_USBCTRL_DEV_VENDORID) $(CONFIG_USR_LIB_USBCTRL_DFU_DEV_PRODUCTID)
+      cmd_sign_flop        = $(PROJ_FILES)/tools/encrypt_sign_firmware.py $(CONFIG_PRIVATE_DIR) $< 123456789 FLOP 1 16384 "$(CONFIG_USR_LIB_USBCTRL_DEV_VENDORID)" "$(CONFIG_USR_LIB_USBCTRL_DFU_DEV_PRODUCTID)"
 
 # extract existing sphinx doc from libs and drivers to fusion with wookeypedia in a single global website
 quiet_cmd_load_libs_docs    = LOAD_LIBS_DOCS
