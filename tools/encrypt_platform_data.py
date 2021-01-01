@@ -49,7 +49,7 @@ def encrypt_platform_data(argv):
         # to use an external smartcard for this
         firmware_sig_priv_key = argv[12]
         firmware_sig_sym_key = argv[13]
-            
+
     token_pub_key_data = read_in_file(token_pub_key)
     local_pet_key_data = read_in_file(local_pet_key)
     salt_data = read_in_file(salt)
@@ -66,10 +66,10 @@ def encrypt_platform_data(argv):
         # to use an external smartcard for this
         firmware_sig_priv_key_data = read_in_file(firmware_sig_priv_key)
         firmware_sig_sym_key_data = read_in_file(firmware_sig_sym_key)
- 
+
     # The encryption and HMAC keys are from the local pet key file
     # We only take first 64 bytes (last bytes are the IV)
-    dk = local_pet_key_data[:64] 
+    dk = local_pet_key_data[:64]
     # The key we use is the SHA-256 of the two 32 bytes in two halves (for one-wayness)
     (dk1, _, _) = local_sha256(dk[:32])
     (dk2, _, _) = local_sha256(dk[32:])
@@ -82,7 +82,7 @@ def encrypt_platform_data(argv):
     counter_inc = initial_iv
     cipher = local_AES.new(enc_key, AES.MODE_CTR, iv=counter_inc)
     token_pub_key_data = cipher.encrypt(token_pub_key_data)
-    platform_priv_key_data = cipher.encrypt(platform_priv_key_data) 
+    platform_priv_key_data = cipher.encrypt(platform_priv_key_data)
     platform_pub_key_data = cipher.encrypt(platform_pub_key_data)
     if (applet_type == "dfu") or (applet_type == "sig"):
         firmware_sig_pub_key_data = cipher.encrypt(firmware_sig_pub_key_data)
@@ -109,12 +109,12 @@ def encrypt_platform_data(argv):
     hm = local_hmac.new(hmac_key, digestmod=hashlib.sha256)
     hm.update(dk[32:])
     hmac_tag = hm.digest()
- 
+
     # Curve name
     text  = "#ifndef USED_SIGNATURE_CURVE\n"
     text += "#define USED_SIGNATURE_CURVE "+curve_name+"\n"
     text += "#endif\n"
- 
+
     # PBKDF2 iterations
     text += "#ifndef PLATFORM_PBKDF2_ITERATIONS\n"
     text += "#define PLATFORM_PBKDF2_ITERATIONS "+str(pbkdf2_iterations)+"\n"
@@ -133,50 +133,50 @@ def encrypt_platform_data(argv):
         text += "#define ENCRYPTED_LOCAL_PET_KEY_IDX_"+applet_type.upper()+" 9\n"
     text += "\n\n"
     # IV
-    text += "unsigned char platform_iv_"+applet_type+"[]    = { "
+    text += "__attribute__((section(\".noupgrade."+applet_type+"\"))) unsigned char platform_iv_"+applet_type+"[]    = { "
     for byte in initial_iv:
         text += "0x%02x, " % stringtoint(byte)
     # Salt
-    text += " };\n\nunsigned char platform_salt_"+applet_type+"[]  = { "
+    text += " };\n\n__attribute__((section(\".noupgrade."+applet_type+"\"))) unsigned char platform_salt_"+applet_type+"[]  = { "
     for byte in salt_data:
         text += "0x%02x, " % stringtoint(byte)
     # HMAC tag
-    text += " };\n\nunsigned char platform_hmac_tag_"+applet_type+"[]  = { "
+    text += " };\n\n__attribute__((section(\".noupgrade."+applet_type+"\"))) unsigned char platform_hmac_tag_"+applet_type+"[]  = { "
     for byte in hmac_tag:
         text += "0x%02x, " % stringtoint(byte)
     # Encrypted token_pub_key_data
-    text += " };\n\nunsigned char token_pub_key_data_"+applet_type+"[]  = { "
+    text += " };\n\n__attribute__((section(\".noupgrade."+applet_type+"\"))) unsigned char token_pub_key_data_"+applet_type+"[]  = { "
     for byte in token_pub_key_data:
         text += "0x%02x, " % stringtoint(byte)
     # Encrypted platform_priv_key_data
-    text += " };\n\nunsigned char platform_priv_key_data_"+applet_type+"[]  = { "
+    text += " };\n\n__attribute__((section(\".noupgrade."+applet_type+"\"))) unsigned char platform_priv_key_data_"+applet_type+"[]  = { "
     for byte in platform_priv_key_data:
         text += "0x%02x, " % stringtoint(byte)
     # Encrypted platform_pub_key_data
-    text += " };\n\nunsigned char platform_pub_key_data_"+applet_type+"[]  = { "
+    text += " };\n\n__attribute__((section(\".noupgrade."+applet_type+"\"))) unsigned char platform_pub_key_data_"+applet_type+"[]  = { "
     for byte in platform_pub_key_data:
         text += "0x%02x, " % stringtoint(byte)
     # Encrypted firmware signature_pub_key_data only for DFU and SIG bag
     if (applet_type == "dfu") or (applet_type == "sig"):
-        text += " };\n\nunsigned char firmware_sig_pub_key_data_"+applet_type+"[]  = { "
+        text += " };\n\n__attribute__((section(\".noupgrade."+applet_type+"\"))) unsigned char firmware_sig_pub_key_data_"+applet_type+"[]  = { "
         for byte in firmware_sig_pub_key_data:
-            text += "0x%02x, " % stringtoint(byte) 
+            text += "0x%02x, " % stringtoint(byte)
     # Encrypted firmware private signature key and symmetric key only for SIG bag when explicitly asked for
     if (applet_type == "sig") and (len(argv) == 14):
-        text += " };\n\nunsigned char firmware_sig_priv_key_data_"+applet_type+"[]  = { "
+        text += " };\n\n__attribute__((section(\".noupgrade."+applet_type+"\"))) unsigned char firmware_sig_priv_key_data_"+applet_type+"[]  = { "
         for byte in firmware_sig_priv_key_data:
-            text += "0x%02x, " % stringtoint(byte) 
-        text += " };\n\nunsigned char firmware_sig_sym_key_data_"+applet_type+"[]  = { "
+            text += "0x%02x, " % stringtoint(byte)
+        text += " };\n\n__attribute__((section(\".noupgrade."+applet_type+"\"))) unsigned char firmware_sig_sym_key_data_"+applet_type+"[]  = { "
         for byte in firmware_sig_sym_key_data:
             text += "0x%02x, " % stringtoint(byte)
-        text += " };\n\nunsigned char encrypted_local_pet_key_data_"+applet_type+"[]  = { "
+        text += " };\n\n__attribute__((section(\".noupgrade."+applet_type+"\"))) unsigned char encrypted_local_pet_key_data_"+applet_type+"[]  = { "
         for byte in encrypted_local_pet_key_data:
             text += "0x%02x, " % stringtoint(byte)
-      
+
     text += "};\n\n\n"
 
     # Now create the keybag structure
-    text += "databag keybag_"+applet_type+"[] = {\n"
+    text += "__attribute__((section(\".noupgrade."+applet_type+"\"))) databag keybag_"+applet_type+"[] = {\n"
 
     name = "platform_iv_"+applet_type
     text += "    { .data = "+name+", .size = sizeof("+name+") },\n"
@@ -204,8 +204,8 @@ def encrypt_platform_data(argv):
     # Save in header file
     save_in_file(text, outfile_base+'.h')
 
-    # Save in bin file 
-    encrypted_data_bin = initial_iv + salt_data + hmac_tag+token_pub_key_data + platform_priv_key_data + platform_pub_key_data     
+    # Save in bin file
+    encrypted_data_bin = initial_iv + salt_data + hmac_tag+token_pub_key_data + platform_priv_key_data + platform_pub_key_data
     if (applet_type == "dfu") or (applet_type == "sig"):
         encrypted_data_bin += firmware_sig_pub_key_data
     if (applet_type == "sig") and (len(argv) == 14):
