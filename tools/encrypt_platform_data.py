@@ -143,177 +143,56 @@ def encrypt_platform_data(argv):
     else:
         bkup_sram_cfg = "SIG_USE_BKUP_SRAM"
 
-    text += "#ifdef "+bkup_sram_cfg+"\n\n"
-    # IV
-    text += "__attribute__((section(\".noupgrade."+applet_type+".flash\"))) const unsigned char flash_platform_iv_"+applet_type+"[]    = { "
-    for byte in initial_iv:
-        text += "0x%02x, " % stringtoint(byte)
-    text += " };\n\n__attribute__((section(\".noupgrade."+applet_type+"\"))) const unsigned char platform_iv_"+applet_type+"[]    = { "
-    for byte in initial_iv:
-        text += "0x%02x, " % 0
-    # Salt
-    text += " };\n\n__attribute__((section(\".noupgrade."+applet_type+".flash\"))) const unsigned char flash_platform_salt_"+applet_type+"[]  = { "
-    for byte in salt_data:
-        text += "0x%02x, " % stringtoint(byte)
-    text += " };\n\n__attribute__((section(\".noupgrade."+applet_type+"\"))) const unsigned char platform_salt_"+applet_type+"[]  = { "
-    for byte in salt_data:
-        text += "0x%02x, " % 0
-    # HMAC tag
-    text += " };\n\n__attribute__((section(\".noupgrade."+applet_type+".flash\"))) const unsigned char flash_platform_hmac_tag_"+applet_type+"[]  = { "
-    for byte in hmac_tag:
-        text += "0x%02x, " % stringtoint(byte)
-    text += " };\n\n__attribute__((section(\".noupgrade."+applet_type+"\"))) const unsigned char platform_hmac_tag_"+applet_type+"[]  = { "
-    for byte in hmac_tag:
-        text += "0x%02x, " % 0
-    # Encrypted token_pub_key_data
-    text += " };\n\n__attribute__((section(\".noupgrade."+applet_type+".flash\"))) const unsigned char flash_token_pub_key_data_"+applet_type+"[]  = { "
-    for byte in token_pub_key_data:
-        text += "0x%02x, " % stringtoint(byte)
-    text += " };\n\n__attribute__((section(\".noupgrade."+applet_type+"\"))) const unsigned char token_pub_key_data_"+applet_type+"[]  = { "
-    for byte in token_pub_key_data:
-        text += "0x%02x, " % 0
-    # Encrypted platform_priv_key_data
-    text += " };\n\n__attribute__((section(\".noupgrade."+applet_type+".flash\"))) const unsigned char flash_platform_priv_key_data_"+applet_type+"[]  = { "
-    for byte in platform_priv_key_data:
-        text += "0x%02x, " % stringtoint(byte)
-    text += " };\n\n__attribute__((section(\".noupgrade."+applet_type+"\"))) const unsigned char platform_priv_key_data_"+applet_type+"[]  = { "
-    for byte in platform_priv_key_data:
-        text += "0x%02x, " % 0
-    # Encrypted platform_pub_key_data
-    text += " };\n\n__attribute__((section(\".noupgrade."+applet_type+".flash\"))) const unsigned char flash_platform_pub_key_data_"+applet_type+"[]  = { "
-    for byte in platform_pub_key_data:
-        text += "0x%02x, " % stringtoint(byte)
-    text += " };\n\n__attribute__((section(\".noupgrade."+applet_type+"\"))) const unsigned char platform_pub_key_data_"+applet_type+"[]  = { "
-    for byte in platform_pub_key_data:
-        text += "0x%02x, " % 0
-    # Encrypted firmware signature_pub_key_data only for DFU and SIG bag
-    if (applet_type == "dfu") or (applet_type == "sig"):
-        text += " };\n\n__attribute__((section(\".noupgrade."+applet_type+".flash\"))) const unsigned char flash_firmware_sig_pub_key_data_"+applet_type+"[]  = { "
-        for byte in firmware_sig_pub_key_data:
-            text += "0x%02x, " % stringtoint(byte)
-        text += " };\n\n__attribute__((section(\".noupgrade."+applet_type+"\"))) const unsigned char firmware_sig_pub_key_data_"+applet_type+"[]  = { "
-        for byte in firmware_sig_pub_key_data:
-            text += "0x%02x, " % 0
-    # Encrypted firmware private signature key and symmetric key only for SIG bag when explicitly asked for
-    if (applet_type == "sig") and (len(argv) == 14):
-        text += " };\n\n__attribute__((section(\".noupgrade."+applet_type+".flash\"))) const unsigned char flash_firmware_sig_priv_key_data_"+applet_type+"[]  = { "
-        for byte in firmware_sig_priv_key_data:
-            text += "0x%02x, " % stringtoint(byte)
-        text += " };\n\n__attribute__((section(\".noupgrade."+applet_type+"\"))) const unsigned char firmware_sig_priv_key_data_"+applet_type+"[]  = { "
-        for byte in firmware_sig_priv_key_data:
-            text += "0x%02x, " % 0
-        #
-        text += " };\n\n__attribute__((section(\".noupgrade."+applet_type+".flash\"))) const unsigned char flash_firmware_sig_sym_key_data_"+applet_type+"[]  = { "
-        for byte in firmware_sig_sym_key_data:
-            text += "0x%02x, " % stringtoint(byte)
-        text += " };\n\n__attribute__((section(\".noupgrade."+applet_type+"\"))) const unsigned char firmware_sig_sym_key_data_"+applet_type+"[]  = { "
-        for byte in firmware_sig_sym_key_data:
-            text += "0x%02x, " % 0
-        #
-        text += " };\n\n__attribute__((section(\".noupgrade."+applet_type+".flash\"))) const unsigned char flash_encrypted_local_pet_key_data_"+applet_type+"[]  = { "
-        for byte in encrypted_local_pet_key_data:
-            text += "0x%02x, " % stringtoint(byte)
-        text += " };\n\n__attribute__((section(\".noupgrade."+applet_type+"\"))) const unsigned char encrypted_local_pet_key_data_"+applet_type+"[]  = { "
-        for byte in encrypted_local_pet_key_data:
-            text += "0x%02x, " % 0
-
-    text += "};\n\n\n"
-
-    # Now create the keybag structure in SRAM
-    text += "databag keybag_"+applet_type+"[] = {\n"
-    name = "platform_iv_"+applet_type
-    text += "    { .data = (unsigned char*)"+name+", .size = sizeof("+name+") },\n"
-    name = "platform_salt_"+applet_type
-    text += "    { .data = (unsigned char*)"+name+", .size = sizeof("+name+") },\n"
-    name = "platform_hmac_tag_"+applet_type
-    text += "    { .data = (unsigned char*)"+name+", .size = sizeof("+name+") },\n"
-    name = "token_pub_key_data_"+applet_type
-    text += "    { .data = (unsigned char*)"+name+", .size = sizeof("+name+") },\n"
-    name = "platform_priv_key_data_"+applet_type
-    text += "    { .data = (unsigned char*)"+name+", .size = sizeof("+name+") },\n"
-    name = "platform_pub_key_data_"+applet_type
-    text += "    { .data = (unsigned char*)"+name+", .size = sizeof("+name+") },\n"
-    if (applet_type == "dfu") or (applet_type == "sig"):
-        name = "firmware_sig_pub_key_data_"+applet_type
-        text += "    { .data = (unsigned char*)"+name+", .size = sizeof("+name+") },\n"
-    if (applet_type == "sig") and (len(argv) == 14):
-        name = "firmware_sig_priv_key_data_"+applet_type
-        text += "    { .data = (unsigned char*)"+name+", .size = sizeof("+name+") },\n"
-        name = "firmware_sig_sym_key_data_"+applet_type
-        text += "    { .data = (unsigned char*)"+name+", .size = sizeof("+name+") },\n"
-        name = "encrypted_local_pet_key_data_"+applet_type
-        text += "    { .data = (unsigned char*)"+name+", .size = sizeof("+name+") },\n"
-    text += "};\n"
-    # Now create the keybag structure in FLASH
-    text += "databag flash_keybag_"+applet_type+"[] = {\n"
-    name = "flash_platform_iv_"+applet_type
-    text += "    { .data = (unsigned char*)"+name+", .size = sizeof("+name+") },\n"
-    name = "flash_platform_salt_"+applet_type
-    text += "    { .data = (unsigned char*)"+name+", .size = sizeof("+name+") },\n"
-    name = "flash_platform_hmac_tag_"+applet_type
-    text += "    { .data = (unsigned char*)"+name+", .size = sizeof("+name+") },\n"
-    name = "flash_token_pub_key_data_"+applet_type
-    text += "    { .data = (unsigned char*)"+name+", .size = sizeof("+name+") },\n"
-    name = "flash_platform_priv_key_data_"+applet_type
-    text += "    { .data = (unsigned char*)"+name+", .size = sizeof("+name+") },\n"
-    name = "flash_platform_pub_key_data_"+applet_type
-    text += "    { .data = (unsigned char*)"+name+", .size = sizeof("+name+") },\n"
-    if (applet_type == "dfu") or (applet_type == "sig"):
-        name = "flash_firmware_sig_pub_key_data_"+applet_type
-        text += "    { .data = (unsigned char*)"+name+", .size = sizeof("+name+") },\n"
-    if (applet_type == "sig") and (len(argv) == 14):
-        name = "flash_firmware_sig_priv_key_data_"+applet_type
-        text += "    { .data = (unsigned char*)"+name+", .size = sizeof("+name+") },\n"
-        name = "flash_firmware_sig_sym_key_data_"+applet_type
-        text += "    { .data = (unsigned char*)"+name+", .size = sizeof("+name+") },\n"
-        name = "flash_encrypted_local_pet_key_data_"+applet_type
-        text += "    { .data = (unsigned char*)"+name+", .size = sizeof("+name+") },\n"
-    text += "};\n"
+    text += "/* Handle backup SRAM usage for the keybag content */\n"
+    text += "#ifdef "+bkup_sram_cfg+"\n"
+    text += "  #define KEYBAG_SECTION "+"__attribute__((section(\".noupgrade."+applet_type+")))\n"
+    text += "#else\n"
+    text += "  #define KEYBAG_SECTION\n"
+    text += "#endif /* "+bkup_sram_cfg+" */\n\n\n"
     
     ###############
-    # Case where we use the keybags in regular FLIP/GLOP flash
+    # Handle the keybags
     ###############
-    text += "#else\n\n"
     # IV
-    text += "const unsigned char platform_iv_"+applet_type+"[]    = { "
+    text += "KEYBAG_SECTION const unsigned char platform_iv_"+applet_type+"[]    = { "
     for byte in initial_iv:
         text += "0x%02x, " % stringtoint(byte)
     # Salt
-    text += " };\n\nconst unsigned char platform_salt_"+applet_type+"[]  = { "
+    text += " };\n\nKEYBAG_SECTION const unsigned char platform_salt_"+applet_type+"[]  = { "
     for byte in salt_data:
         text += "0x%02x, " % stringtoint(byte)
     # HMAC tag
-    text += " };\n\nconst unsigned char platform_hmac_tag_"+applet_type+"[]  = { "
+    text += " };\n\nKEYBAG_SECTION const unsigned char platform_hmac_tag_"+applet_type+"[]  = { "
     for byte in hmac_tag:
         text += "0x%02x, " % stringtoint(byte)
     # Encrypted token_pub_key_data
-    text += " };\n\nconst unsigned char token_pub_key_data_"+applet_type+"[]  = { "
+    text += " };\n\nKEYBAG_SECTION const unsigned char token_pub_key_data_"+applet_type+"[]  = { "
     for byte in token_pub_key_data:
         text += "0x%02x, " % stringtoint(byte)
     # Encrypted platform_priv_key_data
-    text += " };\n\nconst unsigned char platform_priv_key_data_"+applet_type+"[]  = { "
+    text += " };\n\nKEYBAG_SECTION const unsigned char platform_priv_key_data_"+applet_type+"[]  = { "
     for byte in platform_priv_key_data:
         text += "0x%02x, " % stringtoint(byte)
     # Encrypted platform_pub_key_data
-    text += " };\n\nconst unsigned char platform_pub_key_data_"+applet_type+"[]  = { "
+    text += " };\n\nKEYBAG_SECTION const unsigned char platform_pub_key_data_"+applet_type+"[]  = { "
     for byte in platform_pub_key_data:
         text += "0x%02x, " % stringtoint(byte)
     # Encrypted firmware signature_pub_key_data only for DFU and SIG bag
     if (applet_type == "dfu") or (applet_type == "sig"):
-        text += " };\n\nconst unsigned char firmware_sig_pub_key_data_"+applet_type+"[]  = { "
+        text += " };\n\nKEYBAG_SECTION const unsigned char firmware_sig_pub_key_data_"+applet_type+"[]  = { "
         for byte in firmware_sig_pub_key_data:
             text += "0x%02x, " % stringtoint(byte)
     # Encrypted firmware private signature key and symmetric key only for SIG bag when explicitly asked for
     if (applet_type == "sig") and (len(argv) == 14):
-        text += " };\n\nconst unsigned char firmware_sig_priv_key_data_"+applet_type+"[]  = { "
+        text += " };\n\nKEYBAG_SECTION const unsigned char firmware_sig_priv_key_data_"+applet_type+"[]  = { "
         for byte in firmware_sig_priv_key_data:
             text += "0x%02x, " % stringtoint(byte)
         #
-        text += " };\n\nconst unsigned char firmware_sig_sym_key_data_"+applet_type+"[]  = { "
+        text += " };\n\nKEYBAG_SECTION const unsigned char firmware_sig_sym_key_data_"+applet_type+"[]  = { "
         for byte in firmware_sig_sym_key_data:
             text += "0x%02x, " % stringtoint(byte)
         #
-        text += " };\n\nconst unsigned char encrypted_local_pet_key_data_"+applet_type+"[]  = { "
+        text += " };\n\nKEYBAG_SECTION const unsigned char encrypted_local_pet_key_data_"+applet_type+"[]  = { "
         for byte in encrypted_local_pet_key_data:
             text += "0x%02x, " % stringtoint(byte)
 
@@ -344,9 +223,6 @@ def encrypt_platform_data(argv):
         name = "encrypted_local_pet_key_data_"+applet_type
         text += "    { .data = (unsigned char*)"+name+", .size = sizeof("+name+") },\n"
     text += "};\n"
-
-
-    text += "\n#endif /* "+bkup_sram_cfg+" */\n"
 
     # Save in header file
     save_in_file(text, outfile_base+'.h')
