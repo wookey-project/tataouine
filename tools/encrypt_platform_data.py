@@ -145,7 +145,7 @@ def encrypt_platform_data(argv):
 
     text += "/* Handle backup SRAM usage for the keybag content */\n"
     text += "#ifdef "+bkup_sram_cfg+"\n"
-    text += "  #define KEYBAG_SECTION "+"__attribute__((section(\".noupgrade."+applet_type+")))\n"
+    text += "  #define KEYBAG_SECTION "+"__attribute__((section(\".noupgrade."+applet_type+"\")))\n"
     text += "#else\n"
     text += "  #define KEYBAG_SECTION\n"
     text += "#endif /* "+bkup_sram_cfg+" */\n\n\n"
