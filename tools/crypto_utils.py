@@ -129,8 +129,8 @@ class local_AES:
                 self.aes = AES.new(key, mode)
             return
     def counter_inc(self):
-        curr_iv = expand(inttostring((stringtoint(self.iv))), 128, "LEFT")
-        self.iv = expand(inttostring((stringtoint(self.iv)+1)), 128, "LEFT")
+        curr_iv = truncate(expand(inttostring((stringtoint(self.iv))), 128, "LEFT"), 128, "RIGHT")
+        self.iv = truncate(expand(inttostring((stringtoint(self.iv)+1)), 128, "LEFT"), 128, "RIGHT")
         curr_iv = str_encode(curr_iv)
         return curr_iv
     def encrypt(self, data):

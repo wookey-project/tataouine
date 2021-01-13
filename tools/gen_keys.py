@@ -244,8 +244,41 @@ if __name__ == '__main__':
     save_in_file(gen_rand_string(32), AUTH_TOKEN_PATH+"/master_symmetric_auth_key.bin")
     ## Master firmware encryption key shared between the DFU and SIG tokens
     shared_master_dfu_sig = gen_rand_string(64)
-    save_in_file(shared_master_dfu_sig, DFU_TOKEN_PATH+"/master_symmetric_dfu_key.bin")
-    save_in_file(shared_master_dfu_sig, SIG_TOKEN_PATH+"/master_symmetric_sig_key.bin") 
+    save_in_file(shared_master_dfu_sig, DFU_TOKEN_PATH+"/master_symmetric_dfu_key.bin")    
+    save_in_file(shared_master_dfu_sig, SIG_TOKEN_PATH+"/master_symmetric_sig_key.bin")
+    ##
+    # In case of DFU and SIG, we also have an over-encryption key
+    shared_overencrypt_dfu_sig = gen_rand_string(32)
+    save_in_file(shared_overencrypt_dfu_sig, DFU_TOKEN_PATH+"/symmetric_overencrypt_dfu_key_iv.bin") 
+    save_in_file(shared_overencrypt_dfu_sig, SIG_TOKEN_PATH+"/symmetric_overencrypt_sig_key_iv.bin")
+    # Generate the associated C headers
+    # DFU case
+    text  = "/* NOTE: here lies an overencryption firmware key allowing secret seperation (with the application handling the token) */\n\n"
+    text += "/* Handle backup SRAM usage for the overencryption key and IV content */\n"
+    text += "#ifdef CONFIG_APP_DFUFLASH_USE_BKUP_SRAM\n"
+    text += "  #define KEYBAG_SECTION "+"__attribute__((section(\".noupgrade.dfu_flash_key_iv\")))\n"
+    text += "#else\n"
+    text += "  #define KEYBAG_SECTION\n"
+    text += "#endif /* CONFIG_APP_DFUFLASH_USE_BKUP_SRAM */\n\n\n"
+    text += "KEYBAG_SECTION const unsigned char symmetric_overencrypt_dfu_key_iv[]    = { "
+    for byte in read_in_file(DFU_TOKEN_PATH+"/symmetric_overencrypt_dfu_key_iv.bin"):
+        text += "0x%02x, " % stringtoint(byte)
+    text += "};"
+    save_in_file(text, DFU_TOKEN_PATH+"/symmetric_overencrypt_dfu_key_iv.h") 
+    # SIG case
+    text  = "/* NOTE: here lies an overencryption firmware key allowing secret seperation (with the application handling the token) */\n\n"
+    text += "/* Handle backup SRAM usage for the overencryption key and IV content */\n"
+    text += "#ifdef SIG_USE_BKUP_SRAM\n"
+    text += "  #define KEYBAG_SECTION "+"__attribute__((section(\".noupgrade.sig_flash_key_iv\")))\n"
+    text += "#else\n"
+    text += "  #define KEYBAG_SECTION\n"
+    text += "#endif /* SIG_USE_BKUP_SRAM */\n\n\n"
+    text += "KEYBAG_SECTION const unsigned char symmetric_overencrypt_sig_key_iv[]    = { "
+    for byte in read_in_file(SIG_TOKEN_PATH+"/symmetric_overencrypt_sig_key_iv.bin"):
+        text += "0x%02x, " % stringtoint(byte)
+    text += "};"
+    save_in_file(text, SIG_TOKEN_PATH+"/symmetric_overencrypt_sig_key_iv.h") 
+    ##
     # Save salts
     salt_auth = gen_rand_string(16)
     save_in_file(salt_auth, AUTH_TOKEN_PATH+"/salt_auth.bin")
