@@ -5,7 +5,7 @@ from crypto_utils import *
 
 def PrintUsage():
     executable = os.path.basename(__file__)
-    print(u'\nkey2java\n\n\tUsage:\t{} token_priv_key.bin token_pub_key.bin platform_pub_key.bin shared_petpin.bin  shared_petname.bin shared_userpin.bin master_secret_key.bin enc_local_pet_key.bin max_pin_tries max_secure_channel_tries outfile applet_type\n'.format(executable))
+    print(u'\nkey2java\n\n\tUsage:\t{} token_priv_key.bin token_pub_key.bin platform_pub_key.bin shared_petpin.bin  shared_petname.bin shared_userpin.bin master_secret_key.bin enc_local_pet_key.bin max_pin_tries max_secure_channel_tries sdcard_passwd.bin outfile applet_type\n'.format(executable))
     sys.exit(-1)
 
 def Key2Java(argv):
@@ -33,6 +33,9 @@ def Key2Java(argv):
     if not os.path.isfile(argv[8]):
         print(u'\nFile "{}" does not exist'.format(argv[8]))
         PrintUsage()
+    if not os.path.isfile(argv[11]):
+        print(u'\nFile "{}" does not exist'.format(argv[11]))
+        PrintUsage()
 
     # Keys for the secure channel
     token_priv_key    = argv[1]
@@ -45,13 +48,14 @@ def Key2Java(argv):
     enc_local_pet_key = argv[8]
     max_pin_tries     = int(argv[9], 0)
     max_secure_channel_tries = int(argv[10], 0)
-    outfile           = argv[11]
-    applet_type       = argv[12]
+    sdcard_passwd     = argv[11]
+    outfile           = argv[12]
+    applet_type       = argv[13]
     sig_priv_key = None
     sig_pub_key = None
     if applet_type == "sig":
-        sig_priv_key = argv[13]
-        sig_pub_key = argv[14]
+        sig_priv_key = argv[14]
+        sig_pub_key = argv[15]
 
     token_priv_key_data = read_in_file(token_priv_key)
     token_pub_key_data = read_in_file(token_pub_key)
@@ -64,8 +68,9 @@ def Key2Java(argv):
     if applet_type == "sig":
         sig_priv_key_data = read_in_file(sig_priv_key)
         sig_pub_key_data = read_in_file(sig_pub_key)
-   
-    libeccparams = token_priv_key_data[1:3] 
+    sdcard_passwd_data   = read_in_file(sdcard_passwd)
+
+    libeccparams = token_priv_key_data[1:3]
     token_priv_key_data    = token_priv_key_data[3:]
     token_pub_key_data     = token_pub_key_data[3:int((2*(len(token_pub_key_data)) / 3)+1)]
     platform_pub_key_data  = platform_pub_key_data[3:int((2*(len(platform_pub_key_data)) / 3)+1)]
@@ -76,7 +81,7 @@ def Key2Java(argv):
     text = "package wookey_"+applet_type+";\n\nclass Keys {\n\tstatic byte[] OurPrivKeyBuf    = { "
     for byte in token_priv_key_data:
         text += "(byte)0x%02x, " % ord(byte)
-    # For public keys, add the '04' uncompressed point 
+    # For public keys, add the '04' uncompressed point
     text += " };\n\n\tstatic byte[] OurPubKeyBuf     = { (byte)0x04, "
     for byte in token_pub_key_data:
         text += "(byte)0x%02x, " % ord(byte)
@@ -108,11 +113,11 @@ def Key2Java(argv):
     # Add the encrypted local pet key
     text += " };\n\n\tstatic byte[] EncLocalPetSecretKey  = { "
     for byte in enc_local_pet_key_data[:64]:
-        text += "(byte)0x%02x, " % ord(byte)  
+        text += "(byte)0x%02x, " % ord(byte)
     # Add the encrypted local pet key
     text += " };\n\n\tstatic byte[] EncLocalPetSecretKeyIV  = { "
     for byte in enc_local_pet_key_data[64:]:
-        text += "(byte)0x%02x, " % ord(byte)  
+        text += "(byte)0x%02x, " % ord(byte)
     if applet_type == "sig":
         # Add the signature public key
         text += " };\n\n\tstatic byte[] FirmwareSigPubKeyBuf     = { (byte)0x04, "
@@ -121,7 +126,11 @@ def Key2Java(argv):
         text += " };\n\n\tstatic byte[] FirmwareSigPrivKeyBuf = { "
         for byte in sig_priv_key_data:
             text += "(byte)0x%02x, " % ord(byte)
-    # 
+    if applet_type == "auth":
+        text += " };\n\n\tstatic byte[] EncLocalSDPassword  = { "
+        for byte in sdcard_passwd_data:
+            text += "(byte)0x%02x, " % ord(byte)
+    #
     text += "};\n"
 
     # Add the maximum PIN tries
@@ -130,7 +139,7 @@ def Key2Java(argv):
     text += "\n\n\tstatic final short max_secure_channel_tries = "+str(max_secure_channel_tries)+";"
 
     text += "\n}"
-    
+
     save_in_file(text, outfile)
     return 0
 
