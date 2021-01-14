@@ -110,6 +110,11 @@ if __name__ == '__main__':
         sys.exit(-1)
 
     # Now decrypt the firmware
+
+    # Get the flash overencryption key and IV
+    flash_overencryption_key_iv = read_in_file(keys_path+"/DFU/symmetric_overencrypt_dfu_key_iv.bin")
+    aes_flash_overencryption = local_AES.new(flash_overencryption_key_iv[:16], AES.MODE_CTR, iv=flash_overencryption_key_iv[16:])
+
     # Split the firmware in chunks
     n_chunks = int(len(encrypted_content) // firmware_chunk_size)
     if len(encrypted_content) % firmware_chunk_size != 0:
@@ -130,7 +135,12 @@ if __name__ == '__main__':
         else:
             chunk = encrypted_content[(i*firmware_chunk_size):]
         aes = local_AES.new(chunk_key, AES.MODE_CTR, iv=chunk_iv)
-        decrypted_firmware += aes.decrypt(chunk)
+        decrypted_chunk = aes.decrypt(chunk)
+        # Then firmware is first encrypted with the flash overencryption key (AES-CTR-128), and an IV
+        decrypted_chunk = aes_flash_overencryption.decrypt(decrypted_chunk)
+        #
+        decrypted_firmware += decrypted_chunk
+
         print("\tXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
 
     # Now check the signature on the decrypted firmware with the header

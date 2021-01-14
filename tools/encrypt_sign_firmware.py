@@ -199,6 +199,10 @@ if __name__ == '__main__':
     # The encryption of the firmware chunks of
     # Each chunk is encrypted using AES-CTR and the current session key and an IV of zero
 
+    # Get the flash overencryption key and IV
+    flash_overencryption_key_iv = read_in_file(keys_path+"/SIG/symmetric_overencrypt_sig_key_iv.bin")
+    aes_flash_overencryption = local_AES.new(flash_overencryption_key_iv[:16], AES.MODE_CTR, iv=flash_overencryption_key_iv[16:])
+
     # Split the firmware in chunks
     n_chunks = int(len(firmware_to_sign) // firmware_chunk_size)
     if len(firmware_to_sign) % firmware_chunk_size != 0:
@@ -232,6 +236,10 @@ if __name__ == '__main__':
             chunk = firmware_to_sign[(i*firmware_chunk_size) : ((i+1)*firmware_chunk_size)]
         else:
             chunk = firmware_to_sign[(i*firmware_chunk_size):]
+
+        # Then firmware is first encrypted with the flash overencryption key (AES-CTR-128), and an IV corresponding to
+        chunk = aes_flash_overencryption.encrypt(chunk)
+        # 
         aes = local_AES.new(chunk_key, AES.MODE_CTR, iv=chunk_iv)
         encrypted_firmware += aes.encrypt(chunk)
         print("\tXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")

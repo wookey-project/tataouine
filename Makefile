@@ -497,6 +497,7 @@ endif
 ifeq ("$(CONFIG_USE_SIG_TOKEN_BOOL)","y")
 	@echo $(SIG_TOKEN_USER_PIN)  >> tmp_gen_keys_file
 endif
+	@echo $(AUTH_TOKEN_SD_PWD) >> tmp_gen_keys_file
 	@$(GENKEYS) $(KEYS_DIR) $(EC_UTILS) $(ECC_CURVENAME) $(USE_SIG_TOKEN) < tmp_gen_keys_file
 	@rm -f tmp_gen_keys_file
 
@@ -520,7 +521,11 @@ sign_interactive_each_fn_$(1):
 		FIRMWARE_CHUNK_SIZE=16384; \
 	fi; \
 	echo "++++++++++ Interactive signing $$$$FIRMWARE_TYPE, magic=$$$$FIRMWARE_MAGIC, version=$(3), chunk size=$$$$FIRMWARE_CHUNK_SIZE +++++++++++++++"; \
-	$(SIGNFIRMWARE) $(KEYS_DIR) $(BUILD_DIR)/$(1)_fw.bin $$$$FIRMWARE_MAGIC $$$$FIRMWARE_TYPE $(3) $$$$FIRMWARE_CHUNK_SIZE "$(CONFIG_USR_LIB_USBCTRL_DEV_VENDORID)" "$(CONFIG_USR_LIB_USBCTRL_DFU_DEV_PRODUCTID)"
+	if [ "$(CONFIG_USR_LIB_USBCTRL_DEV_VENDORID)" != "" ]; then \
+		$(SIGNFIRMWARE) $(KEYS_DIR) $(BUILD_DIR)/$(1)_fw.bin $$$$FIRMWARE_MAGIC $$$$FIRMWARE_TYPE $(3) $$$$FIRMWARE_CHUNK_SIZE "$(CONFIG_USR_LIB_USBCTRL_DEV_VENDORID)" "$(CONFIG_USR_LIB_USBCTRL_DFU_DEV_PRODUCTID)"; \
+        else \
+		$(SIGNFIRMWARE) $(KEYS_DIR) $(BUILD_DIR)/$(1)_fw.bin $$$$FIRMWARE_MAGIC $$$$FIRMWARE_TYPE $(3) $$$$FIRMWARE_CHUNK_SIZE "$(CONFIG_USB_DEV_VENDORID)" "$(CONFIG_USB_DEV_PRODUCTID)"; \
+	fi;
 endef
 
 define sign_interactive_fn =
@@ -607,7 +612,11 @@ endif
 		FIRMWARE_CHUNK_SIZE=16384; \
 	fi; \
 	echo "++++++++++ Automatic signing $$$$FIRMWARE_TYPE, magic=$$$$FIRMWARE_MAGIC, version=$(3), chunk size=$$$$FIRMWARE_CHUNK_SIZE +++++++++++++++"; \
-	$(SIGNFIRMWARE) $(KEYS_DIR) $(BUILD_DIR)/$(1)_fw.bin $$$$FIRMWARE_MAGIC $$$$FIRMWARE_TYPE $(3) $$$$FIRMWARE_CHUNK_SIZE "$(CONFIG_USR_LIB_USBCTRL_DEV_VENDORID)" "$(CONFIG_USR_LIB_USBCTRL_DFU_DEV_PRODUCTID)" < tmp_firmware_sig_file
+	if [ "$(CONFIG_USR_LIB_USBCTRL_DEV_VENDORID)" != "" ]; then \
+		$(SIGNFIRMWARE) $(KEYS_DIR) $(BUILD_DIR)/$(1)_fw.bin $$$$FIRMWARE_MAGIC $$$$FIRMWARE_TYPE $(3) $$$$FIRMWARE_CHUNK_SIZE "$(CONFIG_USR_LIB_USBCTRL_DEV_VENDORID)" "$(CONFIG_USR_LIB_USBCTRL_DFU_DEV_PRODUCTID)" < tmp_firmware_sig_file; \
+	else \
+		$(SIGNFIRMWARE) $(KEYS_DIR) $(BUILD_DIR)/$(1)_fw.bin $$$$FIRMWARE_MAGIC $$$$FIRMWARE_TYPE $(3) $$$$FIRMWARE_CHUNK_SIZE "$(CONFIG_USB_DEV_VENDORID)" "$(CONFIG_USB_DEV_PRODUCTID)" < tmp_firmware_sig_file; \
+	fi;
 	@rm -f tmp_firmware_sig_file tmp_firmware_sig_log
 endef
 

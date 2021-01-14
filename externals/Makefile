@@ -64,8 +64,8 @@ antjavacard:
 
 secaes: $(BUILD_DIR)/externals
 	if ! test -f $(BUILD_DIR)/externals/libmaskedaes.a; then \
-		CC=$(CROSS_CC) AR=$(CROSS_AR) COMPILER=$(CROSS_CC) EXTRA_CFLAGS="$(AFLAGS) -Os" $(MAKE) -C secaesstm32 libaes; \
-		cp $(PROJ_FILES)/externals/secaesstm32/build/libmaskedaes.a $(BUILD_DIR)/externals/libmaskedaes.a; \
+		CC=$(CROSS_CC) AR=$(CROSS_AR) COMPILER=$(CROSS_CC) EXTRA_CFLAGS="$(AFLAGS) -Os " $(MAKE) -C secaesstm32 libaes; \
+		$(CROSS_OBJCOPY) --weaken-symbol=aes $(PROJ_FILES)/externals/secaesstm32/build/libmaskedaes.a $(BUILD_DIR)/externals/libmaskedaes.a; \
 	fi
 
 libsign: $(BUILD_DIR)/externals
