@@ -111,6 +111,14 @@ choice
       ---help---
       TDES with a 168-bit key, CBC-ESSIV mode.
 endchoice
+
+config USE_SD_LOCK
+  bool "Activate SD locking using a password (EXPERIMENTAL)"
+  default n
+  ---help---
+     Activate SD locking mechanism to increase security.
+     WARNING: this feature is experimental for now!
+
 endmenu
 
 source "Kconfig.gen"
