@@ -33,9 +33,6 @@ def Key2Java(argv):
     if not os.path.isfile(argv[8]):
         print(u'\nFile "{}" does not exist'.format(argv[8]))
         PrintUsage()
-    if not os.path.isfile(argv[11]):
-        print(u'\nFile "{}" does not exist'.format(argv[11]))
-        PrintUsage()
 
     # Keys for the secure channel
     token_priv_key    = argv[1]
@@ -68,7 +65,12 @@ def Key2Java(argv):
     if applet_type == "sig":
         sig_priv_key_data = read_in_file(sig_priv_key)
         sig_pub_key_data = read_in_file(sig_pub_key)
-    sdcard_passwd_data   = read_in_file(sdcard_passwd)
+    # SD card password, only useful for AUTH applet
+    if applet_type == "auth":
+        if not os.path.isfile(sdcard_passwd):
+            print(u'\nFile "{}" does not exist'.format(sdcard_passwd))
+            PrintUsage()
+        sdcard_passwd_data   = read_in_file(sdcard_passwd)
 
     libeccparams = token_priv_key_data[1:3]
     token_priv_key_data    = token_priv_key_data[3:]
@@ -127,7 +129,7 @@ def Key2Java(argv):
         for byte in sig_priv_key_data:
             text += "(byte)0x%02x, " % ord(byte)
     if applet_type == "auth":
-        text += " };\n\n\tstatic byte[] EncLocalSDPassword  = { "
+        text += " };\n\n\tstatic byte[] SDPassword  = { "
         for byte in sdcard_passwd_data:
             text += "(byte)0x%02x, " % ord(byte)
     #
