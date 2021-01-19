@@ -149,27 +149,28 @@ class APDU:
 # The common instructions
 def token_common_instructions(applet_id):
     return {
-                             'TOKEN_INS_SELECT_APPLET'       : APDU(0x00, 0xA4, 0x04, 0x00, local_unhexlify(applet_id), 0x00),
-                             'TOKEN_INS_SECURE_CHANNEL_INIT' : APDU(0x00, 0x00, 0x00, 0x00, None, 0x00),
-                             'TOKEN_INS_UNLOCK_PET_PIN'      : APDU(0x00, 0x01, 0x00, 0x00, None, 0x00),
-                             'TOKEN_INS_UNLOCK_USER_PIN'     : APDU(0x00, 0x02, 0x00, 0x00, None, 0x00),
-                             'TOKEN_INS_SET_USER_PIN'        : APDU(0x00, 0x03, 0x00, 0x00, None, 0x00),
-                             'TOKEN_INS_SET_PET_PIN'         : APDU(0x00, 0x04, 0x00, 0x00, None, 0x00),
-                             'TOKEN_INS_SET_PET_NAME'        : APDU(0x00, 0x05, 0x00, 0x00, None, 0x00),
-                             'TOKEN_INS_USER_PIN_LOCK'       : APDU(0x00, 0x06, 0x00, 0x00, None, 0x00),
-                             'TOKEN_INS_FULL_LOCK'           : APDU(0x00, 0x07, 0x00, 0x00, None, 0x00),
-                             'TOKEN_INS_GET_PET_NAME'        : APDU(0x00, 0x08, 0x00, 0x00, None, 0x00),
-                             'TOKEN_INS_GET_RANDOM'          : APDU(0x00, 0x09, 0x00, 0x00, None, 0x00),
-                             'TOKEN_INS_DERIVE_LOCAL_PET_KEY': APDU(0x00, 0x0a, 0x00, 0x00, None, 0x00),
-                             'TOKEN_INS_GET_CHALLENGE'       : APDU(0x00, 0x0b, 0x00, 0x00, None, 0x00),
+                             'TOKEN_INS_SELECT_APPLET'         : APDU(0x00, 0xA4, 0x04, 0x00, local_unhexlify(applet_id), 0x00),
+                             'TOKEN_INS_SECURE_CHANNEL_INIT'   : APDU(0x00, 0x00, 0x00, 0x00, None, 0x00),
+                             'TOKEN_INS_UNLOCK_PET_PIN'        : APDU(0x00, 0x01, 0x00, 0x00, None, 0x00),
+                             'TOKEN_INS_UNLOCK_USER_PIN'       : APDU(0x00, 0x02, 0x00, 0x00, None, 0x00),
+                             'TOKEN_INS_SET_USER_PIN'          : APDU(0x00, 0x03, 0x00, 0x00, None, 0x00),
+                             'TOKEN_INS_SET_PET_PIN'           : APDU(0x00, 0x04, 0x00, 0x00, None, 0x00),
+                             'TOKEN_INS_SET_PET_NAME'          : APDU(0x00, 0x05, 0x00, 0x00, None, 0x00),
+                             'TOKEN_INS_USER_PIN_LOCK'         : APDU(0x00, 0x06, 0x00, 0x00, None, 0x00),
+                             'TOKEN_INS_FULL_LOCK'             : APDU(0x00, 0x07, 0x00, 0x00, None, 0x00),
+                             'TOKEN_INS_GET_PET_NAME'          : APDU(0x00, 0x08, 0x00, 0x00, None, 0x00),
+                             'TOKEN_INS_GET_RANDOM'            : APDU(0x00, 0x09, 0x00, 0x00, None, 0x00),
+                             'TOKEN_INS_DERIVE_LOCAL_PET_KEY'  : APDU(0x00, 0x0a, 0x00, 0x00, None, 0x00),
+                             'TOKEN_INS_GET_CHALLENGE'         : APDU(0x00, 0x0b, 0x00, 0x00, None, 0x00),
                              # FIXME: to be removed, for debug purposes only!
-                             'TOKEN_INS_ECHO_TEST'           : APDU(0x00, 0x0c, 0x00, 0x00, None, 0x00),
-                             'TOKEN_INS_SECURE_CHANNEL_ECHO' : APDU(0x00, 0x0d, 0x00, 0x00, None, 0x00),
+                             'TOKEN_INS_ECHO_TEST'             : APDU(0x00, 0x0c, 0x00, 0x00, None, 0x00),
+                             'TOKEN_INS_SECURE_CHANNEL_ECHO'   : APDU(0x00, 0x0d, 0x00, 0x00, None, 0x00),
            }
 
 # The AUTH token instructions
 auth_token_instructions =  {
-                             'TOKEN_INS_GET_KEY'             : APDU(0x00, 0x10, 0x00, 0x00, None, 0x00),
+                             'TOKEN_INS_GET_KEY'               : APDU(0x00, 0x10, 0x00, 0x00, None, 0x00),
+                             'TOKEN_INS_GET_SDPWD'             : APDU(0x00, 0x11, 0x00, 0x00, None, 0x00),
                            }
 
 # The DFU token instructions
@@ -180,11 +181,11 @@ dfu_token_instructions =   {
 
 # The SIG token instructions
 sig_token_instructions =   {
-                             'TOKEN_INS_BEGIN_SIGN_SESSION' : APDU(0x00, 0x30, 0x00, 0x00, None, 0x00),
-                             'TOKEN_INS_DERIVE_KEY'         : APDU(0x00, 0x31, 0x00, 0x00, None, 0x00),
-                             'TOKEN_INS_SIGN_FIRMWARE'      : APDU(0x00, 0x32, 0x00, 0x00, None, 0x00),
-                             'TOKEN_INS_VERIFY_FIRMWARE'    : APDU(0x00, 0x33, 0x00, 0x00, None, 0x00),
-                             'TOKEN_INS_GET_SIG_TYPE'       : APDU(0x00, 0x34, 0x00, 0x00, None, 0x00),
+                             'TOKEN_INS_BEGIN_SIGN_SESSION'    : APDU(0x00, 0x30, 0x00, 0x00, None, 0x00),
+                             'TOKEN_INS_DERIVE_KEY'            : APDU(0x00, 0x31, 0x00, 0x00, None, 0x00),
+                             'TOKEN_INS_SIGN_FIRMWARE'         : APDU(0x00, 0x32, 0x00, 0x00, None, 0x00),
+                             'TOKEN_INS_VERIFY_FIRMWARE'       : APDU(0x00, 0x33, 0x00, 0x00, None, 0x00),
+                             'TOKEN_INS_GET_SIG_TYPE'          : APDU(0x00, 0x34, 0x00, 0x00, None, 0x00),
                            }
 
 def token_ins(token_type, instruction, data=None, lc=None):
@@ -471,6 +472,12 @@ class SCP:
             # This is an error
             return None, None, None
         return self.send(token_ins(self.token_type, "TOKEN_INS_GET_KEY"), pin=pin, pin_decrypt=True)
+    def token_auth_get_sdpwd(self, pin):
+        if self.token_type != "auth":
+            print("AUTH Token Error: asked for TOKEN_INS_GET_SDPWD for non AUTH token ("+self.token_type.upper()+")")
+            # This is an error
+            return None, None, None
+        return self.send(token_ins(self.token_type, "TOKEN_INS_GET_SDPWD"), pin=pin, pin_decrypt=True)
     # ====== DFU specific helpers
     def token_dfu_begin_decrypt_session(self, header_data):
         if self.token_type != "dfu":

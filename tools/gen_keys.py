@@ -238,21 +238,13 @@ if __name__ == '__main__':
             print("Error: bad entropy for SIG User PIN")
             sys.exit(-1)
         save_in_file(sig_user_pin, SIG_TOKEN_PATH+"/shared_sig_userpin.bin")
-
-    #=================
-    # SDCard Passwd
-    ## AUTH
-    #DEFAULT_AUTH_SD_PWD = "passwd"
-    #auth_sd_pwd = get_user_input("Please provide your SDCard pwd:\n")
-    #if auth_sd_pwd == "":
-    #    auth_sd_pwd = DEFAULT_AUTH_SD_PWD
-    save_in_file(gen_rand_string(16), AUTH_TOKEN_PATH+"/shared_auth_sd_pwd.bin")
-
-
+ 
     #=================
     # Master symmetric keys
     ## Master encryption key in the AUTH token
     save_in_file(gen_rand_string(32), AUTH_TOKEN_PATH+"/master_symmetric_auth_key.bin")
+    # SDCard Passwd in the AUTH token
+    save_in_file(gen_rand_string(16), AUTH_TOKEN_PATH+"/sd_pwd_auth.bin")
     ## Master firmware encryption key shared between the DFU and SIG tokens
     shared_master_dfu_sig = gen_rand_string(64)
     save_in_file(shared_master_dfu_sig, DFU_TOKEN_PATH+"/master_symmetric_dfu_key.bin")    
@@ -321,7 +313,7 @@ if __name__ == '__main__':
     #=================
     # Formatting the keys for Javacard
     ## AUTH
-    sys_cmd(KEY2JAVA+" "+AUTH_TOKEN_PATH+"/token_auth_private_key.bin "+AUTH_TOKEN_PATH+"/token_auth_public_key.bin "+AUTH_TOKEN_PATH+"/platform_auth_public_key.bin "+AUTH_TOKEN_PATH+"/shared_auth_petpin.bin "+AUTH_TOKEN_PATH+"/shared_auth_petname.bin "+AUTH_TOKEN_PATH+"/shared_auth_userpin.bin "+AUTH_TOKEN_PATH+"/master_symmetric_auth_key.bin "+AUTH_TOKEN_PATH+"/enc_master_symmetric_auth_local_pet_key.bin "+" "+str(auth_max_pin_tries)+" "+" "+str(auth_max_sc_tries)+" "+AUTH_TOKEN_PATH+"/shared_auth_sd_pwd.bin"+" "+AUTH_TOKEN_PATH+"/AUTHKeys.java auth")
+    sys_cmd(KEY2JAVA+" "+AUTH_TOKEN_PATH+"/token_auth_private_key.bin "+AUTH_TOKEN_PATH+"/token_auth_public_key.bin "+AUTH_TOKEN_PATH+"/platform_auth_public_key.bin "+AUTH_TOKEN_PATH+"/shared_auth_petpin.bin "+AUTH_TOKEN_PATH+"/shared_auth_petname.bin "+AUTH_TOKEN_PATH+"/shared_auth_userpin.bin "+AUTH_TOKEN_PATH+"/master_symmetric_auth_key.bin "+AUTH_TOKEN_PATH+"/enc_master_symmetric_auth_local_pet_key.bin "+" "+str(auth_max_pin_tries)+" "+" "+str(auth_max_sc_tries)+" "+AUTH_TOKEN_PATH+"/sd_pwd_auth.bin"+" "+AUTH_TOKEN_PATH+"/AUTHKeys.java auth")
     # Cleanup
     sys_rm_file(AUTH_TOKEN_PATH+"/master_symmetric_auth_key.bin")
     sys_rm_file(AUTH_TOKEN_PATH+"/shared_auth_petname.bin")
@@ -329,22 +321,20 @@ if __name__ == '__main__':
     sys_rm_file(AUTH_TOKEN_PATH+"/enc_master_symmetric_auth_local_pet_key.bin")
 
     ## DFU
-    sys_cmd(KEY2JAVA+" "+DFU_TOKEN_PATH+"/token_dfu_private_key.bin "+DFU_TOKEN_PATH+"/token_dfu_public_key.bin "+DFU_TOKEN_PATH+"/platform_dfu_public_key.bin "+DFU_TOKEN_PATH+"/shared_dfu_petpin.bin "+DFU_TOKEN_PATH+"/shared_dfu_petname.bin "+DFU_TOKEN_PATH+"/shared_dfu_userpin.bin "+DFU_TOKEN_PATH+"/master_symmetric_dfu_key.bin "+DFU_TOKEN_PATH+"/enc_master_symmetric_dfu_local_pet_key.bin "+" "+str(dfu_max_pin_tries)+" "+" "+str(dfu_max_sc_tries)+" "+AUTH_TOKEN_PATH+"/shared_auth_sd_pwd.bin"+" "+DFU_TOKEN_PATH+"/DFUKeys.java dfu")
+    sys_cmd(KEY2JAVA+" "+DFU_TOKEN_PATH+"/token_dfu_private_key.bin "+DFU_TOKEN_PATH+"/token_dfu_public_key.bin "+DFU_TOKEN_PATH+"/platform_dfu_public_key.bin "+DFU_TOKEN_PATH+"/shared_dfu_petpin.bin "+DFU_TOKEN_PATH+"/shared_dfu_petname.bin "+DFU_TOKEN_PATH+"/shared_dfu_userpin.bin "+DFU_TOKEN_PATH+"/master_symmetric_dfu_key.bin "+DFU_TOKEN_PATH+"/enc_master_symmetric_dfu_local_pet_key.bin "+" "+str(dfu_max_pin_tries)+" "+" "+str(dfu_max_sc_tries)+" "+"void.bin"+" "+DFU_TOKEN_PATH+"/DFUKeys.java dfu")
     # Cleanup
     sys_rm_file(DFU_TOKEN_PATH+"/master_symmetric_dfu_key.bin")
     sys_rm_file(DFU_TOKEN_PATH+"/shared_dfu_petname.bin")
     sys_rm_file(DFU_TOKEN_PATH+"/shared_dfu_userpin.bin")
-    sys_rm_file(AUTH_TOKEN_PATH+"/enc_master_symmetric_dfu_local_pet_key.bin")
+    sys_rm_file(DFU_TOKEN_PATH+"/enc_master_symmetric_dfu_local_pet_key.bin")
 
     ## SIG
     if USE_SIG_TOKEN == True:
-        sys_cmd(KEY2JAVA+" "+SIG_TOKEN_PATH+"/token_sig_private_key.bin "+SIG_TOKEN_PATH+"/token_sig_public_key.bin "+SIG_TOKEN_PATH+"/platform_sig_public_key.bin "+SIG_TOKEN_PATH+"/shared_sig_petpin.bin "+SIG_TOKEN_PATH+"/shared_sig_petname.bin "+SIG_TOKEN_PATH+"/shared_sig_userpin.bin "+SIG_TOKEN_PATH+"/master_symmetric_sig_key.bin "+SIG_TOKEN_PATH+"/enc_master_symmetric_sig_local_pet_key.bin "+" "+str(sig_max_pin_tries)+" "+" "+str(sig_max_sc_tries)+" "+AUTH_TOKEN_PATH+"/shared_auth_sd_pwd.bin"+" "+SIG_TOKEN_PATH+"/SIGKeys.java sig "+SIG_TOKEN_PATH+"/token_sig_firmware_private_key.bin "+SIG_TOKEN_PATH+"/token_sig_firmware_public_key.bin")
+        sys_cmd(KEY2JAVA+" "+SIG_TOKEN_PATH+"/token_sig_private_key.bin "+SIG_TOKEN_PATH+"/token_sig_public_key.bin "+SIG_TOKEN_PATH+"/platform_sig_public_key.bin "+SIG_TOKEN_PATH+"/shared_sig_petpin.bin "+SIG_TOKEN_PATH+"/shared_sig_petname.bin "+SIG_TOKEN_PATH+"/shared_sig_userpin.bin "+SIG_TOKEN_PATH+"/master_symmetric_sig_key.bin "+SIG_TOKEN_PATH+"/enc_master_symmetric_sig_local_pet_key.bin "+" "+str(sig_max_pin_tries)+" "+" "+str(sig_max_sc_tries)+" "+"void.bin"+" "+SIG_TOKEN_PATH+"/SIGKeys.java sig "+SIG_TOKEN_PATH+"/token_sig_firmware_private_key.bin "+SIG_TOKEN_PATH+"/token_sig_firmware_public_key.bin")
         # Cleanup
         sys_rm_file(SIG_TOKEN_PATH+"/master_symmetric_sig_key.bin")
         sys_rm_file(SIG_TOKEN_PATH+"/shared_sig_petname.bin")
         sys_rm_file(SIG_TOKEN_PATH+"/shared_sig_userpin.bin")
-        sys_rm_file(AUTH_TOKEN_PATH+"/shared_auth_sd_pwd.bin")
-        sys_rm_file(AUTH_TOKEN_PATH+"/enc_master_symmetric_sig_local_pet_key.bin")
 
     #=================
     # Generate the headers
