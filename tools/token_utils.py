@@ -171,6 +171,11 @@ def token_common_instructions(applet_id):
 auth_token_instructions =  {
                              'TOKEN_INS_GET_KEY'               : APDU(0x00, 0x10, 0x00, 0x00, None, 0x00),
                              'TOKEN_INS_GET_SDPWD'             : APDU(0x00, 0x11, 0x00, 0x00, None, 0x00),
+                             # FIDO specific commands
+                             'TOKEN_INS_FIDO_SEND_PKEY'        : APDU(0x00, 0x12, 0x00, 0x00, None, 0x00),
+                             'TOKEN_INS_FIDO_REGISTER'         : APDU(0x00, 0x13, 0x00, 0x00, None, 0x00),
+                             'TOKEN_INS_FIDO_AUTHENTICATE'     : APDU(0x00, 0x14, 0x00, 0x00, None, 0x00),
+                             'TOKEN_INS_FIDO_AUTHENTICATE_CHECK_ONLY' : APDU(0x00, 0x15, 0x00, 0x00, None, 0x00),
                            }
 
 # The DFU token instructions
@@ -257,7 +262,7 @@ class SCP:
          return enc_data
 
     # Send a message through the secure channel
-    def send(self, orig_apdu, pin=None, update_session_keys=False, pin_decrypt=False):
+    def send(self, orig_apdu, pin=None, update_session_keys=False, pin_decrypt=False, pin_encrypt=False):
         apdu = deepcopy(orig_apdu)
         print("=============================================")
         def counter_inc():
@@ -268,6 +273,13 @@ class SCP:
             # Secure channel not initialized, quit
             print("SCP Error: secure channel not initialized ...")
             return None, None, None
+        # Do we have to encrypt encapsulated data inside the channel?
+        if (pin_decrypt == True):
+            if pin == None:
+                print("SCP Error: asking for pin_encrypt without providing the PIN!")
+                return None, None, None
+            if apdu.data != None and len(apdu.data) > 0:
+                apdu.data = self.pin_encrypt_data(pin, apdu.data, self.IV)
         # Initialize the hmac
         hm = local_hmac.new(self.HMAC_Key, digestmod=hashlib.sha256)
         hm.update(self.IV+chr(apdu.cla)+chr(apdu.ins)+chr(apdu.p1)+chr(apdu.p2))
@@ -478,6 +490,34 @@ class SCP:
             # This is an error
             return None, None, None
         return self.send(token_ins(self.token_type, "TOKEN_INS_GET_SDPWD"), pin=pin, pin_decrypt=True)
+    # ====== AUTH FIDO specific helpers
+    def token_auth_fido_send_pkey(self, pin, pkey):
+        if self.token_type != "auth":
+            print("AUTH Token Error: asked for TOKEN_INS_FIDO_SEND_PKEY for non AUTH token ("+self.token_type.upper()+")")
+            # This is an error
+            return None, None, None
+        # FIXME: encrypt sensitive data inside channel
+        return self.send(token_ins(self.token_type, "TOKEN_INS_FIDO_SEND_PKEY", data=pkey), pin=pin, pin_encrypt=False)
+    def token_auth_fido_register(self, app_data):
+        if self.token_type != "auth":
+            print("AUTH Token Error: asked for TOKEN_INS_FIDO_REGISTER for non AUTH token ("+self.token_type.upper()+")")
+            # This is an error
+            return None, None, None
+        return self.send(token_ins(self.token_type, "TOKEN_INS_FIDO_REGISTER", data=app_data))
+    def token_auth_fido_authenticate(self, app_data, key_handle):
+        if self.token_type != "auth":
+            print("AUTH Token Error: asked for TOKEN_INS_FIDO_AUTHENTICATE for non AUTH token ("+self.token_type.upper()+")")
+            # This is an error
+            return None, None, None
+        return self.send(token_ins(self.token_type, "TOKEN_INS_FIDO_AUTHENTICATE", data=app_data+key_handle))
+    def token_auth_fido_authenticate_check_only(self, app_data, key_handle):
+        if self.token_type != "auth":
+            print("AUTH Token Error: asked for TOKEN_INS_FIDO_AUTHENTICATE_CHECK_ONLY for non AUTH token ("+self.token_type.upper()+")")
+            # This is an error
+            return None, None, None
+        # FIXME: encrypt sensitive data inside channel
+        return self.send(token_ins(self.token_type, "TOKEN_INS_FIDO_AUTHENTICATE_CHECK_ONLY", data=app_data+key_handle))
+
     # ====== DFU specific helpers
     def token_dfu_begin_decrypt_session(self, header_data):
         if self.token_type != "dfu":
@@ -491,6 +531,7 @@ class SCP:
             # This is an error
             return None, None, None
         return self.send(token_ins(self.token_type, "TOKEN_INS_DERIVE_KEY", data=chr((chunk_num >> 8) & 0xff)+chr(chunk_num & 0xff)))
+
     # ====== SIG specific helpers
     def token_sig_begin_sign_session(self, header_data):
         if self.token_type != "sig":

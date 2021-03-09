@@ -497,8 +497,8 @@ endif
 ifeq ("$(CONFIG_USE_SIG_TOKEN_BOOL)","y")
 	@echo $(SIG_TOKEN_USER_PIN)  >> tmp_gen_keys_file
 endif
-	@echo $(AUTH_TOKEN_SD_PWD) >> tmp_gen_keys_file
-	@$(GENKEYS) $(KEYS_DIR) $(EC_UTILS) $(ECC_CURVENAME) $(USE_SIG_TOKEN) < tmp_gen_keys_file
+	@echo $(AUTH_TOKEN_SD_PWD)   >> tmp_gen_keys_file
+	@$(GENKEYS) $(KEYS_DIR) $(EC_UTILS) $(ECC_CURVENAME) $(USE_SIG_TOKEN) $(CONFIG_PROJ_NAME) < tmp_gen_keys_file
 	@rm -f tmp_gen_keys_file
 
 ######### Firmware signature targets
