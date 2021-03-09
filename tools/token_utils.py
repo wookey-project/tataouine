@@ -274,11 +274,12 @@ class SCP:
             print("SCP Error: secure channel not initialized ...")
             return None, None, None
         # Do we have to encrypt encapsulated data inside the channel?
-        if (pin_decrypt == True):
+        if (pin_encrypt == True):
             if pin == None:
                 print("SCP Error: asking for pin_encrypt without providing the PIN!")
                 return None, None, None
             if apdu.data != None and len(apdu.data) > 0:
+                print(">>>(sensitive data encrypted)  "+"\033[1;42m["+local_hexlify(apdu.data)+"]\033[1;m")
                 apdu.data = self.pin_encrypt_data(pin, apdu.data, self.IV)
         # Initialize the hmac
         hm = local_hmac.new(self.HMAC_Key, digestmod=hashlib.sha256)
@@ -355,6 +356,7 @@ class SCP:
                 print("SCP Error: asking for pin_decrypt without providing the PIN!")
                 return None, None, None
             dec_resp_data = self.pin_decrypt_data(pin, dec_resp_data, old_IV)
+            print("<<<(sensitive data decrypted)  \033[1;43m[%s]\033[1;m" % (local_hexlify(dec_resp_data)))
         return dec_resp_data, sw1, sw2
 
     # Initialize the secure channel
@@ -497,7 +499,7 @@ class SCP:
             # This is an error
             return None, None, None
         # FIXME: encrypt sensitive data inside channel
-        return self.send(token_ins(self.token_type, "TOKEN_INS_FIDO_SEND_PKEY", data=pkey), pin=pin, pin_encrypt=False)
+        return self.send(token_ins(self.token_type, "TOKEN_INS_FIDO_SEND_PKEY", data=pkey), pin=pin, pin_encrypt=True)
     def token_auth_fido_register(self, app_data):
         if self.token_type != "auth":
             print("AUTH Token Error: asked for TOKEN_INS_FIDO_REGISTER for non AUTH token ("+self.token_type.upper()+")")
