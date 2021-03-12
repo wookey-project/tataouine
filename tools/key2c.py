@@ -47,6 +47,9 @@ def Key2C(argv):
     if check == False:
         print("Error when parsing ASN.1 %s" % argv[2])
         sys.exit(-1)
+    if len(privkey) != 32:
+        print("Error when parsing ASN.1 %s: privkey size %d is != 32" % (argv[2], len(privkey)))
+        sys.exit(-1)
     # Get OID (encapsulated [0])
     (check, oidenc_size, oidenc) = extract_DER_object(seq[size_ver+privkey_size:], 0xa0)
     if check == False:
@@ -96,14 +99,22 @@ def Key2C(argv):
         print("Error when parsing ASN.1: private and public keys do not correspond!" % argv[2])
         sys.exit(-1)
     # Everything is OK: save our data
-    text = "static const unsigned char fido_attestation_privkey["+str(len(privkey))+"] = { \n\t"
+    text = "static const unsigned char fido_attestation_halfprivkey["+str(len(privkey) // 2)+"] = { \n\t"
     line = 1
-    for byte in privkey:
+    for byte in privkey[:16]:
         text += "0x%02x, " % ord(byte)
         if line % 8 == 0:
             text += "\n\t"
         line += 1
     text += "\n};"
+    text += "\n\n#ifdef UNSAFE_LOCAL_KEY_HANDLE_GENERATION\n" 
+    text += "static const unsigned char fido_attestation_privkey["+str(len(privkey))+"] = { \n\t"
+    for byte in privkey[:32]:
+        text += "0x%02x, " % ord(byte)
+        if line % 8 == 0:
+            text += "\n\t"
+        line += 1
+    text += "\n};\n#endif"
     text += "\n\nstatic const unsigned char fido_attestation_pubkey["+str(len(pubkey))+"] = { \n\t"
     line = 1
     for byte in pubkey:
@@ -114,6 +125,8 @@ def Key2C(argv):
     text += "\n};"
     # Save in file
     save_in_file(text, argv[2]+".h")
+    save_in_file(privkey, argv[2]+".privkey.bin")
+    save_in_file(pubkey, argv[2]+".pubkey.bin")
 
     return 0
 

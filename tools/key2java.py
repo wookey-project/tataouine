@@ -148,6 +148,19 @@ def Key2Java(argv):
             text += "(byte)0x%02x, " % ord(byte)
     text += "};\n"
 
+    # In case of FIDO profile, we also save second half of the private key
+    if applet_type == "auth" and profile == "u2f2":
+        fido_privkey_file = os.path.dirname(os.path.abspath(sdcard_passwd))+"/FIDO/attestation_key.der.privkey.bin"
+        if not os.path.isfile(fido_privkey_file):
+            print(u'\nFile %s does not exist' % fido_privkey_file)
+            sys.exit(-1)
+        fido_privkey = read_in_file(fido_privkey_file)
+        # Save the second half key n the applet
+        text += "\n\tstatic final byte[] FidoHalfPrivKey =  { "
+        for byte in fido_privkey[16:]:
+            text += "(byte)0x%02x, " % ord(byte)
+        text += "};\n"
+
     #
     text += "\n}"
 

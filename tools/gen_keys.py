@@ -241,10 +241,22 @@ if __name__ == '__main__':
             sys.exit(-1)
         save_in_file(sig_user_pin, SIG_TOKEN_PATH+"/shared_sig_userpin.bin")
  
+    # In case of FIDO profile, we also generate the attestation certificate as
+    # well as the ECDSA attestation key
+    if PLATFORM_PROFILE == "u2f2":        
+        print("==> U2F2 profile: generating attestation certificate") 
+        # Use our external tool to generate the attestation certificate and the key
+        CERTIFICATE_GEN = SCRIPT_PATH+"/fido_gen_certificate.sh"
+        sys_cmd("mkdir -p "+AUTH_TOKEN_PATH+"/FIDO/")
+        sys_cmd("sh "+CERTIFICATE_GEN+" "+AUTH_TOKEN_PATH+"/FIDO/")
+        # Now enerate the C header files
+        KEY2C = INTERPRETER + " " + SCRIPT_PATH+"/key2c.py"
+        sys_cmd(KEY2C+" "+AUTH_TOKEN_PATH+"/FIDO/attestation.der"+" "+AUTH_TOKEN_PATH+"/FIDO/attestation_key.der")
+
     #=================
     # Master symmetric keys
     ## Master encryption key in the AUTH token
-    # NOTE: we generate a 64 bytes buffer here for various usage
+    # NOTE: we generate a 64 bytes buffer here for various usages
     save_in_file(gen_rand_string(64), AUTH_TOKEN_PATH+"/master_symmetric_auth_key.bin")
     # SDCard Passwd in the AUTH token
     save_in_file(gen_rand_string(16), AUTH_TOKEN_PATH+"/sd_pwd_auth.bin")
@@ -380,17 +392,4 @@ if __name__ == '__main__':
        sys_rm_file(SIG_TOKEN_PATH+"/token_sig_firmware_private_key.bin")
        sys_rm_file(SIG_TOKEN_PATH+"/master_symmetric_sig_key.bin")
        sys_rm_file(SIG_TOKEN_PATH+"/master_symmetric_sig_local_pet_key.bin")
-       sys_rm_file(SIG_TOKEN_PATH+"/salt_sig.bin")
-
-    # In case of FIDO profile, we also generate the attestation certificate as
-    # well as the ECDSA attestation key
-    if PLATFORM_PROFILE == "u2f2":        
-        print("==> U2F2 profile: generating attestation certificate") 
-        # Use our external tool to generate the attestation certificate and the key
-        CERTIFICATE_GEN = SCRIPT_PATH+"/fido_gen_certificate.sh"
-        sys_cmd("mkdir -p "+AUTH_TOKEN_PATH+"/FIDO/")
-        sys_cmd("sh "+CERTIFICATE_GEN+" "+AUTH_TOKEN_PATH+"/FIDO/")
-        # Now enerate the C header files
-        KEY2C = INTERPRETER + " " + SCRIPT_PATH+"/key2c.py"
-        sys_cmd(KEY2C+" "+AUTH_TOKEN_PATH+"/FIDO/attestation.der"+" "+AUTH_TOKEN_PATH+"/FIDO/attestation_key.der")
-         
+       sys_rm_file(SIG_TOKEN_PATH+"/salt_sig.bin")         

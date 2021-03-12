@@ -498,8 +498,7 @@ class SCP:
             print("AUTH Token Error: asked for TOKEN_INS_FIDO_SEND_PKEY for non AUTH token ("+self.token_type.upper()+")")
             # This is an error
             return None, None, None
-        # FIXME: encrypt sensitive data inside channel
-        return self.send(token_ins(self.token_type, "TOKEN_INS_FIDO_SEND_PKEY", data=pkey), pin=pin, pin_encrypt=True)
+        return self.send(token_ins(self.token_type, "TOKEN_INS_FIDO_SEND_PKEY", data=pkey), pin=pin, pin_encrypt=True, pin_decrypt=True)
     def token_auth_fido_register(self, app_data):
         if self.token_type != "auth":
             print("AUTH Token Error: asked for TOKEN_INS_FIDO_REGISTER for non AUTH token ("+self.token_type.upper()+")")
