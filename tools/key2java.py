@@ -5,7 +5,7 @@ from crypto_utils import *
 
 def PrintUsage():
     executable = os.path.basename(__file__)
-    print(u'\nkey2java\n\n\tUsage:\t{} token_priv_key.bin token_pub_key.bin platform_pub_key.bin shared_petpin.bin  shared_petname.bin shared_userpin.bin master_secret_key.bin enc_local_pet_key.bin max_pin_tries max_secure_channel_tries sdcard_passwd.bin outfile applet_type\n'.format(executable))
+    print(u'\nkey2java\n\n\tUsage:\t{} token_priv_key.bin token_pub_key.bin platform_pub_key.bin shared_petpin.bin  shared_petname.bin shared_userpin.bin master_secret_key.bin enc_local_pet_key.bin max_pin_tries max_secure_channel_tries sdcard_passwd.bin outfile applet_type profile\n'.format(executable))
     sys.exit(-1)
 
 def Key2Java(argv):
@@ -48,11 +48,13 @@ def Key2Java(argv):
     sdcard_passwd     = argv[11]
     outfile           = argv[12]
     applet_type       = argv[13]
+    # Platform profile
+    profile           = argv[14]
     sig_priv_key = None
     sig_pub_key = None
     if applet_type == "sig":
-        sig_priv_key = argv[14]
-        sig_pub_key = argv[15]
+        sig_priv_key = argv[15]
+        sig_pub_key = argv[16]
 
     token_priv_key_data = read_in_file(token_priv_key)
     token_pub_key_data = read_in_file(token_pub_key)
@@ -91,7 +93,7 @@ def Key2Java(argv):
     for byte in platform_pub_key_data:
         text += "(byte)0x%02x, " % ord(byte)
     # Add the curve and signing algorithm information
-    text += " };\n\n\tstatic byte[] LibECCparams  = { "
+    text += " };\n\n\tstatic final byte[] LibECCparams  = { "
     for byte in libeccparams:
         text += "(byte)0x%02x, " % ord(byte)
     # Add the PET PIN
@@ -139,7 +141,27 @@ def Key2Java(argv):
     text += "\n\n\tstatic final byte max_pin_tries = (byte)"+str(max_pin_tries)+";"
     # Add the maximum secure channel mounting tries tries
     text += "\n\n\tstatic final short max_secure_channel_tries = "+str(max_secure_channel_tries)+";"
+    # Add the platform profile
+    text += "\n\n\t /* Platform profiles is: \""+profile+"\"*/"
+    text += "\n\tstatic final byte[] Profile =  { "
+    for byte in profile:
+            text += "(byte)0x%02x, " % ord(byte)
+    text += "};\n"
 
+    # In case of FIDO profile, we also save second half of the private key
+    if applet_type == "auth" and profile == "u2f2":
+        fido_privkey_file = os.path.dirname(os.path.abspath(sdcard_passwd))+"/FIDO/attestation_key.der.privkey.bin"
+        if not os.path.isfile(fido_privkey_file):
+            print(u'\nFile %s does not exist' % fido_privkey_file)
+            sys.exit(-1)
+        fido_privkey = read_in_file(fido_privkey_file)
+        # Save the second half key n the applet
+        text += "\n\tstatic final byte[] FidoHalfPrivKey =  { "
+        for byte in fido_privkey[16:]:
+            text += "(byte)0x%02x, " % ord(byte)
+        text += "};\n"
+
+    #
     text += "\n}"
 
     save_in_file(text, outfile)
@@ -149,7 +171,7 @@ def Key2Java(argv):
 if __name__ == '__main__':
     # Register Ctrl+C handler
     signal.signal(signal.SIGINT, handler)
-    if len(sys.argv) < 12:
+    if len(sys.argv) < 13:
         PrintUsage()
         sys.exit(1)
     Key2Java(sys.argv)
