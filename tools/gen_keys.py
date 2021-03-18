@@ -249,7 +249,7 @@ if __name__ == '__main__':
         CERTIFICATE_GEN = SCRIPT_PATH+"/fido_gen_certificate.sh"
         sys_cmd("mkdir -p "+AUTH_TOKEN_PATH+"/FIDO/")
         sys_cmd("sh "+CERTIFICATE_GEN+" "+AUTH_TOKEN_PATH+"/FIDO/")
-        # Now enerate the C header files
+        # Now generate the C header files
         KEY2C = INTERPRETER + " " + SCRIPT_PATH+"/key2c.py"
         sys_cmd(KEY2C+" "+AUTH_TOKEN_PATH+"/FIDO/attestation.der"+" "+AUTH_TOKEN_PATH+"/FIDO/attestation_key.der")
 
@@ -329,6 +329,24 @@ if __name__ == '__main__':
     # Formatting the keys for Javacard
     ## AUTH
     sys_cmd(KEY2JAVA+" "+AUTH_TOKEN_PATH+"/token_auth_private_key.bin "+AUTH_TOKEN_PATH+"/token_auth_public_key.bin "+AUTH_TOKEN_PATH+"/platform_auth_public_key.bin "+AUTH_TOKEN_PATH+"/shared_auth_petpin.bin "+AUTH_TOKEN_PATH+"/shared_auth_petname.bin "+AUTH_TOKEN_PATH+"/shared_auth_userpin.bin "+AUTH_TOKEN_PATH+"/master_symmetric_auth_key.bin "+AUTH_TOKEN_PATH+"/enc_master_symmetric_auth_local_pet_key.bin "+" "+str(auth_max_pin_tries)+" "+" "+str(auth_max_sc_tries)+" "+AUTH_TOKEN_PATH+"/sd_pwd_auth.bin"+" "+AUTH_TOKEN_PATH+"/AUTHKeys.java auth "+PLATFORM_PROFILE)
+    # In case of FIDO profile, also save the HMAC of the platform keys
+    if PLATFORM_PROFILE == "u2f2":        
+        print("==> U2F2 profile: generating platform keys hash HMAC") 
+        # HMAC of SHA-256(decrypted_token_pub_key || decrypted_platform_priv_key || decrypted_platform_pub_key)
+        to_hmac =  read_in_file(AUTH_TOKEN_PATH+"/token_auth_public_key.bin")
+        to_hmac += read_in_file(AUTH_TOKEN_PATH+"/platform_auth_private_key.bin")
+        to_hmac += read_in_file(AUTH_TOKEN_PATH+"/platform_auth_public_key.bin")
+        (to_hmac, _, _) = local_sha256(to_hmac)
+        # HMAC with the token FIDO secret key
+        token_fido_secret_key = read_in_file(AUTH_TOKEN_PATH+"/master_symmetric_auth_key.bin")[32:]
+        hm = local_hmac.new(token_fido_secret_key, digestmod=hashlib.sha256)
+        hm.update(to_hmac)
+        out_hmac = hm.digest()
+        save_in_file(out_hmac, AUTH_TOKEN_PATH+"/FIDO/fido_hmac.bin")
+        # Now generate the C header files
+        KEY2C = INTERPRETER + " " + SCRIPT_PATH+"/key2c.py"
+        sys_cmd(KEY2C+" "+AUTH_TOKEN_PATH+"/FIDO/fido_hmac.bin")
+
     # Cleanup
     sys_rm_file(AUTH_TOKEN_PATH+"/master_symmetric_auth_key.bin")
     sys_rm_file(AUTH_TOKEN_PATH+"/shared_auth_petname.bin")
