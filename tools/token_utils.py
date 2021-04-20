@@ -26,6 +26,9 @@ def _connect_to_token(verbose=True):
         card = None
     return card
 
+def try_connect_to_token(verbose):
+    return _connect_to_token(verbose)
+
 def connect_to_token(token_type=None):
     card = None
     while card == None:
@@ -582,7 +585,7 @@ class SCP:
 
 # Helper to fully unlock a token, which is the first step to
 # access advanced features of a token
-def token_full_unlock(card, token_type, local_keys_path, pet_pin = None, user_pin = None, force_pet_name_accept = False):
+def token_full_unlock(card, token_type, local_keys_path, pet_pin = None, user_pin = None, force_pet_name_accept = False, only_get_petname = False):
     # ======================
     # Get the PET PIN for local ECDH keys decryption
     if pet_pin == None:
@@ -600,6 +603,8 @@ def token_full_unlock(card, token_type, local_keys_path, pet_pin = None, user_pi
     if (sw1 != 0x90) or (sw2 != 0x00):
         print("\033[1;41m Error: something wrong happened when getting the PET name ...\033[1;m")
         sys.exit(-1) 
+    if only_get_petname == True:
+        return scp, resp
     if force_pet_name_accept == False:
         answer = None
         while answer != "y" and answer != "n":
@@ -615,5 +620,4 @@ def token_full_unlock(card, token_type, local_keys_path, pet_pin = None, user_pi
         else:
             print("\033[1;41m Error: USER pin seems wrong! The card is being LOCKED!\033[1;m")
         sys.exit(-1)
-
     return scp
