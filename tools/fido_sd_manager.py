@@ -227,7 +227,7 @@ class sd_header(Structure, StructHelper):
         ('bitmap', c_uint8 * (SLOTS_NUM // 8)),
         #
         ('hmac', c_uint8 * 32),
-        ('padding', c_uint8 * (SECTOR_SIZE - 32)),
+        ('padding', c_uint8 * ((SECTOR_SIZE * 5) - 32)),
         #
         ('slots', sd_slot_header_entry * SLOTS_NUM),
         ]
@@ -350,10 +350,10 @@ def read_SD_sectors(sd_device, sector_num, number = 1, key = None):
         (iv_key, _, _) = local_sha256(key)
         num_aes_sectors = (number * SECTOR_SIZE) // AES_CBC_ESSIV_SECTOR_SIZE
         if (number * SECTOR_SIZE) % AES_CBC_ESSIV_SECTOR_SIZE != 0:
-            num_aes_sectors += 1        
+            num_aes_sectors += 1
         for s in range(0, num_aes_sectors):
             # AES CBC-ESSIV
-            iv = derive_essiv_iv(iv_key, s, "AES", '\x00'*16)
+            iv = derive_essiv_iv(iv_key, (sector_num // AES_CBC_ESSIV_SECTOR_SIZE) + s, "AES", '\x00'*16)
             crypto = local_AES.new(key, AES.MODE_CBC, iv=iv)
             b = (s*AES_CBC_ESSIV_SECTOR_SIZE)
             e = ((s+1)*AES_CBC_ESSIV_SECTOR_SIZE)
@@ -382,7 +382,7 @@ def write_SD_sectors(sd_device, sector_num, sectors, key = None):
             num_aes_sectors += 1        
         for s in range(0, num_aes_sectors):
             # AES CBC-ESSIV
-            iv = derive_essiv_iv(iv_key, s, "AES", '\x00'*16)
+            iv = derive_essiv_iv(iv_key, (sector_num // AES_CBC_ESSIV_SECTOR_SIZE) + s, "AES", '\x00'*16)
             crypto = local_AES.new(key, AES.MODE_CBC, iv=iv)
             b = (s*AES_CBC_ESSIV_SECTOR_SIZE)
             e = ((s+1)*AES_CBC_ESSIV_SECTOR_SIZE)
@@ -766,10 +766,10 @@ if __name__ == '__main__':
     keys_path = sys.argv[1]
     pet_pin = sys.argv[2]
     user_pin = sys.argv[3]
-    key, sdpwd, scp = FIDO_token_get_assets("auth", keys_path, pet_pin, user_pin)
-    key = key[:32]
-    #key = "\xaa"*32
-    #sdpwd = "\xbb"*16
+    #key, sdpwd, scp = FIDO_token_get_assets("auth", keys_path, pet_pin, user_pin)
+    #key = key[:32]
+    key = "\xaa"*32
+    sdpwd = "\xbb"*16
     print(local_hexlify(key))
     print(local_hexlify(sdpwd))    
     #
