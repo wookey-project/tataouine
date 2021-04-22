@@ -179,7 +179,7 @@ def FIDO_token_authenticate(scp, keys_path, app_param, kh, check_only=False):
 #        SDCard (encrypted)
 #   | bitmap of active sectors   | (len 1024 (two sectors))
 #   |----------------------------| 
-#   | hmac of slotting table     | (len 512)
+#   | hmac of slotting table     | (len 512 + 2560)
 #   |----------------------------|               \
 #   | appid1|slotid1|hmac        | (len 512)     |
 #   |----------------------------|               |
@@ -227,7 +227,7 @@ class sd_header(Structure, StructHelper):
         ('bitmap', c_uint8 * (SLOTS_NUM // 8)),
         #
         ('hmac', c_uint8 * 32),
-        ('padding', c_uint8 * ((SECTOR_SIZE * 5) - 32)),
+        ('padding', c_uint8 * ((SECTOR_SIZE * 6) - 32)),
         #
         ('slots', sd_slot_header_entry * SLOTS_NUM),
         ]
@@ -263,14 +263,18 @@ class sd_header(Structure, StructHelper):
     def update_hmac(self, key):
         # Compute HMAC
         hm = local_hmac.new(key, digestmod=hashlib.sha256)
-        to_hmac = self.serialize('bitmap')+self.serialize('slots')
+        to_hmac = self.serialize('bitmap')
+        for i in range(0, SLOTS_NUM):
+            to_hmac += self.slots[i].serialize('appid') + self.slots[i].serialize('slotid') + self.slots[i].serialize('hmac')
         hm.update(str_decode(to_hmac))
         self.deserialize('hmac', str_encode(hm.digest()))
         return
     def check_hmac(self, key):
         # Compute HMAC
         hm = local_hmac.new(key, digestmod=hashlib.sha256)
-        to_hmac = self.serialize('bitmap')+self.serialize('slots')
+        to_hmac = self.serialize('bitmap')
+        for i in range(0, SLOTS_NUM):
+            to_hmac += self.slots[i].serialize('appid') + self.slots[i].serialize('slotid') + self.slots[i].serialize('hmac')
         hm.update(str_decode(to_hmac))
         hmac = str_encode(hm.digest())
         if hmac != self.serialize('hmac'):
@@ -331,7 +335,7 @@ class sd_slot_entry(Structure, StructHelper):
 
 ##############
 # Global variable to tell if we use SD surface encryption
-USE_SD_ENCRYPTION = True
+USE_SD_ENCRYPTION = False
 AES_CBC_ESSIV_SECTOR_SIZE = SLOT_SIZE
 
 def read_SD_sectors(sd_device, sector_num, number = 1, key = None):    
