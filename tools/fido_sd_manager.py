@@ -335,7 +335,7 @@ class sd_slot_entry(Structure, StructHelper):
 
 ##############
 # Global variable to tell if we use SD surface encryption
-USE_SD_ENCRYPTION = False
+USE_SD_ENCRYPTION = True
 AES_CBC_ESSIV_SECTOR_SIZE = SLOT_SIZE
 
 def read_SD_sectors(sd_device, sector_num, number = 1, key = None):    
@@ -355,9 +355,10 @@ def read_SD_sectors(sd_device, sector_num, number = 1, key = None):
         num_aes_sectors = (number * SECTOR_SIZE) // AES_CBC_ESSIV_SECTOR_SIZE
         if (number * SECTOR_SIZE) % AES_CBC_ESSIV_SECTOR_SIZE != 0:
             num_aes_sectors += 1
+        base = (sector_num * SECTOR_SIZE) // AES_CBC_ESSIV_SECTOR_SIZE
         for s in range(0, num_aes_sectors):
             # AES CBC-ESSIV
-            iv = derive_essiv_iv(iv_key, (sector_num // AES_CBC_ESSIV_SECTOR_SIZE) + s, "AES", '\x00'*16)
+            iv = derive_essiv_iv(iv_key, base + s, "AES")
             crypto = local_AES.new(key, AES.MODE_CBC, iv=iv)
             b = (s*AES_CBC_ESSIV_SECTOR_SIZE)
             e = ((s+1)*AES_CBC_ESSIV_SECTOR_SIZE)
@@ -383,10 +384,11 @@ def write_SD_sectors(sd_device, sector_num, sectors, key = None):
         (iv_key, _, _) = local_sha256(key)
         num_aes_sectors = len(sectors) // AES_CBC_ESSIV_SECTOR_SIZE
         if len(sectors) % AES_CBC_ESSIV_SECTOR_SIZE != 0:
-            num_aes_sectors += 1        
+            num_aes_sectors += 1
+        base = (sector_num * SECTOR_SIZE) // AES_CBC_ESSIV_SECTOR_SIZE
         for s in range(0, num_aes_sectors):
             # AES CBC-ESSIV
-            iv = derive_essiv_iv(iv_key, (sector_num // AES_CBC_ESSIV_SECTOR_SIZE) + s, "AES", '\x00'*16)
+            iv = derive_essiv_iv(iv_key, base + s, "AES")
             crypto = local_AES.new(key, AES.MODE_CBC, iv=iv)
             b = (s*AES_CBC_ESSIV_SECTOR_SIZE)
             e = ((s+1)*AES_CBC_ESSIV_SECTOR_SIZE)

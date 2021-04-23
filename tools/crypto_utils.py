@@ -359,12 +359,15 @@ def decrypt_platform_data(encrypted_platform_bin_file, pin, data_type, override_
 
 
 ## CBC-ESSIV IV derivation
-def derive_essiv_iv(key, sector_num, algo, SD_diverse):
+def derive_essiv_iv(key, sector_num, algo, SD_diverse = None):
     # Sanity check
-    if len(SD_diverse) != 16:
+    if SD_diverse != None and len(SD_diverse) != 16:
         print("Bad SD CID length %d" % len(SD_diverse))
         sys.exit(-1)
-    (hash_SD, _, _) = local_sha256(SD_diverse)
+    if SD_diverse != None:
+        (hash_SD, _, _) = local_sha256(SD_diverse)
+    else:
+        hash_SD = '\x00' * 16
     if algo == "AES":
         sector_str = expand(inttostring(sector_num), 32, "LEFT") + hash_SD[:(16-4)]
         aes = local_AES.new(key, AES.MODE_ECB)
