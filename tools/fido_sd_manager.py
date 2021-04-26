@@ -74,6 +74,8 @@ class StructHelper(object):
                     return pack("<H", val) 
                 elif type_ == c_uint32:
                     return pack("<I", val)
+                elif type_ == c_uint64:
+                    return pack("<Q", val)
                 else:
                     # Constructed type: call serialize again
                     return val.serialize('')
@@ -179,7 +181,7 @@ def FIDO_token_authenticate(scp, keys_path, app_param, kh, check_only=False):
 #        SDCard (encrypted)
 #   | bitmap of active sectors   | (len 1024 (two sectors))
 #   |----------------------------| 
-#   | hmac of slotting table     | (len 512 + 2560)
+#   | hmac of slotting table+ctr | (len 512 + 2560)
 #   |----------------------------|               \
 #   | appid1|slotid1|hmac        | (len 512)     |
 #   |----------------------------|               |
@@ -225,9 +227,11 @@ class sd_header(Structure, StructHelper):
     _pack_ = 1
     _fields_ = [
         ('bitmap', c_uint8 * (SLOTS_NUM // 8)),
+        # Usage counter for anti-replay
+        ('ctr_replay', c_uint64),
         #
         ('hmac', c_uint8 * 32),
-        ('padding', c_uint8 * ((SECTOR_SIZE * 6) - 32)),
+        ('padding', c_uint8 * ((SECTOR_SIZE * 6) - 32 - 8)),
         #
         ('slots', sd_slot_header_entry * SLOTS_NUM),
         ]
@@ -261,20 +265,22 @@ class sd_header(Structure, StructHelper):
         self.slots[slot_num].deserialize('', b'\x00'*sizeof(sd_slot_header_entry))
         return
     def update_hmac(self, key):
-        # Compute HMAC
+        # Compute HMAC only on active slots
         hm = local_hmac.new(key, digestmod=hashlib.sha256)
-        to_hmac = self.serialize('bitmap')
+        to_hmac = self.serialize('bitmap') + self.serialize('ctr_replay')
         for i in range(0, SLOTS_NUM):
-            to_hmac += self.slots[i].serialize('appid') + self.slots[i].serialize('slotid') + self.slots[i].serialize('hmac')
+            if self.is_slot_active(i) == True:
+                to_hmac += self.slots[i].serialize('appid') + self.slots[i].serialize('slotid') + self.slots[i].serialize('hmac')
         hm.update(str_decode(to_hmac))
         self.deserialize('hmac', str_encode(hm.digest()))
         return
     def check_hmac(self, key):
         # Compute HMAC
         hm = local_hmac.new(key, digestmod=hashlib.sha256)
-        to_hmac = self.serialize('bitmap')
+        to_hmac = self.serialize('bitmap') + self.serialize('ctr_replay')
         for i in range(0, SLOTS_NUM):
-            to_hmac += self.slots[i].serialize('appid') + self.slots[i].serialize('slotid') + self.slots[i].serialize('hmac')
+            if self.is_slot_active(i) == True:
+                to_hmac += self.slots[i].serialize('appid') + self.slots[i].serialize('slotid') + self.slots[i].serialize('hmac')
         hm.update(str_decode(to_hmac))
         hmac = str_encode(hm.digest())
         if hmac != self.serialize('hmac'):
