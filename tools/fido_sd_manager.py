@@ -183,11 +183,11 @@ def FIDO_token_authenticate(scp, keys_path, app_param, kh, check_only=False):
 #   |----------------------------| 
 #   | hmac of slotting table+ctr | (len 512 + 2560)
 #   |----------------------------|               \
-#   | appid1|slotid1|hmac        | (len 512)     |
+#   | appid1|kh1|slotid1|hmac    | (len 512)     |
 #   |----------------------------|               |
-#   | appid2|slotid2|hmac        | (len 512)     = global slotting table
+#   | appid2|kh2|slotid2|hmac    | (len 512)     = global slotting table
 #   |----------------------------|               |
-#   | appid3|slotid3|hmac        | (len 512)     |
+#   | appid3|kh3|slotid3|hmac    | (len 512)     |
 #   |----------------------------|               /
 #   | ... (upto 4M len max)      |
 #   |                            |
@@ -214,9 +214,10 @@ class sd_slot_header_entry(Structure, StructHelper):
     _pack_ = 1
     _fields_ = [
         ('appid', c_uint8 * 32),
+        ('kh', c_uint8 * 32),
         ('slotid', c_uint32),
         ('hmac', c_uint8 * 32),
-        ('padding', c_uint8 * (SECTOR_SIZE - 68)), 
+        ('padding', c_uint8 * (SECTOR_SIZE - 68 - 32)), 
         ]
     # Zero initialize
     def __init__(self):
@@ -270,7 +271,7 @@ class sd_header(Structure, StructHelper):
         to_hmac = self.serialize('bitmap') + self.serialize('ctr_replay')
         for i in range(0, SLOTS_NUM):
             if self.is_slot_active(i) == True:
-                to_hmac += self.slots[i].serialize('appid') + self.slots[i].serialize('slotid') + self.slots[i].serialize('hmac')
+                to_hmac += self.slots[i].serialize('appid') + self.slots[i].serialize('kh') + self.slots[i].serialize('slotid') + self.slots[i].serialize('hmac')
         hm.update(str_decode(to_hmac))
         self.deserialize('hmac', str_encode(hm.digest()))
         return
@@ -280,7 +281,7 @@ class sd_header(Structure, StructHelper):
         to_hmac = self.serialize('bitmap') + self.serialize('ctr_replay')
         for i in range(0, SLOTS_NUM):
             if self.is_slot_active(i) == True:
-                to_hmac += self.slots[i].serialize('appid') + self.slots[i].serialize('slotid') + self.slots[i].serialize('hmac')
+                to_hmac += self.slots[i].serialize('appid') + self.slots[i].serialize('kh') + self.slots[i].serialize('slotid') + self.slots[i].serialize('hmac')
         hm.update(str_decode(to_hmac))
         hmac = str_encode(hm.digest())
         if hmac != self.serialize('hmac'):
@@ -300,7 +301,7 @@ class sd_icon_rgb_fixed(Structure, StructHelper):
     _pack_ = 1
     _fields_ = [
         ('rgb_color', c_uint8 * 3),
-        ('padding', c_uint8 * (SLOT_SIZE - 104 - 3)),
+        ('padding', c_uint8 * (SLOT_SIZE - 104 - 3 - 60 - 32)),
         ]
     # Zero initialize
     def __init__(self):
@@ -310,7 +311,7 @@ class sd_icon_data(Union, StructHelper):
     _pack_ = 1
     _fields_ = [
         ('rgb_color', sd_icon_rgb_fixed),
-        ('icon_data', c_uint8 * (SLOT_SIZE - 104)),
+        ('icon_data', c_uint8 * (SLOT_SIZE - 104 - 60 - 32)),
         ]
     # Zero initialize
     def __init__(self):
@@ -320,8 +321,10 @@ class sd_slot_entry(Structure, StructHelper):
     _pack_ = 1
     _fields_ = [
         ('appid', c_uint8 * 32),
+        ('kh', c_uint8 * 32),
         ('flags', c_uint32),
         ('name', c_uint8 * 60),
+        ('url', c_uint8 * 60),
         ('ctr', c_uint32),
         ('icon_len', c_uint16),
         ('icon_type', c_uint16),
@@ -333,7 +336,7 @@ class sd_slot_entry(Structure, StructHelper):
     def hmac(self, key):
         # Compute HMAC
         hm = local_hmac.new(key, digestmod=hashlib.sha256)
-        to_hmac = self.serialize('appid')+self.serialize('flags')+self.serialize('name')+self.serialize('ctr')+self.serialize('icon_len')+self.serialize('icon_type')
+        to_hmac = self.serialize('appid')+self.serialize('kh')+self.serialize('flags')+self.serialize('name')+self.serialize('url')+self.serialize('ctr')+self.serialize('icon_len')+self.serialize('icon_type')
         if self.icon_len != 0:
             to_hmac += self.serialize('icon')[:self.icon_len]
         hm.update(str_decode(to_hmac))
@@ -444,7 +447,7 @@ def init_SD(key, device):
     return
 
 # Check the intergity of our SD header and get slot appid if asked, or by slot number
-def get_SD_appid_slot(key, device, slot_num=None, appid=None, check_hmac=True):
+def get_SD_appid_slot(key, device, slot_num=None, appid=None, kh=None, check_hmac=True):
     # Derive our keys from the master key
     (AES_key, _, _)  = local_sha256("ENCRYPTION"+ key)
     (HMAC_key, _, _) = local_sha256("INTEGRITY" + key)    
@@ -483,12 +486,18 @@ def get_SD_appid_slot(key, device, slot_num=None, appid=None, check_hmac=True):
         if (appid != None) and (appid_slot.serialize('appid') != appid):
             close_SD(sd_device)
             return False, appid_slot, slot_num
+        if (kh != None) and (appid_slot.serialize('kh') != kh):
+            close_SD(sd_device)
+            return False, appid_slot, slot_num
         close_SD(sd_device)
         return True, appid_slot, slot_num 
-    # Find the appid slot bye searching by appid
+    # Find the appid slot bye searching by appid and the optional keyhandle hash
     for i in range(0, SLOTS_NUM):
         # Get active slot data
         if (sd_h.slots[i].serialize('appid') == appid) and (sd_h.is_slot_active(i) == True):
+            if (kh != None) and (kh != sd_h.slots[i].serialize('kh')): 
+                # This is not the slot we want
+                continue
             # Appid found, get the sector
             slotid = sd_h.slots[i].slotid
             # Read it
@@ -506,7 +515,7 @@ def get_SD_appid_slot(key, device, slot_num=None, appid=None, check_hmac=True):
     return True, None, None
 
 # Remove an appid
-def remove_appid(key, device, appid=None, slot_num=None, check_hmac=True):
+def remove_appid(key, device, appid=None, kh=None, slot_num=None, check_hmac=True):
     if (appid == None) and (slot_num == None):
         print("remove_appid: appid or slot_num must be not None!")
         return False
@@ -535,8 +544,12 @@ def remove_appid(key, device, appid=None, slot_num=None, check_hmac=True):
     # Find and remove our appid
     for i in range(0, SLOTS_NUM):
         # Get active slot data
-        if (sd_h.slots[i].serialize('appid') == appid) and (sd_h.is_slot_active(i) == True):
-            slot_num = i
+        if (sd_h.slots[i].serialize('appid') == appid) and (sd_h.is_slot_active(i) == True):            
+            if (kh != None):
+                if (kh == sd_h.slots[i].serialize('kh')):
+                    slot_num = i
+            else:
+                slot_num = i
     # Now remove
     if slot_num != None:
         print("remove_appid: removing slot %d" % slot_num)
@@ -572,7 +585,7 @@ def remove_appid(key, device, appid=None, slot_num=None, check_hmac=True):
 
 
 # Update or create new appid and add a new slot
-def update_appid(key, device, appid, slot_num=None, name=None, ctr=0, icon=None, flags=0, check_hmac=True):
+def update_appid(key, device, appid, slot_num=None, name=None, url=None, kh=None, ctr=0, icon=None, flags=0, check_hmac=True):
     # Derive our keys from the master key
     (AES_key, _, _)  = local_sha256("ENCRYPTION"+ key)
     (HMAC_key, _, _) = local_sha256("INTEGRITY" + key)    
@@ -598,7 +611,7 @@ def update_appid(key, device, appid, slot_num=None, name=None, ctr=0, icon=None,
         sd_appid_slot.deserialize('appid', appid)
     else:
         # Slot number not provided, find it
-        _, sd_appid_slot, num_slot = get_SD_appid_slot(key, device, appid=appid)
+        _, sd_appid_slot, num_slot = get_SD_appid_slot(key, device, appid=appid, kh=kh)
     found = False
     if sd_appid_slot == None:
         # Find a free slot
@@ -616,6 +629,8 @@ def update_appid(key, device, appid, slot_num=None, name=None, ctr=0, icon=None,
         print("create_new_appid: creating new slot %d" % num_slot)
         sd_appid_slot = sd_slot_entry()
         sd_appid_slot.deserialize('appid', appid)
+        if kh != None:
+            sd_appid_slot.deserialize('kh', kh)
     else:
         print("create_new_appid: updating slot %d" % num_slot)
     # Fill our slot
@@ -626,6 +641,16 @@ def update_appid(key, device, appid, slot_num=None, name=None, ctr=0, icon=None,
             print("update_appid: name %s too long!" % name)
             return False, None, None, None
         sd_appid_slot.deserialize('name', name+(b'\x00'*(60-len(name))))
+    if url != None:
+        if len(url) > 60:
+            print("update_appid: url %s too long!" % url)
+            return False, None, None, None
+        sd_appid_slot.deserialize('url', url+(b'\x00'*(60-len(url))))
+    if kh != None:
+        if len(kh) != 32:
+            print("update_appid: kh has bad size" % len(kh))
+            return False, None, None, None
+        sd_appid_slot.deserialize('kh', kh) 
     # Put our icon data inside it
     sd_appid_slot.icon_len = 0
     sd_appid_slot.icon_type = icon_types['NONE']
@@ -647,6 +672,8 @@ def update_appid(key, device, appid, slot_num=None, name=None, ctr=0, icon=None,
     # We use a fixed address
     sd_h.slots[num_slot].slotid = (sizeof(sd_header) + (num_slot * SLOT_SIZE)) // SECTOR_SIZE
     sd_h.slots[num_slot].deserialize('appid', appid)
+    if kh != None:
+        sd_h.slots[num_slot].deserialize('kh', kh)
     # Now update the hmacs and save the slot
     hmac = sd_appid_slot.hmac(HMAC_key)
     sd_h.slots[num_slot].deserialize('hmac', hmac)
@@ -737,6 +764,8 @@ def dump_slots(key, device, check_hmac=True, slot_num=None, verbose=False, curr_
             log_print("    |- appid     : %s" % (binascii.hexlify(appid_slot.serialize('appid'))), verbose)
             log_print("    |- flags     : 0x%08x" % (appid_slot.flags), verbose)
             log_print("    |- name      : %s" % (appid_slot.serialize('name').decode("latin-1")), verbose)
+            log_print("    |- url       : %s" % (appid_slot.serialize('url').decode("latin-1")), verbose)
+            log_print("    |- kh        : %s" % (binascii.hexlify(appid_slot.serialize('kh'))), verbose)
             log_print("    |- ctr       : 0x%08x" % (appid_slot.ctr), verbose)
             log_print("    |- icon_len  : 0x%04x" % (appid_slot.icon_len), verbose)
             log_print("    |- icon_type : 0x%04x (%s)" % (appid_slot.icon_type, inverse_mapping(icon_types)[appid_slot.icon_type]), verbose)
@@ -797,10 +826,11 @@ if __name__ == '__main__':
     dump_slots(key, "/tmp/sd.dump", verbose=True)
     check =  update_appid(key, "/tmp/sd.dump", b"\xaa"*32, ctr=0x1, icon=b"\xaa\xbb\xcc", check_hmac=True)
     check =  update_appid(key, "/tmp/sd.dump", b"\xbb"*32, ctr=0x2, icon=None, check_hmac=True)
+    #sys.exit(0)
     with open("/tmp/amazon.png", "rb") as f:        
-        check =  update_appid(key, "/tmp/sd.dump", b"\xcc"*32, ctr=0x3, name=b"Amazon", icon=RLE_compress_buffer(f.read(), target_dim=(45,45), colors=6)[0], check_hmac=True)
+        check =  update_appid(key, "/tmp/sd.dump", b"\xcc"*32, ctr=0x3, name=b"Amazon", url=b"www.amazon.fr", kh=b'\xab'*32, icon=RLE_compress_buffer(f.read(), target_dim=(45,45), colors=6)[0], check_hmac=True)
         for i in range(0, 200):
             f.seek(0)
-            check =  update_appid(key, "/tmp/sd.dump", ("\xcc"*31+chr(i)).encode("latin-1"), ctr=i, name=("Amazon %d" % i).encode("latin-1"), icon=RLE_compress_buffer(f.read(), target_dim=(45,45), colors=6)[0], check_hmac=True)
+            check =  update_appid(key, "/tmp/sd.dump", ("\xcc"*31+chr(i)).encode("latin-1"), ctr=i, name=("Amazon %d" % i).encode("latin-1"), icon=RLE_compress_buffer(f.read(), target_dim=(45,45), colors=6)[0], url=("www.amazon%d.fr" % i).encode("latin-1"), check_hmac=True)
    
     dump_slots(key, "/tmp/sd.dump", verbose=True)

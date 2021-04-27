@@ -15,6 +15,10 @@ from math import ceil
 
 from PyQt5.QtCore import QThread
 
+# For parsing JSON
+import glob
+import json
+
 # Thread worker to get all the slots (possibly long running, hence the thread)
 class Worker(QObject):
     finished = pyqtSignal()
@@ -25,7 +29,7 @@ class Worker(QObject):
         self.do_exit = False
     def curr_slot_progress(self, n, m):
         self.progressbar.setWindowTitle("Please wait, loading active slots %d / %d (maximum %d)" % (n, self.max_active_slots, m))
-        self.progressbar.progress.setValue((n / self.max_active_slots) * 100.00)
+        self.progressbar.progress.setValue(int((n / self.max_active_slots) * 100.00))
         if self.do_exit == True:            
             return True
         return False
@@ -159,6 +163,7 @@ class LoadData(QWidget):
         self.mkey.move(X_shift, Y_shift)
         self.mkey_lbl.setDisabled(True)
         self.mkey.setDisabled(True)
+        self.mkey.setText("aa"*32)
         Y_shift += Y_shift_delta
 
 
@@ -244,7 +249,7 @@ class LoadData(QWidget):
                 return      
         self.mainwindow.device = self.sd_path.text()
         self.mainwindow.key = key
-        QTimer.singleShot(500, self.mainwindow.refresh)
+        QTimer.singleShot(300, self.mainwindow.refresh)
         self.close()
 
     def cancel_clicked(self, event):
@@ -271,6 +276,19 @@ class LoadData(QWidget):
             self.mkey.setDisabled(True)
         return
 
+#############
+EXISTING_APPID_PATH = SCRIPT_PATH + "fido_db/"
+class SelectExisting(QWidget):
+    def closeEvent(self, evnt):
+        self.close()
+    def __init__(self, upwindow):
+        super().__init__()
+        self.upwindow = upwindow
+        self.setMinimumSize(400, 185)
+        # Make window on top
+        self.setWindowModality(Qt.ApplicationModal)
+        # Get all our existing APPIDs
+        print(glob.glob(EXISTING_APPID_PATH + "*.json")) 
 
 #############
 class EditSlot(QWidget):
@@ -315,6 +333,15 @@ class EditSlot(QWidget):
         self.appid.move(X_shift, Y_shift)
         Y_shift += Y_shift_delta
 
+        self.kh_lbl = QLabel("kh:", self)
+        self.kh_lbl.move(X_shift_lbl, Y_shift)
+        self.kh = QLineEdit(self)
+        if slot_idx != None: 
+            self.kh.setText("%s" % binascii.hexlify(appid_slot.serialize('kh')).decode("latin-1"))
+        self.kh.setMinimumWidth(min_w)
+        self.kh.move(X_shift, Y_shift)
+        Y_shift += Y_shift_delta
+
         self.name_lbl = QLabel("name:", self)
         self.name_lbl.move(X_shift_lbl, Y_shift)
         self.name = QLineEdit(self)
@@ -324,11 +351,22 @@ class EditSlot(QWidget):
         self.name.move(X_shift, Y_shift)
         Y_shift += Y_shift_delta
 
+        self.url_lbl = QLabel("url:", self)
+        self.url_lbl.move(X_shift_lbl, Y_shift)
+        self.url = QLineEdit(self)
+        if slot_idx != None: 
+            self.url.setText("%s" % appid_slot.serialize('url').decode("latin-1").rstrip('\x00'))
+        self.url.setMinimumWidth(min_w)
+        self.url.move(X_shift, Y_shift)
+        Y_shift += Y_shift_delta
+
         self.ctr_lbl = QLabel("ctr:", self)
         self.ctr_lbl.move(X_shift_lbl, Y_shift)
         self.ctr = QLineEdit(self)
         if slot_idx != None: 
             self.ctr.setText("%d" % appid_slot.ctr)
+        else:
+            self.ctr.setText("0")
         self.ctr.setMinimumWidth(min_w)
         self.ctr.move(X_shift, Y_shift)
         Y_shift += Y_shift_delta
@@ -338,6 +376,8 @@ class EditSlot(QWidget):
         self.flags = QLineEdit(self)
         if slot_idx != None: 
             self.flags.setText("%d" % appid_slot.flags)
+        else:
+            self.flags.setText("0")
         self.flags.setMinimumWidth(min_w)
         self.flags.move(X_shift, Y_shift)
         Y_shift += Y_shift_delta
@@ -428,7 +468,10 @@ class EditSlot(QWidget):
         return
 
     def load_existing_clicked(self, event):
-        # Show the user the known appids
+        print("Load existing clicked")
+        # Show the user the known appids parsed from the dedicated folder
+        self.select = SelectExisting(self)
+        self.select.show()
         return
 
     def cancel_clicked(self, event):
@@ -504,23 +547,32 @@ class EditSlot(QWidget):
             icon, _, _ = RLE_compress_buffer(ba.data(), target_dim=(45, 45))
         else:
             icon = None
-        # Check if we have been asked to add an existing appid
-        _, _, check_slot = get_SD_appid_slot(self.mainwindow.key, self.mainwindow.device, appid=binascii.unhexlify(self.appid.text()), check_hmac=False)
+        kh = None
+        if len(self.kh.text()) == 0:
+            kh_ = b"\x00"*32
+        else:
+            kh_ = binascii.unhexlify(self.kh.text())
+            kh = binascii.unhexlify(self.kh.text())
+        # Check if we have been asked to add an existing appid with kh
+        _, _, check_slot = get_SD_appid_slot(self.mainwindow.key, self.mainwindow.device, appid=binascii.unhexlify(self.appid.text()), kh=kh_, check_hmac=False)
         if (check_slot != None) and (check_slot != slot_num):
             # Tell the user this is not possible
-            error_dialog = QMessageBox()
-            error_dialog.setIcon(QMessageBox.Critical)
+            warning_dialog = QMessageBox()
+            warning_dialog.setIcon(QMessageBox.Critical)
             if slot_num != None:
-                error_dialog.setText("Error modifying slot %d" % slot_num)
+                warning_dialog.setText("Modifying slot %d" % slot_num)
             else:
-                error_dialog.setText("Error adding slot")
-            error_dialog.setInformativeText("Appid:\n%s\nalready exists in slot %d!\nCannot add duplicate" % (self.appid.text(), check_slot))
-            error_dialog.setWindowTitle("Error")
-            error_dialog.exec_()
+                warning_dialog.setText("Adding slot")
+            warning_dialog.setInformativeText("Appid:\n%s with\nKH:\n%s\nalready exists in slot %d\nAdding a duplicate is forbidden" % (self.appid.text(), self.kh.text(), check_slot)) 
+            warning_dialog.setWindowTitle("Error")
+            warning_dialog.exec_()
             return
+        error = False
         try:
-            check, num, _, _ = update_appid(self.mainwindow.key, self.mainwindow.device, binascii.unhexlify(self.appid.text()), slot_num=slot_num, ctr=int(self.ctr.text()), flags=int(self.flags.text()), icon=icon, name=self.name.text().encode('latin-1'), check_hmac=True)
+            check, num, _, _ = update_appid(self.mainwindow.key, self.mainwindow.device, binascii.unhexlify(self.appid.text()), slot_num=slot_num, ctr=int(self.ctr.text()), flags=int(self.flags.text()), icon=icon, name=self.name.text().encode('latin-1'), url=self.url.text().encode('latin-1'), kh = kh, check_hmac=True)
         except:
+            error = True
+        if (error == True) or (num == None):
             # Report an error
             error_dialog = QMessageBox()
             error_dialog.setIcon(QMessageBox.Critical)
@@ -528,7 +580,7 @@ class EditSlot(QWidget):
                 error_dialog.setText("Error modifying slot %d" % slot_num)
             else:
                 error_dialog.setText("Error adding slot")
-            error_dialog.setInformativeText("An error occured: have you filled all the slot inputs?")
+            error_dialog.setInformativeText("An error occured: have you correctly filled all the slot inputs?\n-kh is optional, must be 64 hexadecimal long)")
             error_dialog.setWindowTitle("Error")
             error_dialog.exec_()
             return
