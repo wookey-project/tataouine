@@ -540,16 +540,19 @@ def remove_appid(key, device, appid=None, kh=None, slot_num=None, check_hmac=Tru
        if (appid != None) and (sd_h.slots[slot_num].serialize('appid') != appid):
            print("remove_appid: appid differ in slot %d from provided one" % slot_num)
            close_SD(sd_device)
-           return False       
-    # Find and remove our appid
-    for i in range(0, SLOTS_NUM):
-        # Get active slot data
-        if (sd_h.slots[i].serialize('appid') == appid) and (sd_h.is_slot_active(i) == True):            
-            if (kh != None):
-                if (kh == sd_h.slots[i].serialize('kh')):
+           return False
+    else:
+        # Find our appid and the corresponding slot number
+        for i in range(0, SLOTS_NUM):
+            # Get active slot data
+            if (sd_h.slots[i].serialize('appid') == appid) and (sd_h.is_slot_active(i) == True):            
+                if (kh != None):
+                    if (kh == sd_h.slots[i].serialize('kh')):
+                        slot_num = i
+                        break
+                else:
                     slot_num = i
-            else:
-                slot_num = i
+                    break
     # Now remove
     if slot_num != None:
         print("remove_appid: removing slot %d" % slot_num)
@@ -815,22 +818,34 @@ if __name__ == '__main__':
     print(local_hexlify(sdpwd))    
     #
     init_SD(key, "/tmp/sd.dump")
-    check, appid, num_slot = get_SD_appid_slot(key, "/tmp/sd.dump", appid=b"\xaa"*32)
-    check =  update_appid(key, "/tmp/sd.dump", b"\xcd"*32, ctr=0x11223344, icon=None, check_hmac=True)
-    check, appid, num_slot = get_SD_appid_slot(key, "/tmp/sd.dump", appid=b"\xcd"*32)
-    check =  update_appid(key, "/tmp/sd.dump", b"\xab"*32, ctr=0x55667788, icon=None, check_hmac=True)
-    check, appid, num_slot = get_SD_appid_slot(key, "/tmp/sd.dump", appid=b"\xab"*32)
-    dump_slots(key, "/tmp/sd.dump", verbose=True)
-    check = remove_appid(key, "/tmp/sd.dump", b"\xab"*32)
-    check, appid, num_slot = get_SD_appid_slot(key, "/tmp/sd.dump", appid=b"\xab"*32)
-    dump_slots(key, "/tmp/sd.dump", verbose=True)
-    check =  update_appid(key, "/tmp/sd.dump", b"\xaa"*32, ctr=0x1, icon=b"\xaa\xbb\xcc", check_hmac=True)
-    check =  update_appid(key, "/tmp/sd.dump", b"\xbb"*32, ctr=0x2, icon=None, check_hmac=True)
+    #check, appid, num_slot = get_SD_appid_slot(key, "/tmp/sd.dump", appid=b"\xaa"*32)
+    #check =  update_appid(key, "/tmp/sd.dump", b"\xcd"*32, name=b"Mon service custom", url=b"www.sericefido.org", ctr=0x1337, icon=None, check_hmac=True)
+    #check, appid, num_slot = get_SD_appid_slot(key, "/tmp/sd.dump", appid=b"\xcd"*32)
+    #check =  update_appid(key, "/tmp/sd.dump", b"\xab"*32, ctr=0x55667788, icon=None, check_hmac=True)
+    #check, appid, num_slot = get_SD_appid_slot(key, "/tmp/sd.dump", appid=b"\xab"*32)
+    #dump_slots(key, "/tmp/sd.dump", verbose=True)
+    #check = remove_appid(key, "/tmp/sd.dump", b"\xab"*32)
+    #check, appid, num_slot = get_SD_appid_slot(key, "/tmp/sd.dump", appid=b"\xab"*32)
+    #dump_slots(key, "/tmp/sd.dump", verbose=True)
+    #check =  update_appid(key, "/tmp/sd.dump", b"\xaa"*32, ctr=0x1, icon=b"\xaa\xbb\xcc", check_hmac=True)
+    #check =  update_appid(key, "/tmp/sd.dump", b"\xbb"*32, ctr=0x2, icon=None, check_hmac=True)
     #sys.exit(0)
-    with open("/tmp/amazon.png", "rb") as f:        
-        check =  update_appid(key, "/tmp/sd.dump", b"\xcc"*32, ctr=0x3, name=b"Amazon", url=b"www.amazon.fr", kh=b'\xab'*32, icon=RLE_compress_buffer(f.read(), target_dim=(45,45), colors=6)[0], check_hmac=True)
-        for i in range(0, 200):
+    U2F_APPID_DB_PATH = SCRIPT_PATH + "fido_db/"
+    sys.path.append(U2F_APPID_DB_PATH)
+    import fido_db
+    #for a in fido_db.u2f_rp_database:
+    #    logo = binascii.unhexlify(a['logo'])
+    #    if len(logo) != 0:
+    #        check =  update_appid(key, "/tmp/sd.dump", binascii.unhexlify(a['appid']), ctr=0, name=a['name'].encode("latin-1"), icon=RLE_compress_buffer(logo, target_dim=(45,45), colors=6)[0], url=(a['url']).encode("latin-1"), check_hmac=True)
+    #    else:
+    #        check =  update_appid(key, "/tmp/sd.dump", binascii.unhexlify(a['appid']), ctr=0, name=a['name'].encode("latin-1"), icon=None, url=(a['url']).encode("latin-1"), check_hmac=True)
+ 
+    with open("/tmp/amazon.png", "rb") as f: 
+        #check =  update_appid(key, "/tmp/sd.dump", b"\xcc"*32, ctr=0x3, name=b"Amazon", url=b"www.amazon.fr", kh=b'\xab'*32, icon=RLE_compress_buffer(f.read(), target_dim=(45,45), colors=6)[0], check_hmac=True)
+        for i in range(0, 300):
+            print("=============== %d" % i)
             f.seek(0)
-            check =  update_appid(key, "/tmp/sd.dump", ("\xcc"*31+chr(i)).encode("latin-1"), ctr=i, name=("Amazon %d" % i).encode("latin-1"), icon=RLE_compress_buffer(f.read(), target_dim=(45,45), colors=6)[0], url=("www.amazon%d.fr" % i).encode("latin-1"), check_hmac=True)
-   
+            check =  update_appid(key, "/tmp/sd.dump", ("\xcc"*30+chr((i >> 16) & 0xff)+chr(i & 0xff)).encode("latin-1"), slot_num=i, ctr=i, name=("Amazon %d" % i).encode("latin-1"), icon=RLE_compress_buffer(f.read(), target_dim=(45,45), colors=6)[0], url=("www.amazon%d.fr" % i).encode("latin-1"), check_hmac=True)
+  
+    
     dump_slots(key, "/tmp/sd.dump", verbose=True)

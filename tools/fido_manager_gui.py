@@ -277,7 +277,7 @@ class LoadData(QWidget):
         return
 
 #############
-EXISTING_APPID_PATH = SCRIPT_PATH + "fido_db/"
+U2F_APPID_DB_PATH = SCRIPT_PATH + "fido_db/"
 class SelectExisting(QWidget):
     def closeEvent(self, evnt):
         self.close()
@@ -285,10 +285,76 @@ class SelectExisting(QWidget):
         super().__init__()
         self.upwindow = upwindow
         self.setMinimumSize(400, 185)
+
+        # icon
+        self.icon = QLabel(self)
+        #self.icon.setStyleSheet("border: 1px solid black;")
+        self.icon.setFixedSize(45, 45)
+        self.icon.move(150, 15)
+
         # Make window on top
         self.setWindowModality(Qt.ApplicationModal)
-        # Get all our existing APPIDs
-        print(glob.glob(EXISTING_APPID_PATH + "*.json")) 
+        layout = QHBoxLayout()
+        self.cb = QComboBox()
+        self.cb.currentIndexChanged.connect(self.selectionchange)
+        # Get all our existing relying parties
+        sys.path.append(U2F_APPID_DB_PATH)
+        import fido_db
+        for a in fido_db.u2f_rp_database:
+            self.cb.addItem(a['name'])
+        layout.addWidget(self.cb)
+        self.setLayout(layout)
+        self.setWindowTitle("Select a known Relying Party")
+         
+        Y_shift = 130
+        self.ok = QPushButton('OK', self)
+        self.ok.clicked.connect(self.ok_clicked)
+        self.ok.setMinimumWidth(145)
+        self.ok.move(50, Y_shift)
+   
+        self.cancel = QPushButton('Cancel', self)
+        self.cancel.clicked.connect(self.cancel_clicked)
+        self.cancel.setMinimumWidth(145)
+        self.cancel.move(200, Y_shift)
+
+
+    def selectionchange(self, i):
+        sys.path.append(U2F_APPID_DB_PATH)
+        import fido_db        
+        self.current_selection = fido_db.u2f_rp_database[i]
+        if (len(fido_db.u2f_rp_database[i]['logo']) != 0):
+            # Normalize the logo
+            buff = binascii.unhexlify(fido_db.u2f_rp_database[i]['logo'])
+            icon, _, _ = RLE_compress_buffer(buff, target_dim=(45, 45))
+            img, img_class = RLE_uncompress_buffer(icon, target_dim=(45,45))
+            img = img.convert("RGBA")
+            qimg = ImageQt(img)
+            pix = QPixmap.fromImage(qimg)
+            self.icon.setPixmap(pix)
+            self.logo_set = pix
+        else:
+            pix = QPixmap(45, 45)
+            pix.fill(QColor(0,0,0,0))
+            self.icon.setPixmap(pix)
+            self.logo_set = None
+
+    def cancel_clicked(self):
+        self.close()
+        return
+    def ok_clicked(self):
+        self.upwindow.appid.setText(self.current_selection['appid'])
+        self.upwindow.name.setText(self.current_selection['name'])
+        self.upwindow.url.setText(self.current_selection['url'])
+        if self.logo_set != None:
+            self.upwindow.icon_checkbox.setChecked(True)
+            self.upwindow.icon.setPixmap(self.logo_set)
+            self.upwindow.icon_type = "RLE"
+        else:
+            self.upwindow.icon_checkbox.setChecked(False)
+            self.upwindow.icon_type = "NONE"
+
+        self.close()
+        return
 
 #############
 class EditSlot(QWidget):

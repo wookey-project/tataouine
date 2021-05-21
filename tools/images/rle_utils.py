@@ -112,7 +112,7 @@ def rle_encoded_img(nbcoul, nbdata):
         
 ###############
 # Implement run length encoding
-def _RLE_compress_buffer(in_img_buff, target_dim=None, colors=None, show=False, alpha=(255, 255, 255)):
+def _RLE_compress_buffer(in_img_buff, target_dim=None, colors=None, show=False, alpha=(255, 255, 255), verbose=False):
     img = Image.open(io.BytesIO(in_img_buff))
     # Remove alpha if necessary
     if alpha == None:
@@ -132,9 +132,11 @@ def _RLE_compress_buffer(in_img_buff, target_dim=None, colors=None, show=False, 
         img = img.quantize(16)
     # Resize our image if necessary
     if target_dim != None:
-        print("[+] Resizing image from (%d, %d) to (%d, %d)" % (img.width, img.height, target_dim[0], target_dim[1]))
+        if verbose == True:
+            print("[+] Resizing image from (%d, %d) to (%d, %d)" % (img.width, img.height, target_dim[0], target_dim[1]))
         img = img.resize(target_dim, Image.ANTIALIAS)
-    print("[+] Compressing image of (%d, %d)" % (img.width, img.height))
+    if verbose == True:
+        print("[+] Compressing image of (%d, %d)" % (img.width, img.height))
     # Load pixels and RLE compress them    
     pixels = img.load()
     colormap = []
@@ -188,7 +190,7 @@ def _RLE_compress_buffer(in_img_buff, target_dim=None, colors=None, show=False, 
         img.show()
     return out_buff, img_class, img
 
-def RLE_compress_buffer(in_img_buff, target_dim=None, colors=None, target_size=None, show=False, alpha=(255, 255, 255)):
+def RLE_compress_buffer(in_img_buff, target_dim=None, colors=None, target_size=None, show=False, alpha=(255, 255, 255), verbose=False):
     if target_size != None:
         # Adjust colors until we reach our target size
         colors = 256
@@ -203,12 +205,13 @@ def RLE_compress_buffer(in_img_buff, target_dim=None, colors=None, target_size=N
     else:
         out_buff, img_class, img = _RLE_compress_buffer(in_img_buff, target_dim, colors, show=False, alpha=alpha)
     # Output compressed size evaluation
-    print("[+] Compressed size evaluation: %d bytes" % (len(out_buff)))
+    if verbose == True:
+        print("[+] Compressed size evaluation: %d bytes" % (len(out_buff)))
     if show == True:
         img.show()
     return out_buff, img_class, img
 
-def RLE_uncompress_buffer(in_img_buff, target_dim=None, show=False):
+def RLE_uncompress_buffer(in_img_buff, target_dim=None, show=False, verbose=False):
     # Infer our lengths
     colormap_len = unpack("<I", in_img_buff[8:8+4])[0]    
     rle_data_len = unpack("<I", in_img_buff[8+4+(3*colormap_len):8+4+(3*colormap_len)+4])[0]
@@ -230,13 +233,14 @@ def RLE_uncompress_buffer(in_img_buff, target_dim=None, show=False):
             idx += 1
     # Resize if necessary
     if target_dim != None:
-        print("[+] Resizing image to (%d, %d)" % (target_dim[0], target_dim[1]))
+        if verbose == True:
+            print("[+] Resizing image to (%d, %d)" % (target_dim[0], target_dim[1]))
         img = img.resize(target_dim, Image.ANTIALIAS)
     if show == True:
         img.show()
     return img, img_class
 
-def RLE_save_header(out_file_name, img_class):
+def RLE_save_header(out_file_name, img_class, verbose=False):
     # Format our header content
     header_content = ""
     header_content += ("const int %s_nbcoul = %d;\n" % (out_file_name, img_class.nbcoul))
@@ -249,20 +253,21 @@ def RLE_save_header(out_file_name, img_class):
     for d in img_class.data:
         header_content += ("0x%02x, " % d)
     header_content += "};\n" 
-    print("[+] Writing header to %s" % out_file_name)
+    if verbose == True:
+        print("[+] Writing header to %s" % out_file_name)
     f = open(out_file_name, "wb")
     f.write(header_content.encode("latin-1"))
     f.close()
     return header_content
 
-def RLE_file(in_img, compress='c', target_dim=None, colors=None, target_size=None, show=False, header=False, alpha=(255, 255, 255)):
+def RLE_file(in_img, compress='c', target_dim=None, colors=None, target_size=None, show=False, header=False, alpha=(255, 255, 255), verbose=False):
     if not os.path.isfile(in_img):
         print("Error: file %s does not exist!" % in_img)
         sys.exit(-1)
     with open(in_img, "rb") as f:
         in_img_buff = f.read()
     if compress == 'c':
-        out_buff, img_class, img = RLE_compress_buffer(in_img_buff, target_dim, colors, target_size, show, alpha=alpha)
+        out_buff, img_class, img = RLE_compress_buffer(in_img_buff, target_dim, colors, target_size, show, alpha=alpha, verbose=verbose)
         # Save output file
         with open(in_img+".rle", "wb") as f:
             f.write(out_buff)
@@ -273,7 +278,7 @@ def RLE_file(in_img, compress='c', target_dim=None, colors=None, target_size=Non
             base_name = os.path.dirname(in_img)+"/"+os.path.splitext(base_name)[0]+"_rle.h"
             RLE_save_header(base_name, img_class)
     elif compress == 'u':
-        img, img_class = RLE_uncompress_buffer(in_img_buff, target_dim, show)
+        img, img_class = RLE_uncompress_buffer(in_img_buff, target_dim, show, verbose=verbose)
         # Save output file
         img.save(in_img+".uncompressed.png", "PNG")
     else:
@@ -326,4 +331,4 @@ if __name__ == '__main__':
     if (args.size != None) and (args.colors != None):
         print("Error: --size and --colors are incompatible")
         sys.exit(-1)
-    RLE_file(args.input, compress=args.action, target_dim=target_dim, colors=args.colors, target_size=args.size, show=args.show, header=args.header, alpha=alpha)
+    RLE_file(args.input, compress=args.action, target_dim=target_dim, colors=args.colors, target_size=args.size, show=args.show, header=args.header, alpha=alpha, verbose=True)

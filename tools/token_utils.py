@@ -179,6 +179,8 @@ auth_token_instructions =  {
                              'TOKEN_INS_FIDO_REGISTER'         : APDU(0x00, 0x13, 0x00, 0x00, None, 0x00),
                              'TOKEN_INS_FIDO_AUTHENTICATE'     : APDU(0x00, 0x14, 0x00, 0x00, None, 0x00),
                              'TOKEN_INS_FIDO_AUTHENTICATE_CHECK_ONLY' : APDU(0x00, 0x15, 0x00, 0x00, None, 0x00),
+                             'TOKEN_INS_FIDO_GET_REPLAY_COUNTER'      : APDU(0x00, 0x16, 0x00, 0x00, None, 0x00),
+                             'TOKEN_INS_FIDO_SET_REPLAY_COUNTER'      : APDU(0x00, 0x17, 0x00, 0x00, None, 0x00),
                            }
 
 # The DFU token instructions
@@ -536,6 +538,18 @@ class SCP:
             return None, None, None
         # FIXME: encrypt sensitive data inside channel
         return self.send(token_ins(self.token_type, "TOKEN_INS_FIDO_AUTHENTICATE_CHECK_ONLY", data=app_data+key_handle))
+    def token_auth_fido_get_replay_counter(self):
+        if self.token_type != "auth":
+            print("AUTH FIDO Token Error: asked for TOKEN_INS_FIDO_GET_REPLAY_COUNTER for non AUTH token ("+self.token_type.upper()+")")
+            # This is an error
+            return None, None, None
+        return self.send(token_ins(self.token_type, "TOKEN_INS_FIDO_GET_REPLAY_COUNTER"))
+    def token_auth_fido_set_replay_counter(self, counter):
+        if self.token_type != "auth":
+            print("AUTH FIDO Token Error: asked for TOKEN_INS_FIDO_SET_REPLAY_COUNTER for non AUTH token ("+self.token_type.upper()+")")
+            # This is an error
+            return None, None, None
+        return self.send(token_ins(self.token_type, "TOKEN_INS_FIDO_SET_REPLAY_COUNTER", data=counter))
 
     # ====== DFU specific helpers
     def token_dfu_begin_decrypt_session(self, header_data):
