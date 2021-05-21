@@ -64,14 +64,14 @@ class StructHelper(object):
         if field_name == '':
             return bytearray(self)
         for name, type_ in self._fields_:
-            if name == field_name: 
+            if name == field_name:
                 val = getattr(self, name)
                 if isinstance(val, Array):
                     return bytearray(val)
                 elif type_ == c_uint8:
-                    return pack("<B", val) 
-                elif type_ == c_uint16:  
-                    return pack("<H", val) 
+                    return pack("<B", val)
+                elif type_ == c_uint16:
+                    return pack("<H", val)
                 elif type_ == c_uint32:
                     return pack("<I", val)
                 elif type_ == c_uint64:
@@ -109,7 +109,7 @@ def FIDO_token_get_assets(token_type, keys_path, pet_pin, user_pin, user_feed_ba
     card = connect_to_token(token_type)
     token_type_min = token_type.lower()
     token_type_maj = token_type.upper()
-  
+
     # Establish secure channel
     if user_feed_back == None:
         scp = token_full_unlock(card, token_type_min, keys_path+"/"+token_type_maj+"/encrypted_platform_"+token_type_min+"_keys.bin", pet_pin, user_pin, force_pet_name_accept = True)
@@ -119,7 +119,7 @@ def FIDO_token_get_assets(token_type, keys_path, pet_pin, user_pin, user_feed_ba
         if check == False:
             print("Error: user refused Pet Name")
             return None, None, None
-        scp = token_full_unlock(card, token_type_min, keys_path+"/"+token_type_maj+"/encrypted_platform_"+token_type_min+"_keys.bin", pet_pin, user_pin, force_pet_name_accept = True)        
+        scp = token_full_unlock(card, token_type_min, keys_path+"/"+token_type_maj+"/encrypted_platform_"+token_type_min+"_keys.bin", pet_pin, user_pin, force_pet_name_accept = True)
 
     key, sw1, sw2 = scp.token_auth_get_key(user_pin)
     if sw1 != 0x90 or sw2 != 0x00:
@@ -130,7 +130,7 @@ def FIDO_token_get_assets(token_type, keys_path, pet_pin, user_pin, user_feed_ba
         print("Error: error in FIDO_token_get_assets for sdpwd")
         return None, None, None
     return key, sdpwd, scp
-    
+
 
 # Open a FIDO session
 def FIDO_token_open_session(scp, token_type, keys_path):
@@ -169,18 +169,18 @@ def FIDO_token_authenticate(scp, keys_path, app_param, kh, check_only=False):
         r, sw1, sw2 = scp.token_auth_fido_authenticate(app_param, kh)
         if sw1 != 0x90 or sw2 != 0x00:
             print("Error: error in FIDO_token_authenticate")
-            return False, None    
+            return False, None
         if len(r) == 1:
-            return False, None    
+            return False, None
         else:
             return True, r
 
 
 #   How it works:
-#  
+#
 #        SDCard (encrypted)
 #   | bitmap of active sectors   | (len 1024 (two sectors))
-#   |----------------------------| 
+#   |----------------------------|
 #   | hmac of slotting table+ctr | (len 512 + 2560)
 #   |----------------------------|               \
 #   | appid1|kh1|slotid1|hmac    | (len 512)     |
@@ -202,7 +202,7 @@ def FIDO_token_authenticate(scp, keys_path, app_param, kh, check_only=False):
 #   |appid|ctr|icon-type|icon_len|
 #   |icon.........               |
 #   |----------------------------|
-#  
+#
 
 SECTOR_SIZE = 512
 # Maximum number of slots
@@ -217,7 +217,7 @@ class sd_slot_header_entry(Structure, StructHelper):
         ('kh', c_uint8 * 32),
         ('slotid', c_uint32),
         ('hmac', c_uint8 * 32),
-        ('padding', c_uint8 * (SECTOR_SIZE - 68 - 32)), 
+        ('padding', c_uint8 * (SECTOR_SIZE - 68 - 32)),
         ]
     # Zero initialize
     def __init__(self):
@@ -287,7 +287,7 @@ class sd_header(Structure, StructHelper):
         if hmac != self.serialize('hmac'):
             return False
         else:
-            return True 
+            return True
 
 icon_types = {
     'NONE'    : 0,
@@ -347,12 +347,12 @@ class sd_slot_entry(Structure, StructHelper):
 USE_SD_ENCRYPTION = True
 AES_CBC_ESSIV_SECTOR_SIZE = SLOT_SIZE
 
-def read_SD_sectors(sd_device, sector_num, number = 1, key = None):    
+def read_SD_sectors(sd_device, sector_num, number = 1, key = None):
     try:
         sd_device.seek((sector_num * SECTOR_SIZE), 0)
     except:
         print("Error: cannot seek sector %d in SD dev file ..." % sector_num)
-        sys.exit(-1) 
+        sys.exit(-1)
     try:
         sectors = sd_device.read(number * SECTOR_SIZE)
     except:
@@ -382,7 +382,7 @@ def read_SD_sectors(sd_device, sector_num, number = 1, key = None):
 def write_SD_sectors(sd_device, sector_num, sectors, key = None):
     if (len(sectors) < SECTOR_SIZE) or (len(sectors) % SECTOR_SIZE != 0):
         print("Error: sector length %d illegal" % len(sectors))
-        sys.exit(-1) 
+        sys.exit(-1)
     try:
         sd_device.seek((sector_num * SECTOR_SIZE), 0)
     except:
@@ -412,9 +412,9 @@ def write_SD_sectors(sd_device, sector_num, sectors, key = None):
         sd_device.write(ciphered_sectors)
     except:
         print("Error: cannot write sector %d in SD dev file ..." % sector_num)
-        sys.exit(-1) 
+        sys.exit(-1)
     return
-   
+
 #####
 def open_SD(device):
     # Try to open our SD card
@@ -437,7 +437,7 @@ def init_SD(key, device):
     sd_device = open_SD(device)
     # Derive our keys from the master key
     (AES_key, _, _)  = local_sha256("ENCRYPTION"+ key)
-    (HMAC_key, _, _) = local_sha256("INTEGRITY" + key)    
+    (HMAC_key, _, _) = local_sha256("INTEGRITY" + key)
     # Initialize our slotting table
     init_header = sd_header()
     init_header.update_hmac(HMAC_key)
@@ -450,7 +450,7 @@ def init_SD(key, device):
 def get_SD_appid_slot(key, device, slot_num=None, appid=None, kh=None, check_hmac=True):
     # Derive our keys from the master key
     (AES_key, _, _)  = local_sha256("ENCRYPTION"+ key)
-    (HMAC_key, _, _) = local_sha256("INTEGRITY" + key)    
+    (HMAC_key, _, _) = local_sha256("INTEGRITY" + key)
     sd_device = open_SD(device)
     # First, read the header with the mapping
     header = None
@@ -490,12 +490,12 @@ def get_SD_appid_slot(key, device, slot_num=None, appid=None, kh=None, check_hma
             close_SD(sd_device)
             return False, appid_slot, slot_num
         close_SD(sd_device)
-        return True, appid_slot, slot_num 
+        return True, appid_slot, slot_num
     # Find the appid slot bye searching by appid and the optional keyhandle hash
     for i in range(0, SLOTS_NUM):
         # Get active slot data
         if (sd_h.slots[i].serialize('appid') == appid) and (sd_h.is_slot_active(i) == True):
-            if (kh != None) and (kh != sd_h.slots[i].serialize('kh')): 
+            if (kh != None) and (kh != sd_h.slots[i].serialize('kh')):
                 # This is not the slot we want
                 continue
             # Appid found, get the sector
@@ -509,7 +509,7 @@ def get_SD_appid_slot(key, device, slot_num=None, appid=None, kh=None, check_hma
                 if hmac != sd_h.slots[i].serialize('hmac'):
                     print("get_SD_appid_slot: slot %d HMAC not OK!" % i)
                     close_SD(sd_device)
-                    return False, appid_slot, i 
+                    return False, appid_slot, i
             close_SD(sd_device)
             return True, appid_slot, i
     return True, None, None
@@ -566,7 +566,7 @@ def remove_appid(key, device, appid=None, kh=None, slot_num=None, check_hmac=Tru
         if write_SD_sectors(sd_device, sd_h.slots[slot_num].slotid, to_write, AES_key) == False:
             # Write failure
             print("create_new_appid: SD write failure!")
-            return False 
+            return False
         sd_h.set_slot_inactive(slot_num)
         # Update our HMAC
         sd_h.update_hmac(HMAC_key)
@@ -581,7 +581,7 @@ def remove_appid(key, device, appid=None, kh=None, slot_num=None, check_hmac=Tru
             # Write failure
             print("remove_appid: SD write failure!")
             return False
-        return True 
+        return True
     # Nothing found
     print("remove_appid: asked appid not found!")
     return False
@@ -591,7 +591,7 @@ def remove_appid(key, device, appid=None, kh=None, slot_num=None, check_hmac=Tru
 def update_appid(key, device, appid, slot_num=None, name=None, url=None, kh=None, ctr=0, icon=None, flags=0, check_hmac=True):
     # Derive our keys from the master key
     (AES_key, _, _)  = local_sha256("ENCRYPTION"+ key)
-    (HMAC_key, _, _) = local_sha256("INTEGRITY" + key)    
+    (HMAC_key, _, _) = local_sha256("INTEGRITY" + key)
     sd_device = open_SD(device)
     # First, read the header with the mapping
     header = read_SD_sectors(sd_device, 0, sizeof(sd_header) // SECTOR_SIZE, AES_key)
@@ -603,7 +603,7 @@ def update_appid(key, device, appid, slot_num=None, name=None, url=None, kh=None
         print("update_appid: header HMAC not OK!")
         close_SD(sd_device)
         return False, None, None, None
-    if slot_num != None:       
+    if slot_num != None:
         # Slot number provided, force it
         if slot_num >= SLOTS_NUM:
             print("update_appid: asked slot %d overflow max %d" % (slot_num, SLOTS_NUM))
@@ -653,7 +653,7 @@ def update_appid(key, device, appid, slot_num=None, name=None, url=None, kh=None
         if len(kh) != 32:
             print("update_appid: kh has bad size" % len(kh))
             return False, None, None, None
-        sd_appid_slot.deserialize('kh', kh) 
+        sd_appid_slot.deserialize('kh', kh)
     # Put our icon data inside it
     sd_appid_slot.icon_len = 0
     sd_appid_slot.icon_type = icon_types['NONE']
@@ -762,7 +762,7 @@ def dump_slots(key, device, check_hmac=True, slot_num=None, verbose=False, curr_
             hmac = appid_slot.hmac(HMAC_key)
             if hmac != sd_h.slots[i].serialize('hmac'):
                 log_print("dump_slots: slot %d HMAC not OK!" % i, verbose)
-                return None          
+                return None
             log_print("  Content:", verbose)
             log_print("    |- appid     : %s" % (binascii.hexlify(appid_slot.serialize('appid'))), verbose)
             log_print("    |- flags     : 0x%08x" % (appid_slot.flags), verbose)
@@ -810,12 +810,12 @@ if __name__ == '__main__':
     keys_path = sys.argv[1]
     pet_pin = sys.argv[2]
     user_pin = sys.argv[3]
-    #key, sdpwd, scp = FIDO_token_get_assets("auth", keys_path, pet_pin, user_pin)
-    #key = key[:32]
-    key = "\xaa"*32
-    sdpwd = "\xbb"*16
+    key, sdpwd, scp = FIDO_token_get_assets("auth", keys_path, pet_pin, user_pin)
+    key = key[:32]
+    #key = "\xaa"*32
+    #sdpwd = "\xbb"*16
     print(local_hexlify(key))
-    print(local_hexlify(sdpwd))    
+    print(local_hexlify(sdpwd))
     #
     init_SD(key, "/tmp/sd.dump")
     #check, appid, num_slot = get_SD_appid_slot(key, "/tmp/sd.dump", appid=b"\xaa"*32)
@@ -846,6 +846,5 @@ if __name__ == '__main__':
             print("=============== %d" % i)
             f.seek(0)
             check =  update_appid(key, "/tmp/sd.dump", ("\xcc"*30+chr((i >> 16) & 0xff)+chr(i & 0xff)).encode("latin-1"), slot_num=i, ctr=i, name=("Amazon %d" % i).encode("latin-1"), icon=RLE_compress_buffer(f.read(), target_dim=(45,45), colors=6)[0], url=("www.amazon%d.fr" % i).encode("latin-1"), check_hmac=True)
-  
-    
+      
     dump_slots(key, "/tmp/sd.dump", verbose=True)
