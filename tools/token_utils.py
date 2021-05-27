@@ -26,6 +26,9 @@ def _connect_to_token(verbose=True):
         card = None
     return card
 
+def try_connect_to_token(verbose):
+    return _connect_to_token(verbose)
+
 def connect_to_token(token_type=None):
     card = None
     while card == None:
@@ -176,6 +179,8 @@ auth_token_instructions =  {
                              'TOKEN_INS_FIDO_REGISTER'         : APDU(0x00, 0x13, 0x00, 0x00, None, 0x00),
                              'TOKEN_INS_FIDO_AUTHENTICATE'     : APDU(0x00, 0x14, 0x00, 0x00, None, 0x00),
                              'TOKEN_INS_FIDO_AUTHENTICATE_CHECK_ONLY' : APDU(0x00, 0x15, 0x00, 0x00, None, 0x00),
+                             'TOKEN_INS_FIDO_GET_REPLAY_COUNTER'      : APDU(0x00, 0x16, 0x00, 0x00, None, 0x00),
+                             'TOKEN_INS_FIDO_SET_REPLAY_COUNTER'      : APDU(0x00, 0x17, 0x00, 0x00, None, 0x00),
                            }
 
 # The DFU token instructions
@@ -235,6 +240,9 @@ class SCP:
     first_IV = None
     AES_Key = None
     HMAC_Key = None
+    dec_token_pub_key_data = None
+    dec_platform_priv_key_data = None
+    dec_platform_pub_key_data = None
     dec_firmware_sig_pub_key_data = None
     token_type = None
     pbkdf2_salt = None
@@ -364,9 +372,9 @@ class SCP:
         self.cardservice = card
         self.token_type = data_type
         # Decrypt local platform keys. We also keep the current salt and PBKDF2 iterations for later usage
-        dec_token_pub_key_data, dec_platform_priv_key_data, dec_platform_pub_key_data, self.dec_firmware_sig_pub_key_data, _, _, self.pbkdf2_salt, self.pbkdf2_iterations = decrypt_platform_data_with_token(encrypted_platform_bin_file, pin, data_type, card)
+        self.dec_token_pub_key_data, self.dec_platform_priv_key_data, self.dec_platform_pub_key_data, self.dec_firmware_sig_pub_key_data, _, _, self.pbkdf2_salt, self.pbkdf2_iterations = decrypt_platform_data_with_token(encrypted_platform_bin_file, pin, data_type, card)
 	# Get the algorithm and the curve
-        ret_alg, ret_curve, prime, a, b, gx, gy, order, cofactor = get_curve_from_key(dec_platform_pub_key_data)
+        ret_alg, ret_curve, prime, a, b, gx, gy, order, cofactor = get_curve_from_key(self.dec_platform_pub_key_data)
         if (ret_alg == None) or (ret_curve == None):
             print("SCP Error: unkown curve or algorithm in the structured keys ...")
             sys.exit(-1)
@@ -392,8 +400,8 @@ class SCP:
             sys.exit(-1)        
         # Then, we initialize our secure channel
         # Sign the public part *concatenated with the challenge* with our ECDSA private key
-        ecdsa_pubkey = PubKey(c, Point(c, stringtoint(dec_platform_pub_key_data[3:3+32]), stringtoint(dec_platform_pub_key_data[3+32:3+64])))
-        ecdsa_privkey = PrivKey(c, stringtoint(dec_platform_priv_key_data[3:]))
+        ecdsa_pubkey = PubKey(c, Point(c, stringtoint(self.dec_platform_pub_key_data[3:3+32]), stringtoint(self.dec_platform_pub_key_data[3+32:3+64])))
+        ecdsa_privkey = PrivKey(c, stringtoint(self.dec_platform_priv_key_data[3:]))
         ecdsa_keypair = KeyPair(ecdsa_pubkey, ecdsa_privkey)
         to_send = expand(inttostring(ecdh_keypair.pubkey.Y.x), 256, "LEFT")
         to_send += expand(inttostring(ecdh_keypair.pubkey.Y.y), 256, "LEFT")
@@ -412,7 +420,7 @@ class SCP:
             print("SCP Error: bad response length from the token with TOKEN_INS_SECURE_CHANNEL_INIT")
             sys.exit(-1)
         # Extract the ECDSA signature
-        ecdsa_token_pubkey = PubKey(c, Point(c, stringtoint(dec_token_pub_key_data[3:3+32]), stringtoint(dec_token_pub_key_data[3+32:3+64])))
+        ecdsa_token_pubkey = PubKey(c, Point(c, stringtoint(self.dec_token_pub_key_data[3:3+32]), stringtoint(self.dec_token_pub_key_data[3+32:3+64])))
         ecdsa_token_sig = resp[3*32:]
         check_sig = ecdsa_verify(sha256, KeyPair(ecdsa_token_pubkey, None), resp[:3*32], ecdsa_token_sig)
         if check_sig == False:
@@ -493,31 +501,55 @@ class SCP:
             return None, None, None
         return self.send(token_ins(self.token_type, "TOKEN_INS_GET_SDPWD"), pin=pin, pin_decrypt=True)
     # ====== AUTH FIDO specific helpers
-    def token_auth_fido_send_pkey(self, pin, pkey):
+    def token_auth_fido_send_pkey(self, pin, pkey=None, local_fido_hmac_file=None):
         if self.token_type != "auth":
-            print("AUTH Token Error: asked for TOKEN_INS_FIDO_SEND_PKEY for non AUTH token ("+self.token_type.upper()+")")
+            print("AUTH FIDO Token Error: asked for TOKEN_INS_FIDO_SEND_PKEY for non AUTH token ("+self.token_type.upper()+")")
             # This is an error
             return None, None, None
-        return self.send(token_ins(self.token_type, "TOKEN_INS_FIDO_SEND_PKEY", data=pkey), pin=pin, pin_encrypt=True, pin_decrypt=True)
+        if pkey == None and local_fido_hmac_file == None:
+            print("AUTH FIDO Token Error: asked for TOKEN_INS_FIDO_SEND_PKEY with both pkey=None and local_fido_hmac_file=None")
+            # This is an error
+            return None, None, None
+        if pkey != None:
+            # We have been provided a raw pkey to send, send it!
+            return self.send(token_ins(self.token_type, "TOKEN_INS_FIDO_SEND_PKEY", data=pkey), pin=pin, pin_encrypt=True, pin_decrypt=True)
+        else:
+            # We have been provided a local_keys_path, get our assets to send
+            to_hash = self.dec_token_pub_key_data + self.dec_platform_priv_key_data + self.dec_platform_pub_key_data
+            (h, _, _) = local_sha256(to_hash)
+            fido_hmac = read_in_file(local_fido_hmac_file)
+            return self.send(token_ins(self.token_type, "TOKEN_INS_FIDO_SEND_PKEY", data=h+fido_hmac), pin=pin, pin_encrypt=True, pin_decrypt=True)
     def token_auth_fido_register(self, app_data):
         if self.token_type != "auth":
-            print("AUTH Token Error: asked for TOKEN_INS_FIDO_REGISTER for non AUTH token ("+self.token_type.upper()+")")
+            print("AUTH FIDO Token Error: asked for TOKEN_INS_FIDO_REGISTER for non AUTH token ("+self.token_type.upper()+")")
             # This is an error
             return None, None, None
         return self.send(token_ins(self.token_type, "TOKEN_INS_FIDO_REGISTER", data=app_data))
     def token_auth_fido_authenticate(self, app_data, key_handle):
         if self.token_type != "auth":
-            print("AUTH Token Error: asked for TOKEN_INS_FIDO_AUTHENTICATE for non AUTH token ("+self.token_type.upper()+")")
+            print("AUTH FIDO Token Error: asked for TOKEN_INS_FIDO_AUTHENTICATE for non AUTH token ("+self.token_type.upper()+")")
             # This is an error
             return None, None, None
         return self.send(token_ins(self.token_type, "TOKEN_INS_FIDO_AUTHENTICATE", data=app_data+key_handle))
     def token_auth_fido_authenticate_check_only(self, app_data, key_handle):
         if self.token_type != "auth":
-            print("AUTH Token Error: asked for TOKEN_INS_FIDO_AUTHENTICATE_CHECK_ONLY for non AUTH token ("+self.token_type.upper()+")")
+            print("AUTH FIDO Token Error: asked for TOKEN_INS_FIDO_AUTHENTICATE_CHECK_ONLY for non AUTH token ("+self.token_type.upper()+")")
             # This is an error
             return None, None, None
         # FIXME: encrypt sensitive data inside channel
         return self.send(token_ins(self.token_type, "TOKEN_INS_FIDO_AUTHENTICATE_CHECK_ONLY", data=app_data+key_handle))
+    def token_auth_fido_get_replay_counter(self):
+        if self.token_type != "auth":
+            print("AUTH FIDO Token Error: asked for TOKEN_INS_FIDO_GET_REPLAY_COUNTER for non AUTH token ("+self.token_type.upper()+")")
+            # This is an error
+            return None, None, None
+        return self.send(token_ins(self.token_type, "TOKEN_INS_FIDO_GET_REPLAY_COUNTER"))
+    def token_auth_fido_set_replay_counter(self, counter):
+        if self.token_type != "auth":
+            print("AUTH FIDO Token Error: asked for TOKEN_INS_FIDO_SET_REPLAY_COUNTER for non AUTH token ("+self.token_type.upper()+")")
+            # This is an error
+            return None, None, None
+        return self.send(token_ins(self.token_type, "TOKEN_INS_FIDO_SET_REPLAY_COUNTER", data=counter))
 
     # ====== DFU specific helpers
     def token_dfu_begin_decrypt_session(self, header_data):
@@ -567,7 +599,7 @@ class SCP:
 
 # Helper to fully unlock a token, which is the first step to
 # access advanced features of a token
-def token_full_unlock(card, token_type, local_keys_path, pet_pin = None, user_pin = None, force_pet_name_accept = False):
+def token_full_unlock(card, token_type, local_keys_path, pet_pin = None, user_pin = None, force_pet_name_accept = False, only_get_petname = False):
     # ======================
     # Get the PET PIN for local ECDH keys decryption
     if pet_pin == None:
@@ -585,6 +617,8 @@ def token_full_unlock(card, token_type, local_keys_path, pet_pin = None, user_pi
     if (sw1 != 0x90) or (sw2 != 0x00):
         print("\033[1;41m Error: something wrong happened when getting the PET name ...\033[1;m")
         sys.exit(-1) 
+    if only_get_petname == True:
+        return scp, resp
     if force_pet_name_accept == False:
         answer = None
         while answer != "y" and answer != "n":
@@ -600,5 +634,4 @@ def token_full_unlock(card, token_type, local_keys_path, pet_pin = None, user_pi
         else:
             print("\033[1;41m Error: USER pin seems wrong! The card is being LOCKED!\033[1;m")
         sys.exit(-1)
-
     return scp

@@ -356,3 +356,27 @@ def decrypt_platform_data(encrypted_platform_bin_file, pin, data_type, override_
         dec_firmware_sig_sym_key_data = cipher.decrypt(firmware_sig_sym_key_data)
 
     return dec_token_pub_key_data, dec_platform_priv_key_data, dec_platform_pub_key_data, dec_firmware_sig_pub_key_data, dec_firmware_sig_priv_key_data, dec_firmware_sig_sym_key_data, salt, pbkdf2_iterations
+
+
+## CBC-ESSIV IV derivation
+def derive_essiv_iv(key, sector_num, algo, SD_diverse = None):
+    # Sanity check
+    if SD_diverse != None and len(SD_diverse) != 16:
+        print("Bad SD CID length %d" % len(SD_diverse))
+        sys.exit(-1)
+    if SD_diverse != None:
+        (hash_SD, _, _) = local_sha256(SD_diverse)
+    else:
+        hash_SD = '\x00' * 16
+    if algo == "AES":
+        sector_str = expand(inttostring(sector_num), 32, "LEFT") + hash_SD[:(16-4)]
+        aes = local_AES.new(key, AES.MODE_ECB)
+        return aes.encrypt(sector_str)
+    elif algo == "TDES":
+        sector_str = expand(inttostring(sector_num), 32, "LEFT") + hash_SD[:(8-4)]
+        tdes = local_DES3.new(key[:24], DES3.MODE_ECB)
+        return tdes.encrypt(sector_str)
+    else:
+        print("Unknown algorithm %s" % algo)
+        sys.exit(-1)
+
