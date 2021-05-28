@@ -141,7 +141,7 @@ def Key2Java(argv):
     text += "\n\n\tstatic final byte max_pin_tries = (byte)"+str(max_pin_tries)+";"
     # Add the maximum secure channel mounting tries tries
     text += "\n\n\tstatic final short max_secure_channel_tries = "+str(max_secure_channel_tries)+";"
-    # Add the platform profile
+    # Add the platform profile
     text += "\n\n\t /* Platform profiles is: \""+profile+"\"*/"
     text += "\n\tstatic final byte[] Profile =  { "
     for byte in profile:
