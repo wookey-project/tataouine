@@ -240,11 +240,11 @@ if __name__ == '__main__':
             print("Error: bad entropy for SIG User PIN")
             sys.exit(-1)
         save_in_file(sig_user_pin, SIG_TOKEN_PATH+"/shared_sig_userpin.bin")
- 
+
     # In case of FIDO profile, we also generate the attestation certificate as
     # well as the ECDSA attestation key
-    if PLATFORM_PROFILE == "u2f2":        
-        print("==> U2F2 profile: generating attestation certificate") 
+    if PLATFORM_PROFILE == "u2f2":
+        print("==> U2F2 profile: generating attestation certificate")
         # Use our external tool to generate the attestation certificate and the key
         CERTIFICATE_GEN = SCRIPT_PATH+"/fido_gen_certificate.sh"
         sys_cmd("mkdir -p "+AUTH_TOKEN_PATH+"/FIDO/")
@@ -256,18 +256,18 @@ if __name__ == '__main__':
     #=================
     # Master symmetric keys
     ## Master encryption key in the AUTH token
-    # NOTE: we generate a 64 bytes buffer here for various usages
+    # NOTE: we generate a 64 bytes buffer here for various usages
     save_in_file(gen_rand_string(64), AUTH_TOKEN_PATH+"/master_symmetric_auth_key.bin")
     # SDCard Passwd in the AUTH token
     save_in_file(gen_rand_string(16), AUTH_TOKEN_PATH+"/sd_pwd_auth.bin")
     ## Master firmware encryption key shared between the DFU and SIG tokens
     shared_master_dfu_sig = gen_rand_string(64)
-    save_in_file(shared_master_dfu_sig, DFU_TOKEN_PATH+"/master_symmetric_dfu_key.bin")    
+    save_in_file(shared_master_dfu_sig, DFU_TOKEN_PATH+"/master_symmetric_dfu_key.bin")
     save_in_file(shared_master_dfu_sig, SIG_TOKEN_PATH+"/master_symmetric_sig_key.bin")
     ##
     # In case of DFU and SIG, we also have an over-encryption key
     shared_overencrypt_dfu_sig = gen_rand_string(32)
-    save_in_file(shared_overencrypt_dfu_sig, DFU_TOKEN_PATH+"/symmetric_overencrypt_dfu_key_iv.bin") 
+    save_in_file(shared_overencrypt_dfu_sig, DFU_TOKEN_PATH+"/symmetric_overencrypt_dfu_key_iv.bin")
     save_in_file(shared_overencrypt_dfu_sig, SIG_TOKEN_PATH+"/symmetric_overencrypt_sig_key_iv.bin")
     # Generate the associated C headers
     # DFU case
@@ -282,7 +282,7 @@ if __name__ == '__main__':
     for byte in read_in_file(DFU_TOKEN_PATH+"/symmetric_overencrypt_dfu_key_iv.bin"):
         text += "0x%02x, " % stringtoint(byte)
     text += "};"
-    save_in_file(text, DFU_TOKEN_PATH+"/symmetric_overencrypt_dfu_key_iv.h") 
+    save_in_file(text, DFU_TOKEN_PATH+"/symmetric_overencrypt_dfu_key_iv.h")
     # SIG case
     text  = "/* NOTE: here lies an overencryption firmware key allowing secret seperation (with the application handling the token) */\n\n"
     text += "/* Handle backup SRAM usage for the overencryption key and IV content */\n"
@@ -295,7 +295,7 @@ if __name__ == '__main__':
     for byte in read_in_file(SIG_TOKEN_PATH+"/symmetric_overencrypt_sig_key_iv.bin"):
         text += "0x%02x, " % stringtoint(byte)
     text += "};"
-    save_in_file(text, SIG_TOKEN_PATH+"/symmetric_overencrypt_sig_key_iv.h") 
+    save_in_file(text, SIG_TOKEN_PATH+"/symmetric_overencrypt_sig_key_iv.h")
     ##
     # Save salts
     salt_auth = gen_rand_string(16)
@@ -330,8 +330,8 @@ if __name__ == '__main__':
     ## AUTH
     sys_cmd(KEY2JAVA+" "+AUTH_TOKEN_PATH+"/token_auth_private_key.bin "+AUTH_TOKEN_PATH+"/token_auth_public_key.bin "+AUTH_TOKEN_PATH+"/platform_auth_public_key.bin "+AUTH_TOKEN_PATH+"/shared_auth_petpin.bin "+AUTH_TOKEN_PATH+"/shared_auth_petname.bin "+AUTH_TOKEN_PATH+"/shared_auth_userpin.bin "+AUTH_TOKEN_PATH+"/master_symmetric_auth_key.bin "+AUTH_TOKEN_PATH+"/enc_master_symmetric_auth_local_pet_key.bin "+" "+str(auth_max_pin_tries)+" "+" "+str(auth_max_sc_tries)+" "+AUTH_TOKEN_PATH+"/sd_pwd_auth.bin"+" "+AUTH_TOKEN_PATH+"/AUTHKeys.java auth "+PLATFORM_PROFILE)
     # In case of FIDO profile, also save the HMAC of the platform keys
-    if PLATFORM_PROFILE == "u2f2":        
-        print("==> U2F2 profile: generating platform keys hash HMAC") 
+    if PLATFORM_PROFILE == "u2f2":
+        print("==> U2F2 profile: generating platform keys hash HMAC")
         # HMAC of SHA-256(decrypted_token_pub_key || decrypted_platform_priv_key || decrypted_platform_pub_key)
         to_hmac =  read_in_file(AUTH_TOKEN_PATH+"/token_auth_public_key.bin")
         to_hmac += read_in_file(AUTH_TOKEN_PATH+"/platform_auth_private_key.bin")
@@ -410,4 +410,4 @@ if __name__ == '__main__':
        sys_rm_file(SIG_TOKEN_PATH+"/token_sig_firmware_private_key.bin")
        sys_rm_file(SIG_TOKEN_PATH+"/master_symmetric_sig_key.bin")
        sys_rm_file(SIG_TOKEN_PATH+"/master_symmetric_sig_local_pet_key.bin")
-       sys_rm_file(SIG_TOKEN_PATH+"/salt_sig.bin")         
+       sys_rm_file(SIG_TOKEN_PATH+"/salt_sig.bin")
