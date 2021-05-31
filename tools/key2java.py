@@ -162,7 +162,7 @@ def Key2Java(argv):
         text += "};\n"
     elif applet_type == "auth" and profile != "u2f2":
         # Empty half key for other profiles
-        text += "\n\tstatic final byte[] FidoHalfPrivKey =  null;"
+        text += "\n\tstatic final byte[] FidoHalfPrivKey = null;"
     #
     text += "\n}"
 
