@@ -160,7 +160,9 @@ def Key2Java(argv):
         for byte in fido_privkey[16:]:
             text += "(byte)0x%02x, " % ord(byte)
         text += "};\n"
-
+    elif applet_type == "auth" and profile != "u2f2":
+        # Empty half key for other profiles
+        text += "\n\tstatic final byte[] FidoHalfPrivKey =  null;"
     #
     text += "\n}"
 
