@@ -193,7 +193,7 @@ class LoadData(QWidget):
             return False
     def ok_clicked(self, event):
         # Check if SD path is good
-        if os.path.isfile(self.sd_path.text()) == False:
+        if os.path.exists(self.sd_path.text()) == False:
             msg = QMessageBox()
             msg.setIcon(QMessageBox.Critical)
             msg.setWindowTitle("SD file error")

@@ -419,7 +419,7 @@ def write_SD_sectors(sd_device, sector_num, sectors, key = None):
 def open_SD(device):
     # Try to open our SD card
     sd_device = None
-    if not os.path.isfile(device):
+    if not os.path.exists(device):
         print("Error: SD dev file %s does not exist!" % device)
         sys.exit(-1)
     try:
@@ -817,7 +817,9 @@ if __name__ == '__main__':
     print(local_hexlify(key))
     print(local_hexlify(sdpwd))
     #
-    init_SD(key, "/tmp/sd.dump")
+    #sd_file = "/dev/sdc"
+    sd_file = "/tmp/sd.dump"
+    init_SD(key, sd_file)
     #check, appid, num_slot = get_SD_appid_slot(key, "/tmp/sd.dump", appid=b"\xaa"*32)
     #check =  update_appid(key, "/tmp/sd.dump", b"\xcd"*32, name=b"Mon service custom", url=b"www.sericefido.org", ctr=0x1337, icon=None, check_hmac=True)
     #check, appid, num_slot = get_SD_appid_slot(key, "/tmp/sd.dump", appid=b"\xcd"*32)
@@ -833,18 +835,18 @@ if __name__ == '__main__':
     U2F_APPID_DB_PATH = SCRIPT_PATH + "fido_db/"
     sys.path.append(U2F_APPID_DB_PATH)
     import fido_db
-    #for a in fido_db.u2f_rp_database:
-    #    logo = binascii.unhexlify(a['logo'])
-    #    if len(logo) != 0:
-    #        check =  update_appid(key, "/tmp/sd.dump", binascii.unhexlify(a['appid']), ctr=0, name=a['name'].encode("latin-1"), icon=RLE_compress_buffer(logo, target_dim=(45,45), colors=6)[0], url=(a['url']).encode("latin-1"), check_hmac=True)
-    #    else:
-    #        check =  update_appid(key, "/tmp/sd.dump", binascii.unhexlify(a['appid']), ctr=0, name=a['name'].encode("latin-1"), icon=None, url=(a['url']).encode("latin-1"), check_hmac=True)
+    for a in fido_db.u2f_rp_database:
+        logo = binascii.unhexlify(a['logo'])
+        if len(logo) != 0:
+            check =  update_appid(key, "/tmp/sd.dump", binascii.unhexlify(a['appid']), ctr=0, name=a['name'].encode("latin-1"), icon=RLE_compress_buffer(logo, target_dim=(45,45), colors=6)[0], url=(a['url']).encode("latin-1"), check_hmac=True)
+        else:
+            check =  update_appid(key, "/tmp/sd.dump", binascii.unhexlify(a['appid']), ctr=0, name=a['name'].encode("latin-1"), icon=None, url=(a['url']).encode("latin-1"), check_hmac=True)
  
     with open("/tmp/amazon.png", "rb") as f: 
-        #check =  update_appid(key, "/tmp/sd.dump", b"\xcc"*32, ctr=0x3, name=b"Amazon", url=b"www.amazon.fr", kh=b'\xab'*32, icon=RLE_compress_buffer(f.read(), target_dim=(45,45), colors=6)[0], check_hmac=True)
-        for i in range(0, 300):
+        check =  update_appid(key, "/tmp/sd.dump", b"\xcc"*32, ctr=0x3, name=b"Amazon", url=b"www.amazon.fr", kh=b'\xab'*32, icon=RLE_compress_buffer(f.read(), target_dim=(45,45), colors=6)[0], check_hmac=True)
+        for i in range(len(fido_db.u2f_rp_database), 4000):
             print("=============== %d" % i)
             f.seek(0)
-            check =  update_appid(key, "/tmp/sd.dump", ("\xcc"*30+chr((i >> 16) & 0xff)+chr(i & 0xff)).encode("latin-1"), slot_num=i, ctr=i, name=("Amazon %d" % i).encode("latin-1"), icon=RLE_compress_buffer(f.read(), target_dim=(45,45), colors=6)[0], url=("www.amazon%d.fr" % i).encode("latin-1"), check_hmac=True)
+            check =  update_appid(key, sd_file, ("\xcc"*30+chr((i >> 16) & 0xff)+chr(i & 0xff)).encode("latin-1"), slot_num=i, ctr=i, name=("Amazon %d" % i).encode("latin-1"), icon=RLE_compress_buffer(f.read(), target_dim=(45,45), colors=6)[0], url=("www.amazon%d.fr" % i).encode("latin-1"), check_hmac=True)
       
-    dump_slots(key, "/tmp/sd.dump", verbose=True)
+    dump_slots(key, sd_file, verbose=True)
