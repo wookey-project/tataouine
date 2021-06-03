@@ -480,7 +480,7 @@ def get_SD_appid_slot(key, device, slot_num=None, appid=None, kh=None, check_hma
         if check_hmac == True:
             hmac = appid_slot.hmac(HMAC_key)
             if hmac != sd_h.slots[slot_num].serialize('hmac'):
-                print("get_SD_appid_slot: slot %d HMAC not OK!" % i)
+                print("get_SD_appid_slot: slot %d HMAC not OK!" % slot_num)
                 close_SD(sd_device)
                 return False, appid_slot, slot_num
         if (appid != None) and (appid_slot.serialize('appid') != appid):
@@ -753,6 +753,7 @@ def dump_slots(key, device, check_hmac=True, slot_num=None, verbose=False, curr_
             log_print("dump_slots: slot %d is active!" % i, verbose)
             # Print information of the slot
             log_print(" |- appid : %s" % (binascii.hexlify(sd_h.slots[i].serialize('appid'))), verbose)
+            log_print(" |- kh    : %s" % (binascii.hexlify(sd_h.slots[i].serialize('kh'))), verbose)
             log_print(" |- slotid: 0x%08x (sector @0x%08x)" % (sd_h.slots[i].slotid, sd_h.slots[i].slotid * SECTOR_SIZE), verbose)
             log_print(" |- hmac  : %s" % (binascii.hexlify(sd_h.slots[i].serialize('hmac'))), verbose)
             close_SD(sd_device)
@@ -760,7 +761,7 @@ def dump_slots(key, device, check_hmac=True, slot_num=None, verbose=False, curr_
             _, appid_slot, _ =  get_SD_appid_slot(key, device, appid=None, slot_num=i, check_hmac=check_hmac)
             # Check hmac
             hmac = appid_slot.hmac(HMAC_key)
-            if hmac != sd_h.slots[i].serialize('hmac'):
+            if check_hmac == True and hmac != sd_h.slots[i].serialize('hmac'):
                 log_print("dump_slots: slot %d HMAC not OK!" % i, verbose)
                 return None
             log_print("  Content:", verbose)
@@ -819,6 +820,8 @@ if __name__ == '__main__':
     #
     #sd_file = "/dev/sdc"
     sd_file = "/tmp/sd.dump"
+    #dump_slots(key, sd_file, check_hmac=False,verbose=True)
+    #sys.exit(-1)
     init_SD(key, sd_file)
     #check, appid, num_slot = get_SD_appid_slot(key, "/tmp/sd.dump", appid=b"\xaa"*32)
     #check =  update_appid(key, "/tmp/sd.dump", b"\xcd"*32, name=b"Mon service custom", url=b"www.sericefido.org", ctr=0x1337, icon=None, check_hmac=True)
@@ -844,7 +847,7 @@ if __name__ == '__main__':
  
     with open("/tmp/amazon.png", "rb") as f: 
         check =  update_appid(key, "/tmp/sd.dump", b"\xcc"*32, ctr=0x3, name=b"Amazon", url=b"www.amazon.fr", kh=b'\xab'*32, icon=RLE_compress_buffer(f.read(), target_dim=(45,45), colors=6)[0], check_hmac=True)
-        for i in range(len(fido_db.u2f_rp_database), 4000):
+        for i in range(len(fido_db.u2f_rp_database), 30):
             print("=============== %d" % i)
             f.seek(0)
             check =  update_appid(key, sd_file, ("\xcc"*30+chr((i >> 16) & 0xff)+chr(i & 0xff)).encode("latin-1"), slot_num=i, ctr=i, name=("Amazon %d" % i).encode("latin-1"), icon=RLE_compress_buffer(f.read(), target_dim=(45,45), colors=6)[0], url=("www.amazon%d.fr" % i).encode("latin-1"), check_hmac=True)
