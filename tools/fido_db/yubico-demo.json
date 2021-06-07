@@ -1,5 +1,11 @@
 {
   "name": "demo.yubico.com",
   "webauthn": ["demo.yubico.com"],
+  "u2f": [
+    {
+      "app_id": "c46cef82ad1b546477591d008b08759ec3e6d2ecb4f39474bfea6969925d03b7",
+      "label": "demo.yubico.com"
+    }
+  ],
   "no_icon": true
 }
